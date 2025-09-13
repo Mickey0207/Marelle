@@ -1,0 +1,288 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Noto Sans TC", system-ui, sans-serif;
+  }
+  
+  body {
+    background-color: #EFEAE4;
+    color: #666666;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* 主要按鈕樣式 - 使用指定色彩 */
+  .btn-primary {
+    padding: 0.75rem 1.5rem;
+    background-color: #CC824D;
+    color: #FFFFFF;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    transform: scale(1);
+  }
+  
+  .btn-primary:hover {
+    background-color: #b86c37;
+    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.1);
+    transform: scale(1.05);
+  }
+  
+  .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #666666;
+    border: 1px solid rgba(102, 102, 102, 0.2);
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(102, 102, 102, 0.3);
+  }
+  
+  .btn-ghost {
+    padding: 0.5rem 1rem;
+    color: #666666;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-ghost:hover {
+    background-color: rgba(239, 234, 228, 0.5);
+  }
+  
+  /* 輸入框樣式 */
+  .input-lofi {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(102, 102, 102, 0.2);
+    border-radius: 0.5rem;
+    color: #666666;
+    transition: all 0.2s ease;
+  }
+  
+  .input-lofi:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 1);
+    border-color: #CC824D;
+    box-shadow: 0 0 0 2px rgba(204, 130, 77, 0.1);
+  }
+  
+  /* 卡片樣式 */
+  .card-lofi {
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(102, 102, 102, 0.1);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+  
+  .card-lofi:hover {
+    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 導航樣式 */
+  .nav-lofi {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(102, 102, 102, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  
+  /* 商品網格 */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1.5rem;
+  }
+  
+  @media (min-width: 640px) {
+    .product-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .product-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .product-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  /* 商品卡片 */
+  .product-card-lofi {
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(102, 102, 102, 0.1);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .product-card-lofi:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.1);
+  }
+  
+  .product-image {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: linear-gradient(135deg, #EFEAE4 0%, #f5f1e8 100%);
+  }
+  
+  .product-content {
+    padding: 1rem;
+    color: #666666;
+  }
+  
+  /* 價格標籤 */
+  .price-tag {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #CC824D;
+  }
+  
+  .price-original {
+    font-size: 0.875rem;
+    color: rgba(102, 102, 102, 0.6);
+    text-decoration: line-through;
+  }
+}
+
+@layer utilities {
+  .text-shadow-soft {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+  }
+  
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+}
+
+/* === 全局色彩 class === */
+.bg-lofi {
+  background-color: #EFEAE4 !important;
+}
+.text-lofi {
+  color: #666666 !important;
+}
+.bg-primary-btn {
+  background-color: #CC824D !important;
+  color: #FFFFFF !important;
+}
+.bg-primary-btn:hover {
+  background-color: #b86c37 !important;
+}
+.text-primary-btn {
+  color: #CC824D !important;
+}
+.text-btn-white {
+  color: #FFFFFF !important;
+}
+.category-btn-lofi {
+  background-color: rgba(255,255,255,0.5) !important;
+  color: #666666 !important;
+  border: 1px solid rgba(102,102,102,0.2) !important;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+.category-btn-lofi.selected {
+  background-color: #CC824D !important;
+  color: #FFFFFF !important;
+  border-color: #CC824D !important;
+}
+.category-btn-lofi:hover:not(.selected) {
+  background-color: rgba(255,255,255,0.7) !important;
+}
+.status-badge-lofi {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #CC824D;
+  color: #FFFFFF;
+}
+.status-badge-lofi.out {
+  background-color: #d1d5db;
+  color: rgba(102,102,102,0.5);
+}
+/* === END === */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+/* 自定義捲軸 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #EFEAE4;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #CC824D;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #b86c37;
+}
+
+/* 選取文字樣式 */
+::selection {
+  background-color: rgba(204, 130, 77, 0.2);
+  color: #666666;
+}
