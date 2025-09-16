@@ -54,7 +54,63 @@ export default function Products() {
     }
   }, [location.search]);
 
-                        {/* 此區塊移除，正確的 rootExpanded 用法已在下方 map 內部 */}
+  // 處理展開/收合
+  const toggleExpand = (nodeId) => {
+    setExpanded(prev => ({ ...prev, [nodeId]: !prev[nodeId] }));
+  };
+
+  // 處理節點選擇
+  const handleSelectNode = (node) => {
+    setSelectedNode(node.id);
+  };
+
+  // 處理收藏切換
+  const toggleFavorite = (productId) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(productId)) {
+        newFavorites.delete(productId);
+      } else {
+        newFavorites.add(productId);
+      }
+      return newFavorites;
+    });
+  };
+
+  // 處理產品篩選和排序
+  useEffect(() => {
+    let filtered = [...mockProducts];
+
+    // 根據搜尋詞篩選
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // 根據選中的節點篩選
+    if (selectedNode && hierarchyToBaseCategory[selectedNode]) {
+      const baseCategory = hierarchyToBaseCategory[selectedNode];
+      filtered = filtered.filter(product => product.category === baseCategory);
+    }
+
+    // 排序
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low':
+          return a.price - b.price;
+        case 'price-high':
+          return b.price - a.price;
+        case 'name':
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+
+    setFilteredProducts(filtered);
+  }, [searchTerm, selectedNode, sortBy]);
+
   const handleAddToCart = p => addToCart(p);
 
   const path = findNodePath(selectedNode || '');
