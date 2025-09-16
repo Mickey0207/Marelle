@@ -49,7 +49,7 @@ const Home = () => {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+  <div className="w-full">
           <div className="text-center hero-content">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 font-chinese text-primary-btn">
               Lo-Fi
@@ -71,7 +71,7 @@ const Home = () => {
 
       {/* Featured Products */}
   <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white/50">
-        <div className="max-w-7xl mx-auto">
+  <div className="w-full">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4 font-chinese text-primary-btn">精選商品</h2>
             <p className="max-w-2xl mx-auto text-lofi">
@@ -143,64 +143,49 @@ const Home = () => {
 
       {/* Features Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-sage-800 mb-4 font-chinese">為什麼選擇我們</h2>
-            <p className="text-gray-600">
-              我們致力於為您提供最好的購物體驗和生活品質
-            </p>
+            <h2 className="text-3xl font-bold mb-4 font-chinese text-primary-btn">為什麼選擇我們</h2>
+            <p className="text-lofi">我們致力於為您提供最好的購物體驗和生活品質</p>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="feature-card text-center group">
-              <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-sage-200 transition-colors duration-200">
-                <SparklesIcon className="h-8 w-8 text-sage-600" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors duration-200 bg-white/70 border border-gray-200 group-hover:bg-white/90">
+                <SparklesIcon className="h-8 w-8 text-primary-btn" />
               </div>
-              <h3 className="text-xl font-semibold text-sage-800 mb-3">精心策展</h3>
-              <p className="text-gray-600 leading-relaxed">
-                每件商品都經過精心挑選，確保品質與美感的完美結合
-              </p>
+              <h3 className="text-xl font-semibold mb-3 font-chinese text-lofi">精心策展</h3>
+              <p className="text-lofi leading-relaxed opacity-80">每件商品都經過精心挑選，確保品質與美感的完美結合</p>
             </div>
-            
             <div className="feature-card text-center group">
-              <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-sage-200 transition-colors duration-200">
-                <HeartIcon className="h-8 w-8 text-sage-600" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors duration-200 bg-white/70 border border-gray-200 group-hover:bg-white/90">
+                <HeartIcon className="h-8 w-8 text-primary-btn" />
               </div>
-              <h3 className="text-xl font-semibold text-sage-800 mb-3">用心服務</h3>
-              <p className="text-gray-600 leading-relaxed">
-                從選購到售後，我們提供貼心周到的服務體驗
-              </p>
+              <h3 className="text-xl font-semibold mb-3 font-chinese text-lofi">用心服務</h3>
+              <p className="text-lofi leading-relaxed opacity-80">從選購到售後，我們提供貼心周到的服務體驗</p>
             </div>
-            
             <div className="feature-card text-center group">
-              <div className="w-16 h-16 bg-sage-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-sage-200 transition-colors duration-200">
-                <ShieldCheckIcon className="h-8 w-8 text-sage-600" />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors duration-200 bg-white/70 border border-gray-200 group-hover:bg-white/90">
+                <ShieldCheckIcon className="h-8 w-8 text-primary-btn" />
               </div>
-              <h3 className="text-xl font-semibold text-sage-800 mb-3">品質保證</h3>
-              <p className="text-gray-600 leading-relaxed">
-                嚴格的品質控制，讓您安心享受每一次購物
-              </p>
+              <h3 className="text-xl font-semibold mb-3 font-chinese text-lofi">品質保證</h3>
+              <p className="text-lofi leading-relaxed opacity-80">嚴格的品質控制，讓您安心享受每一次購物</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-sage-50 to-lofi-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-sage-800 mb-4 font-chinese">訂閱電子報</h2>
-          <p className="text-gray-600 mb-8">
-            獲取最新商品資訊和生活靈感，讓美好融入您的日常
-          </p>
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white/60">
+        <div className="w-full text-center">
+          <h2 className="text-3xl font-bold mb-4 font-chinese text-primary-btn">訂閱電子報</h2>
+          <p className="text-lofi mb-8 opacity-80">獲取最新商品資訊和生活靈感，讓美好融入您的日常</p>
           <div className="max-w-md mx-auto flex gap-3">
             <input
               type="email"
               placeholder="輸入您的電子郵件"
-              className="flex-1 px-4 py-3 bg-white/80 border border-sage-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage-300 focus:bg-white transition-all duration-200"
+              className="flex-1 input-lofi"
             />
-            <button className="px-6 py-3 bg-sage-600 text-white rounded-lg hover:bg-sage-700 transition-colors duration-200 font-medium">
-              訂閱
-            </button>
+            <button className="btn-primary px-6 py-3 font-chinese">訂閱</button>
           </div>
         </div>
       </section>

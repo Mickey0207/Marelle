@@ -222,13 +222,17 @@ const AdminOverview = () => {
             <ClipboardDocumentListIcon className="w-6 h-6 mb-2" />
             <div className="text-sm font-medium">查看訂單</div>
           </button>
-          <button className="btn-secondary p-4 text-left font-chinese">
+          <button className="btn-secondary p-4 text-left font-chinese" onClick={() => window.location.href='/admin/members'}>
             <UsersIcon className="w-6 h-6 mb-2" />
-            <div className="text-sm font-medium">客戶管理</div>
+            <div className="text-sm font-medium">會員管理</div>
           </button>
           <button className="btn-secondary p-4 text-left font-chinese">
             <CurrencyDollarIcon className="w-6 h-6 mb-2" />
             <div className="text-sm font-medium">銷售報告</div>
+          </button>
+          <button className="btn-secondary p-4 text-left font-chinese" onClick={() => window.location.href='/admin/inventory'}>
+            <ClipboardDocumentListIcon className="w-6 h-6 mb-2" />
+            <div className="text-sm font-medium">庫存管理</div>
           </button>
         </div>
       </div>

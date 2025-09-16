@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import Navbar from '../components/Navbar';
 
-// 完全仿照截圖設計
-const AdminLogin = () => {
+const FrontLogin = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,9 +20,10 @@ const AdminLogin = () => {
     setIsLoading(true);
     setError('');
     await new Promise(resolve => setTimeout(resolve, 1000));
-    if (credentials.username === 'admin@marelle.com.tw' && credentials.password === 'Walkerkevin2580') {
-      localStorage.setItem('marelle-admin-token', 'mock-token');
-      navigate('/admin');
+    // TODO: 串接前台會員登入API
+    if (credentials.username === 'user' && credentials.password === 'password') {
+      // 假設登入成功
+      navigate('/');
     } else {
       setError('帳號或密碼錯誤');
     }
@@ -32,10 +32,8 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fdf8f2]">
-      {/* 共用主站導覽列 */}
       <Navbar />
-      {/* 主內容 */}
-  <main className="flex-1 flex flex-col items-center justify-center py-8 pt-16">
+      <main className="flex-1 flex flex-col items-center justify-center py-8 pt-16">
         <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto bg-transparent flex flex-col items-center">
           <h2 className="text-2xl font-serif font-bold text-[#2d1e0f] mb-8 mt-2 tracking-wider">登入</h2>
           <div className="w-full flex flex-col gap-6">
@@ -94,10 +92,9 @@ const AdminLogin = () => {
         </form>
         <div className="w-full max-w-md mx-auto flex flex-col items-center mt-8">
           <h3 className="text-xl font-serif font-bold text-[#2d1e0f] mb-4 tracking-wider">還不是會員？</h3>
-          <button onClick={() => navigate('/admin/register')} className="w-full border border-[#cc824d] text-[#cc824d] text-base font-bold py-3 rounded transition-colors font-serif tracking-wider hover:bg-[#f7ede3]">註冊會員</button>
+          <button onClick={() => navigate('/register')} className="w-full border border-[#cc824d] text-[#cc824d] text-base font-bold py-3 rounded transition-colors font-serif tracking-wider hover:bg-[#f7ede3]">註冊會員</button>
         </div>
       </main>
-      {/* 頁腳 */}
       <footer className="w-full mt-24 px-8 pb-8 pt-16 bg-transparent text-[#bfae9b] text-sm">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
@@ -122,4 +119,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default FrontLogin;

@@ -7,12 +7,15 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
-import Products from './pages/Products'
-import ProductDetail from './pages/ProductDetail'
+import Products from './pages/EnhancedProducts'
+import ProductDetail from './pages/EnhancedProductDetail'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import AdminDashboard from './admin/Dashboard'
 import AdminLogin from './admin/Login'
+import Register from './admin/Register'
+import FrontLogin from './pages/FrontLogin'
+import FrontRegister from './pages/FrontRegister'
 
 // 註冊 GSAP 插件
 gsap.registerPlugin(ScrollTrigger)
@@ -58,7 +61,10 @@ function App() {
           } />
           
           {/* 後台路由 */}
+          <Route path="/login" element={<FrontLogin />} />
+          <Route path="/register" element={<FrontRegister />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/register" element={<Register />} />
           <Route path="/admin/*" element={<AdminDashboard />} />
         </Routes>
       </div>

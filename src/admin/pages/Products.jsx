@@ -1,27 +1,50 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
   EyeIcon,
-  MagnifyingGlassIcon
+  ChevronUpIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { mockProducts, formatPrice } from '../../utils/data';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState(mockProducts);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+  const [sortField, setSortField] = useState('');
+  const [sortDirection, setSortDirection] = useState('asc');
 
-  useEffect(() => {
-    // Filter products based on search
-    const filtered = products.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-  }, [searchTerm, products]);
+  // Sort products based on current sort settings
+  const sortedProducts = [...products].sort((a, b) => {
+    if (!sortField) return 0;
+    
+    let aValue = a[sortField];
+    let bValue = b[sortField];
+    
+    // Handle different data types
+    if (sortField === 'price') {
+      aValue = parseFloat(aValue);
+      bValue = parseFloat(bValue);
+    } else if (typeof aValue === 'string') {
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+    }
+    
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   useEffect(() => {
     // Animate products table
@@ -39,7 +62,7 @@ const AdminProducts = () => {
         ease: 'power2.out',
       }
     );
-  }, [filteredProducts]);
+  }, [sortedProducts]);
 
   const getStockStatus = (inStock) => {
     return inStock
@@ -54,73 +77,108 @@ const AdminProducts = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 font-chinese">商品管理</h1>
           <p className="text-gray-600 mt-2 font-chinese">
-            管理您的商品庫存和資訊
+            管理商品資訊、變體和庫存
           </p>
         </div>
-        <button className="btn-primary mt-4 sm:mt-0 font-chinese">
-          <PlusIcon className="w-5 h-5 mr-2" />
-          新增商品
-        </button>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="glass p-6 rounded-2xl">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="搜尋商品名稱或分類..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-glass pl-10 w-full font-chinese"
-            />
-          </div>
-          <select className="input-glass font-chinese">
-            <option value="">全部分類</option>
-            <option value="accessories">配件</option>
-            <option value="home">家居</option>
-            <option value="fragrance">香氛</option>
-            <option value="clothing">服飾</option>
-            <option value="tea">茶品</option>
-            <option value="lifestyle">生活用品</option>
-          </select>
-          <select className="input-glass font-chinese">
-            <option value="">庫存狀態</option>
-            <option value="in-stock">有庫存</option>
-            <option value="out-of-stock">缺貨</option>
-          </select>
+        <div className="flex items-center space-x-3 mt-4 sm:mt-0">
+          <Link 
+            to="/admin/products/add"
+            className="px-6 py-3 bg-[#cc824d] text-white rounded-xl hover:bg-[#b3723f] transition-all duration-200 shadow-lg font-chinese text-lg font-semibold flex items-center"
+          >
+            <PlusIcon className="w-6 h-6 mr-3" />
+            新增商品
+          </Link>
         </div>
       </div>
 
       {/* Products Table */}
-      <div className="glass rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="glass rounded-2xl overflow-visible">
+        <div className="overflow-x-auto overflow-y-visible">{/* 允許垂直溢出以顯示下拉選單 */}
           <table className="w-full">
-            <thead className="bg-white/50">
+            <thead className="bg-gradient-to-r from-[#cc824d] to-[#b3723f] text-white">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-900 font-chinese">
-                  商品
+                <th 
+                  className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-[#a65c35] transition-colors font-chinese"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center">
+                    商品
+                    <span className="ml-2">
+                      {sortField === 'name' ? (
+                        sortDirection === 'asc' ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />
+                      ) : (
+                        <ChevronUpIcon className="w-4 h-4 opacity-30" />
+                      )}
+                    </span>
+                  </div>
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-900 font-chinese">
-                  分類
+                <th 
+                  className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-[#a65c35] transition-colors font-chinese"
+                  onClick={() => handleSort('category')}
+                >
+                  <div className="flex items-center">
+                    分類
+                    <span className="ml-2">
+                      {sortField === 'category' ? (
+                        sortDirection === 'asc' ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />
+                      ) : (
+                        <ChevronUpIcon className="w-4 h-4 opacity-30" />
+                      )}
+                    </span>
+                  </div>
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-900 font-chinese">
-                  價格
+                <th 
+                  className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-[#a65c35] transition-colors font-chinese"
+                  onClick={() => handleSort('price')}
+                >
+                  <div className="flex items-center">
+                    價格
+                    <span className="ml-2">
+                      {sortField === 'price' ? (
+                        sortDirection === 'asc' ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />
+                      ) : (
+                        <ChevronUpIcon className="w-4 h-4 opacity-30" />
+                      )}
+                    </span>
+                  </div>
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-900 font-chinese">
-                  庫存狀態
+                <th 
+                  className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-[#a65c35] transition-colors font-chinese"
+                  onClick={() => handleSort('inStock')}
+                >
+                  <div className="flex items-center">
+                    庫存狀態
+                    <span className="ml-2">
+                      {sortField === 'inStock' ? (
+                        sortDirection === 'asc' ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />
+                      ) : (
+                        <ChevronUpIcon className="w-4 h-4 opacity-30" />
+                      )}
+                    </span>
+                  </div>
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-900 font-chinese">
-                  評分
+                <th 
+                  className="px-6 py-4 text-left text-sm font-semibold cursor-pointer hover:bg-[#a65c35] transition-colors font-chinese"
+                  onClick={() => handleSort('rating')}
+                >
+                  <div className="flex items-center">
+                    評分
+                    <span className="ml-2">
+                      {sortField === 'rating' ? (
+                        sortDirection === 'asc' ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />
+                      ) : (
+                        <ChevronUpIcon className="w-4 h-4 opacity-30" />
+                      )}
+                    </span>
+                  </div>
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-900 font-chinese">
+                <th className="px-6 py-4 text-left text-sm font-semibold font-chinese">
                   操作
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredProducts.map((product, index) => {
+              {sortedProducts.map((product, index) => {
                 const stockStatus = getStockStatus(product.inStock);
                 return (
                   <tr key={product.id} className="product-row hover:bg-white/30">
@@ -177,9 +235,12 @@ const AdminProducts = () => {
                         <button className="p-2 text-gray-400 hover:text-blue-500 transition-colors">
                           <EyeIcon className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-gray-400 hover:text-green-500 transition-colors">
+                        <Link
+                          to={`/admin/products/edit/${product.id}`}
+                          className="p-2 text-gray-400 hover:text-green-500 transition-colors"
+                        >
                           <PencilIcon className="w-4 h-4" />
-                        </button>
+                        </Link>
                         <button className="p-2 text-gray-400 hover:text-red-500 transition-colors">
                           <TrashIcon className="w-4 h-4" />
                         </button>
@@ -192,7 +253,7 @@ const AdminProducts = () => {
           </table>
         </div>
         
-        {filteredProducts.length === 0 && (
+        {sortedProducts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 font-chinese">沒有找到符合條件的商品</p>
           </div>
@@ -202,8 +263,8 @@ const AdminProducts = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-700 font-chinese">
-          顯示 <span className="font-medium">1</span> 到 <span className="font-medium">{filteredProducts.length}</span> 項，
-          共 <span className="font-medium">{filteredProducts.length}</span> 項商品
+          顯示 <span className="font-medium">1</span> 到 <span className="font-medium">{sortedProducts.length}</span> 項，
+          共 <span className="font-medium">{sortedProducts.length}</span> 項商品
         </p>
         <div className="flex space-x-2">
           <button className="btn-secondary text-sm font-chinese">上一頁</button>
