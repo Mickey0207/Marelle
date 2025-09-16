@@ -17,6 +17,7 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline';
 import CustomSelect from '../components/CustomSelect';
+import GlassModal from '../../components/GlassModal';
 
 // 模擬會員數據
 const mockMemberData = [
@@ -172,7 +173,8 @@ const MemberManagement = () => {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8">
+    <div className="bg-[#fdf8f2] min-h-screen">
+      <div className="container mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center">
           <UsersIcon className="w-8 h-8 text-amber-500 mr-3" />
@@ -353,94 +355,88 @@ const MemberManagement = () => {
       </div>
 
       {/* 會員詳情模態框 */}
-      {selectedMember && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="glass rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold font-chinese">會員詳情</h2>
-              <button 
-                className="text-gray-400 hover:text-gray-600"
-                onClick={() => setSelectedMember(null)}
-              >
-                ✕
-              </button>
+      <GlassModal
+        isOpen={!!selectedMember}
+        onClose={() => setSelectedMember(null)}
+        title="會員詳情"
+        size="max-w-2xl"
+      >
+        {selectedMember && (
+          <div className="p-6 space-y-6">
+            {/* 基本資訊 */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">會員編號</label>
+                <div className="text-gray-900">{selectedMember.memberNo}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">姓名</label>
+                <div className="text-gray-900 font-chinese">{selectedMember.name}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">Email</label>
+                <div className="text-gray-900">{selectedMember.email}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">手機</label>
+                <div className="text-gray-900">{selectedMember.phone}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">性別</label>
+                <div className="text-gray-900 font-chinese">{selectedMember.gender}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">生日</label>
+                <div className="text-gray-900">{selectedMember.birthday}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">註冊日期</label>
+                <div className="text-gray-900">{selectedMember.registerDate}</div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">最後登入</label>
+                <div className="text-gray-900">{selectedMember.lastLoginDate}</div>
+              </div>
             </div>
-            
-            <div className="space-y-6">
-              {/* 基本資訊 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">會員編號</label>
-                  <div className="text-gray-900">{selectedMember.memberNo}</div>
+
+            {/* 會員統計 */}
+            <div className="border-t border-white/30 pt-6">
+              <h3 className="text-lg font-bold font-chinese mb-4">會員統計</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">{selectedMember.level}</div>
+                  <div className="text-sm text-gray-500 font-chinese">會員等級</div>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">姓名</label>
-                  <div className="text-gray-900 font-chinese">{selectedMember.name}</div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">NT$ {selectedMember.totalSpent.toLocaleString()}</div>
+                  <div className="text-sm text-gray-500 font-chinese">總消費</div>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">Email</label>
-                  <div className="text-gray-900">{selectedMember.email}</div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-amber-600">{selectedMember.points}</div>
+                  <div className="text-sm text-gray-500 font-chinese">積分</div>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">手機</label>
-                  <div className="text-gray-900">{selectedMember.phone}</div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">性別</label>
-                  <div className="text-gray-900 font-chinese">{selectedMember.gender}</div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">生日</label>
-                  <div className="text-gray-900">{selectedMember.birthday}</div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">註冊日期</label>
-                  <div className="text-gray-900">{selectedMember.registerDate}</div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">最後登入</label>
-                  <div className="text-gray-900">{selectedMember.lastLoginDate}</div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{selectedMember.orders}</div>
+                  <div className="text-sm text-gray-500 font-chinese">訂單數</div>
                 </div>
               </div>
+            </div>
 
-              {/* 會員統計 */}
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-bold font-chinese mb-4">會員統計</h3>
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{selectedMember.level}</div>
-                    <div className="text-sm text-gray-500 font-chinese">會員等級</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">NT$ {selectedMember.totalSpent.toLocaleString()}</div>
-                    <div className="text-sm text-gray-500 font-chinese">總消費</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-600">{selectedMember.points}</div>
-                    <div className="text-sm text-gray-500 font-chinese">積分</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{selectedMember.orders}</div>
-                    <div className="text-sm text-gray-500 font-chinese">訂單數</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 會員標籤 */}
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-bold font-chinese mb-4">會員標籤</h3>
-                <div className="flex flex-wrap gap-2">
-                  {selectedMember.tags.map((tag, idx) => (
-                    <span key={idx} className="inline-flex items-center px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full font-chinese">
-                      <TagIcon className="w-4 h-4 mr-1" />{tag}
-                    </span>
-                  ))}
-                </div>
+            {/* 會員標籤 */}
+            <div className="border-t border-white/30 pt-6">
+              <h3 className="text-lg font-bold font-chinese mb-4">會員標籤</h3>
+              <div className="flex flex-wrap gap-2">
+                {selectedMember.tags.map((tag, idx) => (
+                  <span key={idx} className="inline-flex items-center px-3 py-1 text-sm bg-blue-100/80 text-blue-700 rounded-full font-chinese backdrop-blur-sm">
+                    <TagIcon className="w-4 h-4 mr-1" />{tag}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </GlassModal>
+    </div>
     </div>
   );
 };

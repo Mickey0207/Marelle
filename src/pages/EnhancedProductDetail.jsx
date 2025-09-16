@@ -448,16 +448,16 @@ const EnhancedProductDetail = () => {
 
       {/* 圖片放大模態框 */}
       {showImageModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setShowImageModal(false)}>
-          <div className="relative max-w-4xl max-h-screen p-4">
+        <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50" onClick={() => setShowImageModal(false)}>
+          <div className="relative max-w-4xl max-h-screen p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/30">
             <img
               src={productImages[selectedImage]}
               alt={product.name}
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full object-contain rounded-xl"
             />
             <button
               onClick={() => setShowImageModal(false)}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl"
+              className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors duration-200"
             >
               ×
             </button>

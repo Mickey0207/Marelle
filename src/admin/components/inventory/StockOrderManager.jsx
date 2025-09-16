@@ -66,8 +66,8 @@ const StockOrderManager = () => {
         </table>
       </div>
       {showForm && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <form className="bg-white rounded-xl p-8 w-full max-w-md space-y-4 shadow-lg relative" onSubmit={handleSubmit}>
+        <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50">
+          <form className="bg-white/90 backdrop-blur-xl rounded-xl p-8 w-full max-w-md space-y-4 shadow-lg relative border border-white/30" onSubmit={handleSubmit}>
             <button type="button" className="absolute right-4 top-4 text-gray-400 hover:text-gray-600" onClick={closeForm}><XMarkIcon className="w-6 h-6" /></button>
             <h3 className="text-lg font-bold mb-2 font-chinese">新增庫存單據</h3>
             <label className="block font-chinese">單據類型

@@ -324,8 +324,8 @@ const EnhancedProducts = () => {
 
       {/* 快速瀏覽模態框 */}
       {showQuickView && quickViewProduct && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl max-w-2xl w-full max-h-screen overflow-y-auto border border-white/30 shadow-2xl">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold font-chinese">快速瀏覽</h3>

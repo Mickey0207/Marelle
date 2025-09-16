@@ -1564,7 +1564,8 @@ const NotificationManagement = () => {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8">
+    <div className="bg-[#fdf8f2] min-h-screen">
+      <div className="container mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center">
           <BellIcon className="w-8 h-8 text-amber-500 mr-3" />
@@ -1638,6 +1639,7 @@ const NotificationManagement = () => {
         isOpen={showTestPanel}
         onClose={() => setShowTestPanel(false)}
       />
+    </div>
     </div>
   );
 };

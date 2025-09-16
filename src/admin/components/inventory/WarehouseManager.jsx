@@ -106,8 +106,8 @@ const WarehouseManager = () => {
         </div>
       </div>
       {showForm && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <form className="bg-white rounded-xl p-8 w-full max-w-md space-y-4 shadow-lg relative" onSubmit={handleSubmit}>
+        <div className="fixed inset-0 bg-white/20 backdrop-blur-md flex items-center justify-center z-50">
+          <form className="bg-white/90 backdrop-blur-xl rounded-xl p-8 w-full max-w-md space-y-4 shadow-lg relative border border-white/30" onSubmit={handleSubmit}>
             <h3 className="text-lg font-bold mb-2 font-chinese">{editing ? '編輯倉庫' : '新增倉庫'}</h3>
             <label className="block font-chinese">名稱<input className="input" name="name" value={form.name} onChange={handleChange} required /></label>
             <label className="block font-chinese">代碼<input className="input" name="code" value={form.code} onChange={handleChange} required /></label>

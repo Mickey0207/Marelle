@@ -13,7 +13,12 @@ import {
   XMarkIcon,
   MagnifyingGlassIcon,
   CubeIcon,
-  BellIcon
+  BellIcon,
+  KeyIcon,
+  GiftIcon,
+  PlusIcon,
+  TruckIcon,
+  ShoppingCartIcon
 } from '@heroicons/react/24/outline';
 
 // Import admin pages
@@ -28,6 +33,10 @@ import AdminSettings from './pages/Settings';
 import Inventory from './pages/Inventory';
 import MemberManagement from './pages/MemberManagement';
 import NotificationManagement from './pages/NotificationManagement';
+import AdminManagement from './pages/AdminManagement';
+import GiftManagementContainer from './pages/GiftManagementContainer';
+import SupplierManagementContainer from './pages/suppliers/SupplierManagementContainer';
+import ProcurementManagementContainer from './pages/procurement/ProcurementManagementContainer';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -75,11 +84,83 @@ const AdminDashboard = () => {
     { name: '商品管理', href: '/admin/products', icon: ShoppingBagIcon },
     { name: '訂單管理', href: '/admin/orders', icon: ClipboardDocumentListIcon },
     { name: '會員管理', href: '/admin/members', icon: UsersIcon },
+    { name: '贈品管理', href: '/admin/gifts', icon: GiftIcon },
+    { name: '供應商管理', href: '/admin/suppliers', icon: TruckIcon },
+    { name: '採購管理', href: '/admin/procurement', icon: ShoppingCartIcon },
     { name: '通知管理', href: '/admin/notifications', icon: BellIcon },
     { name: '數據分析', href: '/admin/analytics', icon: ChartBarIcon },
+    { name: '管理員系統', href: '/admin/admin-management', icon: KeyIcon },
     { name: '系統設定', href: '/admin/settings', icon: Cog6ToothIcon },
     { name: '庫存管理', href: '/admin/inventory', icon: CubeIcon },
   ];
+
+  // 獲取當前頁面的子頁籤配置
+  const getSubTabs = () => {
+    const path = location.pathname;
+    
+    if (path.startsWith('/admin/products')) {
+      return [
+        { name: '商品列表', href: '/admin/products', icon: ShoppingBagIcon },
+        { name: '新增商品', href: '/admin/products/add', icon: PlusIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/gifts')) {
+      return [
+        { name: '贈品概覽', href: '/admin/gifts', icon: GiftIcon },
+        { name: '階梯規則', href: '/admin/gifts/tier-rules', icon: Cog6ToothIcon },
+        { name: '會員福利', href: '/admin/gifts/member-benefits', icon: UsersIcon },
+        { name: '分配追蹤', href: '/admin/gifts/allocation-tracking', icon: ChartBarIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/orders')) {
+      return [
+        { name: '訂單列表', href: '/admin/orders', icon: ClipboardDocumentListIcon },
+        { name: '訂單統計', href: '/admin/orders/stats', icon: ChartBarIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/members')) {
+      return [
+        { name: '會員列表', href: '/admin/members', icon: UsersIcon },
+        { name: '會員分析', href: '/admin/members/analytics', icon: ChartBarIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/suppliers')) {
+      return [
+        { name: '供應商列表', href: '/admin/suppliers', icon: TruckIcon },
+        { name: '新增供應商', href: '/admin/suppliers/add', icon: PlusIcon },
+        { name: '商品關聯', href: '/admin/suppliers/products', icon: ShoppingBagIcon },
+        { name: '績效評估', href: '/admin/suppliers/performance', icon: ChartBarIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/procurement')) {
+      return [
+        { name: '採購總覽', href: '/admin/procurement', icon: ChartBarIcon },
+        { name: '採購單列表', href: '/admin/procurement/orders', icon: ClipboardDocumentListIcon },
+        { name: '新增採購單', href: '/admin/procurement/orders/add', icon: PlusIcon },
+        { name: '採購建議', href: '/admin/procurement/suggestions', icon: CubeIcon },
+        { name: '驗收入庫', href: '/admin/procurement/inspection', icon: ShoppingBagIcon },
+        { name: '成本分析', href: '/admin/procurement/analytics', icon: ChartBarIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/analytics')) {
+      return [
+        { name: '銷售分析', href: '/admin/analytics', icon: ChartBarIcon },
+        { name: '商品分析', href: '/admin/analytics/products', icon: ShoppingBagIcon },
+        { name: '會員分析', href: '/admin/analytics/members', icon: UsersIcon },
+      ];
+    }
+    
+    return [];
+  };
+
+  const subTabs = getSubTabs();
+  const hasSubTabs = subTabs.length > 0;
 
   const handleLogout = () => {
     localStorage.removeItem('marelle-admin-token');
@@ -91,6 +172,11 @@ const AdminDashboard = () => {
       return location.pathname === '/admin' || location.pathname === '/admin/';
     }
     return location.pathname.startsWith(path);
+  };
+
+  // 檢查子頁籤是否激活（只有完全匹配的路徑才激活）
+  const isSubTabActive = (href) => {
+    return location.pathname === href;
   };
 
   return (
@@ -193,18 +279,42 @@ const AdminDashboard = () => {
         {/* Top bar */}
         <header className="bg-[#fdf8f2] border-b border-gray-200 sticky top-0 z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
-            <div className="flex items-center">
+            <div className="flex items-center flex-1">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg mr-2"
+                className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg mr-4"
               >
                 <Bars3Icon className="w-5 h-5" />
               </button>
-              <nav className="text-sm text-gray-500 font-serif">
-                <Link to="/admin" className="hover:text-[#cc824d]">管理首頁</Link>
-                <span className="mx-2">/</span>
-                <span className="text-gray-700">查看網站</span>
-              </nav>
+              
+              {/* 子頁籤導航 */}
+              {hasSubTabs ? (
+                <div className="flex space-x-6">
+                  {subTabs.map((tab) => {
+                    const IconComponent = tab.icon;
+                    const isActive = isSubTabActive(tab.href);
+                    
+                    return (
+                      <Link
+                        key={tab.href}
+                        to={tab.href}
+                        className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium transition-all duration-200 border-b-2 hover:text-[#cc824d] ${
+                          isActive
+                            ? 'text-[#cc824d] border-[#cc824d]'
+                            : 'text-gray-600 border-transparent hover:border-gray-300'
+                        }`}
+                      >
+                        {IconComponent && <IconComponent className="w-4 h-4" />}
+                        <span className="font-chinese">{tab.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500 font-serif">
+                  <span className="text-gray-700">管理後台</span>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center space-x-4">
@@ -269,8 +379,12 @@ const AdminDashboard = () => {
             <Route path="products/edit/:id" element={<EditProduct />} />
             <Route path="orders/*" element={<AdminOrders />} />
             <Route path="members/*" element={<MemberManagement />} />
+            <Route path="gifts/*" element={<GiftManagementContainer />} />
+            <Route path="suppliers/*" element={<SupplierManagementContainer />} />
+            <Route path="procurement/*" element={<ProcurementManagementContainer />} />
             <Route path="notifications/*" element={<NotificationManagement />} />
             <Route path="analytics/*" element={<AdminAnalytics />} />
+            <Route path="admin-management/*" element={<AdminManagement />} />
             <Route path="settings/*" element={<AdminSettings />} />
             <Route path="inventory" element={<Inventory />} />
           </Routes>
