@@ -18,7 +18,16 @@ import {
   GiftIcon,
   PlusIcon,
   TruckIcon,
-  ShoppingCartIcon
+  ShoppingCartIcon,
+  TicketIcon,
+  MapPinIcon,
+  CalculatorIcon,
+  DocumentTextIcon,
+  CreditCardIcon,
+  CalendarDaysIcon,
+  SpeakerWaveIcon,
+  ShieldCheckIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 
 // Import admin pages
@@ -37,6 +46,23 @@ import AdminManagement from './pages/AdminManagement';
 import GiftManagementContainer from './pages/GiftManagementContainer';
 import SupplierManagementContainer from './pages/suppliers/SupplierManagementContainer';
 import ProcurementManagementContainer from './pages/procurement/ProcurementManagementContainer';
+import CouponManagementContainer from './pages/CouponManagementContainer';
+import LogisticsManagementContainer from './pages/logistics/LogisticsManagementContainer';
+
+// Import accounting system components
+import AccountingManagementContainer from './accounting/AccountingManagementContainer';
+
+// Import festival management components
+import FestivalOverview from './components/FestivalOverview';
+import FestivalManagement from './components/FestivalManagement';
+import PromotionSettings from './components/PromotionSettings';
+import FestivalAnalytics from './components/FestivalAnalytics';
+
+// Import marketing management components
+import MarketingOverview from './components/MarketingOverview';
+import CampaignManagement from './components/CampaignManagement';
+import AdvertisingManagement from './components/AdvertisingManagement';
+import AudienceManagement from './components/AudienceManagement';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -83,10 +109,15 @@ const AdminDashboard = () => {
     { name: '總覽', href: '/admin', icon: HomeIcon },
     { name: '商品管理', href: '/admin/products', icon: ShoppingBagIcon },
     { name: '訂單管理', href: '/admin/orders', icon: ClipboardDocumentListIcon },
+    { name: '物流管理', href: '/admin/logistics', icon: MapPinIcon },
+    { name: '優惠管理', href: '/admin/coupons', icon: TicketIcon },
+    { name: '節慶管理', href: '/admin/festivals', icon: CalendarDaysIcon },
+    { name: '行銷管理', href: '/admin/marketing', icon: SpeakerWaveIcon },
     { name: '會員管理', href: '/admin/members', icon: UsersIcon },
     { name: '贈品管理', href: '/admin/gifts', icon: GiftIcon },
     { name: '供應商管理', href: '/admin/suppliers', icon: TruckIcon },
     { name: '採購管理', href: '/admin/procurement', icon: ShoppingCartIcon },
+    { name: '會計管理', href: '/admin/accounting', icon: CalculatorIcon },
     { name: '通知管理', href: '/admin/notifications', icon: BellIcon },
     { name: '數據分析', href: '/admin/analytics', icon: ChartBarIcon },
     { name: '管理員系統', href: '/admin/admin-management', icon: KeyIcon },
@@ -148,11 +179,74 @@ const AdminDashboard = () => {
       ];
     }
     
+    if (path.startsWith('/admin/logistics')) {
+      return [
+        { name: '物流總覽', href: '/admin/logistics', icon: MapPinIcon },
+        { name: '出貨管理', href: '/admin/logistics/shipments', icon: TruckIcon },
+        { name: '運費設定', href: '/admin/logistics/shipping-rates', icon: Cog6ToothIcon },
+        { name: '物流追蹤', href: '/admin/logistics/tracking', icon: MapPinIcon },
+        { name: '退貨管理', href: '/admin/logistics/returns', icon: ArrowRightOnRectangleIcon },
+        { name: '分析報表', href: '/admin/logistics/analytics', icon: ChartBarIcon },
+        { name: '物流商管理', href: '/admin/logistics/providers', icon: TruckIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/coupons')) {
+      return [
+        { name: '優惠券列表', href: '/admin/coupons', icon: TicketIcon },
+        { name: '新增優惠券', href: '/admin/coupons/new', icon: PlusIcon },
+        { name: '疊加規則', href: '/admin/coupons/stacking-rules', icon: Cog6ToothIcon },
+        { name: '分享管理', href: '/admin/coupons/sharing', icon: GiftIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/festivals')) {
+      return [
+        { name: '節慶總覽', href: '/admin/festivals', icon: ChartBarIcon },
+        { name: '節慶管理', href: '/admin/festivals/management', icon: CalendarDaysIcon },
+        { name: '促銷設定', href: '/admin/festivals/promotions', icon: GiftIcon },
+        { name: '節慶分析', href: '/admin/festivals/analytics', icon: ChartBarIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/marketing')) {
+      return [
+        { name: '行銷總覽', href: '/admin/marketing', icon: ChartBarIcon },
+        { name: '檔期管理', href: '/admin/marketing/campaigns', icon: SpeakerWaveIcon },
+        { name: '廣告管理', href: '/admin/marketing/advertising', icon: TruckIcon },
+        { name: '受眾管理', href: '/admin/marketing/audiences', icon: UsersIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/accounting')) {
+      return [
+        { name: '會計總覽', href: '/admin/accounting', icon: ChartBarIcon },
+        { name: '會計科目', href: '/admin/accounting/chart-of-accounts', icon: CalculatorIcon },
+        { name: '會計分錄', href: '/admin/accounting/journal-entries', icon: DocumentTextIcon },
+        { name: '財務報表', href: '/admin/accounting/financial-reports', icon: DocumentTextIcon },
+        { name: '銀行對帳', href: '/admin/accounting/bank-reconciliation', icon: CreditCardIcon },
+      ];
+    }
+    
     if (path.startsWith('/admin/analytics')) {
       return [
-        { name: '銷售分析', href: '/admin/analytics', icon: ChartBarIcon },
+        { name: '分析總覽', href: '/admin/analytics', icon: ChartBarIcon },
+        { name: '銷售分析', href: '/admin/analytics/sales', icon: ChartBarIcon },
+        { name: '客戶分析', href: '/admin/analytics/customers', icon: UsersIcon },
         { name: '商品分析', href: '/admin/analytics/products', icon: ShoppingBagIcon },
-        { name: '會員分析', href: '/admin/analytics/members', icon: UsersIcon },
+        { name: '營運分析', href: '/admin/analytics/operations', icon: Cog6ToothIcon },
+        { name: 'AI 洞察', href: '/admin/analytics/ai-insights', icon: SparklesIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/settings')) {
+      return [
+        { name: '設定總覽', href: '/admin/settings', icon: ChartBarIcon },
+        { name: '一般設定', href: '/admin/settings/general', icon: Cog6ToothIcon },
+        { name: '安全設定', href: '/admin/settings/security', icon: ShieldCheckIcon },
+        { name: '通知設定', href: '/admin/settings/notifications', icon: BellIcon },
+        { name: '付款設定', href: '/admin/settings/payments', icon: CreditCardIcon },
+        { name: '物流設定', href: '/admin/settings/shipping', icon: TruckIcon },
       ];
     }
     
@@ -378,6 +472,17 @@ const AdminDashboard = () => {
             <Route path="products/add" element={<AddProductAdvanced />} />
             <Route path="products/edit/:id" element={<EditProduct />} />
             <Route path="orders/*" element={<AdminOrders />} />
+            <Route path="logistics/*" element={<LogisticsManagementContainer />} />
+            <Route path="coupons/*" element={<CouponManagementContainer />} />
+            <Route path="festivals" element={<FestivalOverview />} />
+            <Route path="festivals/management" element={<FestivalManagement />} />
+            <Route path="festivals/promotions" element={<PromotionSettings />} />
+            <Route path="festivals/analytics" element={<FestivalAnalytics />} />
+            <Route path="marketing" element={<MarketingOverview />} />
+            <Route path="marketing/campaigns" element={<CampaignManagement />} />
+            <Route path="marketing/advertising" element={<AdvertisingManagement />} />
+            <Route path="marketing/audiences" element={<AudienceManagement />} />
+            <Route path="accounting/*" element={<AccountingManagementContainer />} />
             <Route path="members/*" element={<MemberManagement />} />
             <Route path="gifts/*" element={<GiftManagementContainer />} />
             <Route path="suppliers/*" element={<SupplierManagementContainer />} />

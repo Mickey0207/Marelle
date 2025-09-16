@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { gsap } from 'gsap';
+
+// Import system settings components
+import SystemSettingsOverview from '../components/SystemSettingsOverview';
+import GeneralSettings from '../components/GeneralSettings';
+import SecuritySettings from '../components/SecuritySettings';
+import NotificationSettings from '../components/NotificationSettings';
+import PaymentSettings from '../components/PaymentSettings';
+import ShippingSettings from '../components/ShippingSettings';
 
 const AdminSettings = () => {
   useEffect(() => {
@@ -11,20 +20,16 @@ const AdminSettings = () => {
   }, []);
 
   return (
-    <div className="settings-content space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-chinese">系統設定</h1>
-        <p className="text-gray-600 mt-2 font-chinese">配置系統參數和偏好設定</p>
-      </div>
-
-      <div className="glass p-8 rounded-2xl text-center">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4 font-chinese">
-          系統設定功能開發中
-        </h2>
-        <p className="text-gray-600 font-chinese">
-          此功能正在開發中，敬請期待...
-        </p>
-      </div>
+    <div className="settings-content">
+      {/* 設定頁面路由 */}
+      <Routes>
+        <Route index element={<SystemSettingsOverview />} />
+        <Route path="general" element={<GeneralSettings />} />
+        <Route path="security" element={<SecuritySettings />} />
+        <Route path="notifications" element={<NotificationSettings />} />
+        <Route path="payments" element={<PaymentSettings />} />
+        <Route path="shipping" element={<ShippingSettings />} />
+      </Routes>
     </div>
   );
 };
