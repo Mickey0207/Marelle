@@ -191,7 +191,7 @@ export default function Products() {
       </div>
       {showFilters && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-white/20 backdrop-blur-md" onClick={()=>setShowFilters(false)} />
+          <div className="absolute inset-0 bg-black/30" onClick={()=>setShowFilters(false)} />
           <div className="absolute top-0 left-0 h-full w-80 bg-white/90 backdrop-blur-sm border-r border-gray-200 p-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-4"><h3 className="font-semibold font-chinese text-primary-btn">篩選與搜尋</h3><button onClick={()=>setShowFilters(false)} className="btn-ghost font-chinese">關閉</button></div>
             <div className="mb-6"><label className="block text-sm font-medium mb-2 font-chinese text-lofi">排序</label><SortDropdown value={sortBy} onChange={setSortBy} /></div>
