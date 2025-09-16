@@ -117,7 +117,7 @@ const AdminDashboard = () => {
     if (path.startsWith('/admin/orders')) {
       return [
         { name: '訂單列表', href: '/admin/orders', icon: ClipboardDocumentListIcon },
-        { name: '訂單統計', href: '/admin/orders/stats', icon: ChartBarIcon },
+        { name: '新增訂單', href: '/admin/orders/new', icon: PlusIcon },
       ];
     }
     
