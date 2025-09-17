@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { documentDataManager } from '../../data/documentDataManager';
 import SearchableSelect from '../../../components/SearchableSelect';
+import StandardTable from '../../../components/StandardTable';
 
 const SalesDocumentManagement = () => {
   const [documents, setDocuments] = useState([]);
@@ -421,98 +422,95 @@ const SalesDocumentManagement = () => {
       </div>
 
       {/* 單據列表 */}
-      <div className="glass rounded-2xl overflow-visible">
-        <div className="overflow-x-auto overflow-y-visible">
-          <div className="p-6 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900 font-chinese">
-              銷售單據列表 ({filteredDocuments.length})
-            </h3>
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 font-chinese">
-              <Download className="w-4 h-4" />
-              匯出
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  單據編號
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  類型
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  客戶
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  金額
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  狀態
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  日期
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredDocuments.slice(0, 20).map((doc) => (
-                <tr key={doc.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 font-chinese">
-                    {doc.documentNumber}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-chinese">
-                    {getTypeDisplayName(doc.type)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-chinese">
-                    {doc.partnerName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-chinese">
-                    {formatCurrency(doc.totalAmount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(doc.status)} font-chinese`}>
-                      {getStatusDisplayName(doc.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-chinese">
-                    {formatDate(doc.documentDate)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-900 transition-colors">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="text-green-600 hover:text-green-900 transition-colors">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredDocuments.length === 0 && (
-          <div className="text-center py-12">
-            <ShoppingCart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2 font-chinese">沒有找到銷售單據</h3>
-            <p className="text-gray-500 font-chinese">請調整搜尋條件或新增第一個銷售單據</p>
-          </div>
-        )}
-        </div>
-      </div>
+      <StandardTable
+        data={filteredDocuments.slice(0, 20)}
+        columns={[
+          {
+            key: 'documentNumber',
+            label: '單據編號',
+            sortable: true,
+            render: (_, doc) => (
+              <span className="text-sm font-medium text-gray-900 font-chinese">
+                {doc.documentNumber}
+              </span>
+            )
+          },
+          {
+            key: 'type',
+            label: '類型',
+            sortable: true,
+            render: (_, doc) => (
+              <span className="text-sm text-gray-500 font-chinese">
+                {getTypeDisplayName(doc.type)}
+              </span>
+            )
+          },
+          {
+            key: 'partnerName',
+            label: '客戶',
+            sortable: true,
+            render: (_, doc) => (
+              <span className="text-sm text-gray-900 font-chinese">
+                {doc.partnerName}
+              </span>
+            )
+          },
+          {
+            key: 'totalAmount',
+            label: '金額',
+            sortable: true,
+            render: (_, doc) => (
+              <span className="text-sm text-gray-900 font-chinese">
+                {formatCurrency(doc.totalAmount)}
+              </span>
+            )
+          },
+          {
+            key: 'status',
+            label: '狀態',
+            sortable: true,
+            render: (_, doc) => (
+              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(doc.status)} font-chinese`}>
+                {getStatusDisplayName(doc.status)}
+              </span>
+            )
+          },
+          {
+            key: 'documentDate',
+            label: '日期',
+            sortable: true,
+            render: (_, doc) => (
+              <span className="text-sm text-gray-500 font-chinese">
+                {formatDate(doc.documentDate)}
+              </span>
+            )
+          },
+          {
+            key: 'actions',
+            label: '操作',
+            render: (_, doc) => (
+              <div className="flex items-center gap-2">
+                <button className="text-blue-600 hover:text-blue-900 transition-colors">
+                  <Eye className="w-4 h-4" />
+                </button>
+                <button className="text-green-600 hover:text-green-900 transition-colors">
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button className="text-red-600 hover:text-red-900 transition-colors">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )
+          }
+        ]}
+        emptyMessage="沒有找到銷售單據，請調整搜尋條件或新增第一個銷售單據"
+        exportFileName="sales_documents"
+        customHeader={
+          <h3 className="text-lg font-semibold text-gray-900 font-chinese mb-4">
+            銷售單據列表 ({filteredDocuments.length})
+          </h3>
+        }
+      />
     </div>
   );
 };

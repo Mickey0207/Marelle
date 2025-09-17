@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StandardTable from '../components/StandardTable';
 import { 
   UsersIcon, 
   UserGroupIcon, 
@@ -20,6 +21,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { adminDataManager } from '../data/adminDataManager.js';
 import { ADMIN_PERMISSIONS, MODULE_NAMES, OPERATION_NAMES, validatePassword } from '../data/adminConfig.js';
+import { ADMIN_STYLES, getStatusColor } from '../styles/adminStyles';
 import CustomSelect from '../components/CustomSelect.jsx';
 
 const AdminManagement = () => {

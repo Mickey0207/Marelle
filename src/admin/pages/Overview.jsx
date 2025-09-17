@@ -9,23 +9,15 @@ import {
   ArrowTrendingDownIcon
 } from '@heroicons/react/24/outline';
 import { mockProducts, formatPrice } from '../../utils/data';
+import { ADMIN_STYLES, GSAP_ANIMATIONS } from '../styles/adminStyles';
 
 const AdminOverview = () => {
   useEffect(() => {
-    // Animate cards on load
+    // Animate cards on load using unified animation config
     gsap.fromTo(
       '.stat-card',
-      {
-        opacity: 0,
-        y: 30,
-      },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        stagger: 0.1,
-        ease: 'power2.out',
-      }
+      GSAP_ANIMATIONS.cardStagger.from,
+      GSAP_ANIMATIONS.cardStagger.to
     );
   }, []);
 
@@ -95,11 +87,11 @@ const AdminOverview = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className={ADMIN_STYLES.sectionSpacing}>
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 font-chinese">儀表板總覽</h1>
-        <p className="text-gray-600 mt-2 font-chinese">
+        <h1 className={ADMIN_STYLES.pageTitle}>儀表板總覽</h1>
+        <p className={ADMIN_STYLES.pageSubtitle}>
           今天是 {new Date().toLocaleDateString('zh-TW', { 
             year: 'numeric', 
             month: 'long', 
@@ -110,9 +102,9 @@ const AdminOverview = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className={ADMIN_STYLES.gridCols4}>
         {stats.map((stat, index) => (
-          <div key={stat.name} className="stat-card glass p-6 rounded-2xl">
+          <div key={stat.name} className={ADMIN_STYLES.statCard}>
             <div className="flex items-center">
               <div className={`p-3 rounded-lg bg-gray-50 ${stat.color}`}>
                 <stat.icon className="w-6 h-6" />
@@ -142,12 +134,12 @@ const AdminOverview = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className={ADMIN_STYLES.gridCols2}>
         {/* Recent Orders */}
-        <div className="glass p-6 rounded-2xl">
+        <div className={ADMIN_STYLES.glassCard}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900 font-chinese">最近訂單</h2>
-            <button className="btn-ghost text-sm font-chinese">查看全部</button>
+            <h2 className={ADMIN_STYLES.sectionTitle}>最近訂單</h2>
+            <button className={ADMIN_STYLES.btnGhost}>查看全部</button>
           </div>
           <div className="space-y-4">
             {recentOrders.map((order) => (
@@ -173,10 +165,10 @@ const AdminOverview = () => {
         </div>
 
         {/* Top Products */}
-        <div className="glass p-6 rounded-2xl">
+        <div className={ADMIN_STYLES.glassCard}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900 font-chinese">熱銷商品</h2>
-            <button className="btn-ghost text-sm font-chinese">查看全部</button>
+            <h2 className={ADMIN_STYLES.sectionTitle}>熱銷商品</h2>
+            <button className={ADMIN_STYLES.btnGhost}>查看全部</button>
           </div>
           <div className="space-y-4">
             {topProducts.map((product, index) => (

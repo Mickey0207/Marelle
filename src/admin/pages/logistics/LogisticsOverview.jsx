@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StandardTable from '../../components/StandardTable';
 import logisticsDataManager, { LogisticsStatus, LogisticsType } from '../../data/logisticsDataManager';
 
 const LogisticsOverview = () => {
@@ -156,6 +157,75 @@ const LogisticsOverview = () => {
       )}
     </div>
   );
+
+  // 定義表格列配置
+  const columns = [
+    {
+      key: 'orderNumber',
+      label: '訂單編號',
+      sortable: true,
+      render: (_, shipment) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{shipment?.orderNumber || 'N/A'}</div>
+          <div className="text-sm text-gray-500">{shipment?.trackingNumber || 'N/A'}</div>
+        </div>
+      )
+    },
+    {
+      key: 'receiverInfo',
+      label: '收件人',
+      sortable: true,
+      render: (_, shipment) => (
+        <div>
+          <div className="text-sm text-gray-900">{shipment?.receiverInfo?.name || 'N/A'}</div>
+          <div className="text-sm text-gray-500">{shipment?.receiverInfo?.phone || 'N/A'}</div>
+        </div>
+      )
+    },
+    {
+      key: 'logisticsType',
+      label: '配送方式',
+      sortable: true,
+      render: (_, shipment) => (
+        <span className="text-sm text-gray-900">
+          {getLogisticsTypeDisplayName(shipment?.logisticsType)}
+        </span>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (_, shipment) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(shipment?.status)}`}>
+          {getStatusDisplayName(shipment?.status)}
+        </span>
+      )
+    },
+    {
+      key: 'estimatedDelivery',
+      label: '預計送達',
+      sortable: true,
+      render: (shipment) => (
+        <span className="text-sm text-gray-900">
+          {shipment.estimatedDelivery ? 
+            new Date(shipment.estimatedDelivery).toLocaleDateString('zh-TW') : 
+            '-'
+          }
+        </span>
+      )
+    },
+    {
+      key: 'shippingFee',
+      label: '運費',
+      sortable: true,
+      render: (_, shipment) => (
+        <span className="text-sm text-gray-900">
+          {formatCurrency(shipment?.shippingFee || 0)}
+        </span>
+      )
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-[#fdf8f2] p-6">
@@ -325,65 +395,12 @@ const LogisticsOverview = () => {
             </button>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    訂單編號
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    收件人
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    配送方式
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    狀態
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    預計送達
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    運費
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {recentShipments.map((shipment) => (
-                  <tr key={shipment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{shipment.orderNumber}</div>
-                      <div className="text-sm text-gray-500">{shipment.trackingNumber}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{shipment.receiverInfo.name}</div>
-                      <div className="text-sm text-gray-500">{shipment.receiverInfo.phone}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900">
-                        {getLogisticsTypeDisplayName(shipment.logisticsType)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(shipment.status)}`}>
-                        {getStatusDisplayName(shipment.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {shipment.estimatedDelivery ? 
-                        new Date(shipment.estimatedDelivery).toLocaleDateString('zh-TW') : 
-                        '-'
-                      }
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(shipment.shippingFee)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <StandardTable
+            data={recentShipments}
+            columns={columns}
+            emptyMessage="暫無配送單"
+            emptyDescription="目前沒有任何配送記錄"
+          />
         </div>
 
         {/* 物流方式分佈 */}

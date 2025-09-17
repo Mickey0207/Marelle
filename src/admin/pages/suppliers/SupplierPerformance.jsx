@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StandardTable from '../../components/StandardTable';
 import supplierDataManager, { SupplierGrade } from '../../data/supplierDataManager';
 import {
   ChartBarIcon,
@@ -146,6 +147,111 @@ const SupplierPerformance = () => {
     }
     return 'text-gray-600';
   };
+
+  // 定義表格列配置
+  const columns = [
+    {
+      key: 'supplier',
+      label: selectedSupplier ? '評估期間' : '供應商',
+      sortable: true,
+      render: (performance) => (
+        selectedSupplier ? (
+          <div>
+            <div className="text-sm font-medium text-gray-900">
+              {performance.evaluationPeriod?.start} ~ {performance.evaluationPeriod?.end}
+            </div>
+            <div className="text-xs text-gray-500">
+              {performance.evaluationType === 'quarterly' ? '季度評估' : '年度評估'}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="text-sm font-medium text-gray-900">
+              {performance.supplierName}
+            </div>
+            <div className="text-xs text-gray-500">
+              {getGradeBadge(performance.supplierGrade)}
+            </div>
+          </div>
+        )
+      )
+    },
+    {
+      key: 'overallRating',
+      label: '總體評分',
+      sortable: true,
+      render: (performance) => (
+        <div className="flex items-center space-x-2">
+          {renderStarRating(performance.overallRating)}
+        </div>
+      )
+    },
+    {
+      key: 'qualityScore',
+      label: '品質評分',
+      sortable: true,
+      render: (performance) => (
+        <span className={`text-sm font-medium ${getPerformanceColor(performance.qualityScore)}`}>
+          {performance.qualityScore.toFixed(1)}
+        </span>
+      )
+    },
+    {
+      key: 'deliveryScore',
+      label: '交期評分',
+      sortable: true,
+      render: (performance) => (
+        <span className={`text-sm font-medium ${getPerformanceColor(performance.deliveryScore)}`}>
+          {performance.deliveryScore.toFixed(1)}
+        </span>
+      )
+    },
+    {
+      key: 'serviceScore',
+      label: '服務評分',
+      sortable: true,
+      render: (performance) => (
+        <span className={`text-sm font-medium ${getPerformanceColor(performance.serviceScore)}`}>
+          {performance.serviceScore.toFixed(1)}
+        </span>
+      )
+    },
+    {
+      key: 'onTimeDeliveryRate',
+      label: '準時交貨率',
+      sortable: true,
+      render: (performance) => (
+        <span className={`text-sm font-medium ${getPerformanceColor(performance.onTimeDeliveryRate, 'percentage')}`}>
+          {performance.onTimeDeliveryRate.toFixed(1)}%
+        </span>
+      )
+    },
+    {
+      key: 'qualityPassRate',
+      label: '品質合格率',
+      sortable: true,
+      render: (performance) => (
+        <span className={`text-sm font-medium ${getPerformanceColor(performance.qualityPassRate, 'percentage')}`}>
+          {performance.qualityPassRate.toFixed(1)}%
+        </span>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (performance) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          performance.status === 'completed' ? 'bg-green-100 text-green-800' : 
+          performance.status === 'approved' ? 'bg-blue-100 text-blue-800' : 
+          'bg-yellow-100 text-yellow-800'
+        }`}>
+          {performance.status === 'completed' ? '已完成' : 
+           performance.status === 'approved' ? '已核准' : '進行中'}
+        </span>
+      )
+    }
+  ];
 
   return (
     <div className="bg-[#fdf8f2] min-h-screen p-6">
@@ -307,115 +413,13 @@ const SupplierPerformance = () => {
 
       {/* 績效表格 */}
       <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50/80">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {selectedSupplier ? '評估期間' : '供應商'}
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  總體評分
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  品質評分
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  交期評分
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  服務評分
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  準時交貨率
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  品質合格率
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  狀態
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white/50 divide-y divide-gray-200">
-              {performanceData.map((performance, index) => (
-                <tr key={performance.id || index} className="hover:bg-gray-50/80 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {selectedSupplier ? (
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {performance.evaluationPeriod?.start} ~ {performance.evaluationPeriod?.end}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {performance.evaluationType === 'quarterly' ? '季度評估' : '年度評估'}
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {performance.supplierName}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {getGradeBadge(performance.supplierGrade)}
-                        </div>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      {renderStarRating(performance.overallRating)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-medium ${getPerformanceColor(performance.qualityScore)}`}>
-                      {performance.qualityScore.toFixed(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-medium ${getPerformanceColor(performance.deliveryScore)}`}>
-                      {performance.deliveryScore.toFixed(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-medium ${getPerformanceColor(performance.serviceScore)}`}>
-                      {performance.serviceScore.toFixed(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-medium ${getPerformanceColor(performance.onTimeDeliveryRate, 'percentage')}`}>
-                      {performance.onTimeDeliveryRate.toFixed(1)}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-medium ${getPerformanceColor(performance.qualityPassRate, 'percentage')}`}>
-                      {performance.qualityPassRate.toFixed(1)}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      performance.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                      performance.status === 'approved' ? 'bg-blue-100 text-blue-800' : 
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {performance.status === 'completed' ? '已完成' : 
-                       performance.status === 'approved' ? '已核准' : '進行中'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {performanceData.length === 0 && (
-          <div className="text-center py-12">
-            <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">沒有績效評估資料</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {selectedSupplier ? '此供應商尚無績效評估記錄' : '系統中暫無績效評估資料'}
-            </p>
-          </div>
-        )}
+        <StandardTable
+          data={performanceData}
+          columns={columns}
+          emptyMessage="沒有績效評估資料"
+          emptyDescription={selectedSupplier ? '此供應商尚無績效評估記錄' : '系統中暫無績效評估資料'}
+          emptyIcon={ChartBarIcon}
+        />
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import StandardTable from '../components/StandardTable';
 import { 
   BellIcon,
   MagnifyingGlassIcon,
@@ -106,6 +107,32 @@ const NotificationManagement = () => {
   
   // 分析頁面狀態
   const [analyticsTimeRange, setAnalyticsTimeRange] = useState('7d');
+
+  // 格式化觸發條件的輔助函數
+  const formatCondition = (condition) => {
+    const operatorMap = {
+      'equals': '等於',
+      'not_equals': '不等於',
+      'greater_than': '大於',
+      'less_than': '小於',
+      'contains': '包含',
+      'not_contains': '不包含'
+    };
+    return `${condition.field} ${operatorMap[condition.operator] || condition.operator} ${condition.value}`;
+  };
+
+  // 獲取渠道圖標的輔助函數
+  const getChannelIcon = (channel) => {
+    const channelConfig = {
+      'email_html': '📧',
+      'email_text': '📧',
+      'sms': '💬',
+      'line_text': '💬',
+      'line_flex': '💬',
+      'push_web': '🌐'
+    };
+    return channelConfig[channel] || '📤';
+  };
 
   // 篩選和排序數據
   const filteredData = useMemo(() => {
@@ -248,6 +275,464 @@ const NotificationManagement = () => {
     }
   };
 
+  // 定義通知範本表格列
+  const templateColumns = [
+    {
+      key: 'name',
+      label: '範本名稱',
+      sortable: true,
+      render: (_, template) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{template.name}</div>
+          <div className="text-xs text-gray-500">{template.subject}</div>
+        </div>
+      )
+    },
+    {
+      key: 'category',
+      label: '分類',
+      sortable: true,
+      render: (_, template) => getCategoryBadge(template.category)
+    },
+    {
+      key: 'trigger',
+      label: '觸發條件',
+      sortable: false,
+      render: (_, template) => (
+        <div className="text-sm text-gray-700">
+          {template.trigger}
+        </div>
+      )
+    },
+    {
+      key: 'channels',
+      label: '通知渠道',
+      sortable: false,
+      render: (_, template) => (
+        <div className="flex flex-wrap gap-1">
+          {getChannelIcons(template.channels)}
+        </div>
+      )
+    },
+    {
+      key: 'priority',
+      label: '優先級',
+      sortable: true,
+      render: (_, template) => getPriorityBadge(template.priority)
+    },
+    {
+      key: 'usageCount',
+      label: '使用次數',
+      sortable: true,
+      render: (_, template) => (
+        <div className="text-sm text-gray-900">
+          {template.usageCount?.toLocaleString() || 0}
+        </div>
+      )
+    },
+    {
+      key: 'successRate',
+      label: '成功率',
+      sortable: true,
+      render: (_, template) => (
+        <div className="text-sm text-gray-900">
+          {(template.successRate * 100).toFixed(1)}%
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (_, template) => getStatusBadge(template.status)
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (_, template) => (
+        <div className="flex items-center space-x-2">
+          <button className="text-blue-600 hover:text-blue-900">
+            <EyeIcon className="w-4 h-4" />
+          </button>
+          <button className="text-green-600 hover:text-green-900">
+            <PencilIcon className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => setTestingTemplate(template)}
+            className="text-purple-600 hover:text-purple-900"
+          >
+            <PlayIcon className="w-4 h-4" />
+          </button>
+          <button className="text-red-600 hover:text-red-900">
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  // 觸發器管理欄位配置
+  const triggerColumns = [
+    {
+      key: 'name',
+      label: '觸發器名稱',
+      sortable: true,
+      render: (_, trigger) => (
+        <div>
+          <div className="font-medium text-gray-900">{trigger.name}</div>
+          <div className="text-sm text-gray-500">{trigger.description}</div>
+        </div>
+      )
+    },
+    {
+      key: 'category',
+      label: '分類',
+      sortable: true,
+      render: (_, trigger) => getCategoryBadge(trigger.category)
+    },
+    {
+      key: 'conditions',
+      label: '觸發條件',
+      sortable: false,
+      render: (_, trigger) => (
+        <div className="space-y-1">
+          {trigger.conditions.map((condition, idx) => (
+            <div key={idx} className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+              {formatCondition(condition)}
+            </div>
+          ))}
+        </div>
+      )
+    },
+    {
+      key: 'templates',
+      label: '關聯範本',
+      sortable: false,
+      render: (_, trigger) => (
+        <div className="space-y-1">
+          {trigger.templates.map((template, idx) => (
+            <span key={idx} className="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded mr-1">
+              {template}
+            </span>
+          ))}
+        </div>
+      )
+    },
+    {
+      key: 'triggerCount',
+      label: '觸發次數',
+      sortable: true,
+      render: (_, trigger) => (
+        <div className="text-center">
+          <div className="font-bold text-gray-900">{trigger.triggerCount}</div>
+          <div className="text-xs text-gray-500">{trigger.lastTriggered}</div>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (_, trigger) => getStatusBadge(trigger.status)
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (_, trigger) => (
+        <div className="flex items-center space-x-2">
+          <button className="text-blue-600 hover:text-blue-900">
+            <EyeIcon className="w-4 h-4" />
+          </button>
+          <button className="text-green-600 hover:text-green-900">
+            <PencilIcon className="w-4 h-4" />
+          </button>
+          <button className="text-purple-600 hover:text-purple-900">
+            <PlayIcon className="w-4 h-4" />
+          </button>
+          <button className="text-red-600 hover:text-red-900">
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  // 通知歷史欄位配置
+  const historyColumns = [
+    {
+      key: 'id',
+      label: '通知ID',
+      sortable: true,
+      render: (_, item) => (
+        <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+          {item.id}
+        </code>
+      )
+    },
+    {
+      key: 'templateName',
+      label: '範本',
+      sortable: true,
+      render: (_, item) => (
+        <div>
+          <div className="font-medium text-gray-900">{item.templateName}</div>
+          <div className="text-sm text-gray-500 truncate max-w-xs">
+            {item.subject}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'recipient',
+      label: '收件人',
+      sortable: false,
+      render: (_, item) => (
+        <div className="text-sm font-mono text-gray-900">{item.recipient}</div>
+      )
+    },
+    {
+      key: 'channel',
+      label: '渠道',
+      sortable: true,
+      render: (_, item) => {
+        const channelConfig = {
+          'email_html': { icon: '📧', name: 'Email' },
+          'email_text': { icon: '📧', name: 'Email' },
+          'sms': { icon: '💬', name: 'SMS' },
+          'line_text': { icon: '💬', name: 'LINE' },
+          'line_flex': { icon: '💬', name: 'LINE' },
+          'push_app': { icon: '📱', name: 'App推播' },
+          'push_web': { icon: '🌐', name: '網頁推播' }
+        };
+        const config = channelConfig[item.channel] || { icon: '📤', name: '未知' };
+        return (
+          <span className="inline-flex items-center px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
+            {config.icon} {config.name}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (_, item) => {
+        const statusConfig = {
+          'pending': { bg: 'bg-yellow-100', text: 'text-yellow-700', label: '發送中' },
+          'delivered': { bg: 'bg-green-100', text: 'text-green-700', label: '已送達' },
+          'failed': { bg: 'bg-red-100', text: 'text-red-700', label: '失敗' },
+          'bounced': { bg: 'bg-orange-100', text: 'text-orange-700', label: '退回' }
+        };
+        const config = statusConfig[item.status] || statusConfig['pending'];
+        return (
+          <div>
+            <span className={`inline-flex items-center px-2 py-1 text-xs font-bold rounded ${config.bg} ${config.text}`}>
+              {config.label}
+            </span>
+            {item.errorMessage && (
+              <div className="text-xs text-red-500 mt-1">
+                {item.errorMessage}
+              </div>
+            )}
+          </div>
+        );
+      }
+    },
+    {
+      key: 'sentAt',
+      label: '發送時間',
+      sortable: true,
+      render: (_, item) => (
+        <div>
+          <div className="text-sm text-gray-900">{item.sentAt}</div>
+          {item.deliveredAt && (
+            <div className="text-xs text-gray-500">送達: {item.deliveredAt}</div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'interaction',
+      label: '互動',
+      sortable: false,
+      render: (_, item) => (
+        <div className="space-y-1">
+          {item.openedAt && (
+            <div className="text-xs text-blue-600">開啟: {item.openedAt}</div>
+          )}
+          {item.clickedAt && (
+            <div className="text-xs text-purple-600">點擊: {item.clickedAt}</div>
+          )}
+          {!item.openedAt && !item.clickedAt && (
+            <div className="text-xs text-gray-400">無互動</div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (_, item) => (
+        <div className="flex items-center space-x-2">
+          <button className="text-blue-600 hover:text-blue-900">
+            <EyeIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  // 渠道效果分析欄位配置
+  const channelAnalyticsColumns = [
+    {
+      key: 'channel',
+      label: '渠道',
+      sortable: true,
+      render: (_, channel) => (
+        <div className="flex items-center">
+          <span className="text-lg mr-2">{getChannelIcon(channel.channel)}</span>
+          <span className="font-medium text-gray-900">{channel.name}</span>
+        </div>
+      )
+    },
+    {
+      key: 'sent',
+      label: '發送數',
+      sortable: true,
+      render: (_, channel) => (
+        <div className="text-center text-gray-900">{channel.sent.toLocaleString()}</div>
+      )
+    },
+    {
+      key: 'deliveryRate',
+      label: '送達率',
+      sortable: true,
+      render: (_, channel) => (
+        <div className="text-center">
+          <span className={`font-bold ${getPerformanceColor(channel.deliveryRate, 'delivery')}`}>
+            {channel.deliveryRate}%
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'openRate',
+      label: '開啟率',
+      sortable: true,
+      render: (_, channel) => (
+        <div className="text-center">
+          <span className={`font-bold ${getPerformanceColor(channel.openRate, 'open')}`}>
+            {channel.openRate}%
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'clickRate',
+      label: '點擊率',
+      sortable: true,
+      render: (_, channel) => (
+        <div className="text-center">
+          <span className={`font-bold ${getPerformanceColor(channel.clickRate, 'click')}`}>
+            {channel.clickRate}%
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'performance',
+      label: '效果評級',
+      sortable: true,
+      render: (_, channel) => {
+        const overallScore = (channel.deliveryRate * 0.3 + channel.openRate * 0.4 + channel.clickRate * 0.3);
+        const grade = overallScore >= 80 ? '優秀' : overallScore >= 60 ? '良好' : overallScore >= 40 ? '普通' : '需改善';
+        const gradeColor = overallScore >= 80 ? 'text-green-600' : overallScore >= 60 ? 'text-blue-600' : overallScore >= 40 ? 'text-yellow-600' : 'text-red-600';
+        return (
+          <div className="text-center">
+            <span className={`font-bold ${gradeColor}`}>{grade}</span>
+          </div>
+        );
+      }
+    }
+  ];
+
+  // 範本效果分析欄位配置
+  const templateAnalyticsColumns = [
+    {
+      key: 'template',
+      label: '範本名稱',
+      sortable: true,
+      render: (_, template) => (
+        <span className="font-medium text-gray-900">{template.template}</span>
+      )
+    },
+    {
+      key: 'sent',
+      label: '發送數',
+      sortable: true,
+      render: (_, template) => (
+        <div className="text-center text-gray-900">{template.sent.toLocaleString()}</div>
+      )
+    },
+    {
+      key: 'deliveryRate',
+      label: '送達率',
+      sortable: true,
+      render: (_, template) => (
+        <div className="text-center">
+          <span className={`font-bold ${getPerformanceColor(template.deliveryRate, 'delivery')}`}>
+            {template.deliveryRate}%
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'openRate',
+      label: '開啟率',
+      sortable: true,
+      render: (_, template) => (
+        <div className="text-center">
+          <span className={`font-bold ${getPerformanceColor(template.openRate, 'open')}`}>
+            {template.openRate}%
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'clickRate',
+      label: '點擊率',
+      sortable: true,
+      render: (_, template) => (
+        <div className="text-center">
+          <span className={`font-bold ${getPerformanceColor(template.clickRate, 'click')}`}>
+            {template.clickRate}%
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'suggestion',
+      label: '建議',
+      sortable: false,
+      render: (_, template) => {
+        let suggestion = '';
+        if (template.deliveryRate < 95) suggestion = '優化發送設定';
+        else if (template.openRate < 20) suggestion = '改善主旨行';
+        else if (template.clickRate < 5) suggestion = '優化內容與CTA';
+        else suggestion = '表現良好';
+        
+        return (
+          <div className="text-center">
+            <span className="text-sm text-gray-600">{suggestion}</span>
+          </div>
+        );
+      }
+    }
+  ];
+
   const renderTemplatesTab = () => (
     <>
       {/* 篩選區域 */}
@@ -293,66 +778,14 @@ const NotificationManagement = () => {
       </div>
 
       {/* 主要範本表格 */}
-      <div className="glass rounded-2xl overflow-visible">
-        <div className="overflow-x-auto overflow-y-visible">{/* 允許垂直溢出以顯示下拉選單 */}
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-[#cc824d] to-[#b3723f] text-white">
-              <tr>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('name')}>
-                  範本名稱 <SortIcon field="name" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">分類</th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">觸發條件</th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">通知渠道</th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">優先級</th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('usageCount')}>
-                  使用次數 <SortIcon field="usageCount" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('successRate')}>
-                  成功率 <SortIcon field="successRate" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">狀態</th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredData.map(template => (
-                <tr key={template.id} className="hover:bg-white/30">
-                  <td className="px-4 py-3">
-                    <div>
-                      <div className="font-medium font-chinese">{template.name}</div>
-                      <div className="text-sm text-gray-500 font-chinese">{template.description}</div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">{getCategoryBadge(template.category)}</td>
-                  <td className="px-4 py-3 font-chinese">{template.trigger}</td>
-                  <td className="px-4 py-3">{getChannelIcons(template.channels)}</td>
-                  <td className="px-4 py-3">{getPriorityBadge(template.priority)}</td>
-                  <td className="px-4 py-3 text-center">{template.usageCount}</td>
-                  <td className="px-4 py-3 text-center font-bold text-green-600">{template.successRate}%</td>
-                  <td className="px-4 py-3">{getStatusBadge(template.status)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex space-x-2">
-                      <button className="p-1 text-blue-600 hover:bg-blue-100 rounded" title="查看詳情">
-                        <EyeIcon className="w-4 h-4" />
-                      </button>
-                      <button className="p-1 text-green-600 hover:bg-green-100 rounded" title="編輯">
-                        <PencilIcon className="w-4 h-4" />
-                      </button>
-                      <button className="p-1 text-purple-600 hover:bg-purple-100 rounded" title="測試發送">
-                        <PlayIcon className="w-4 h-4" />
-                      </button>
-                      <button className="p-1 text-red-600 hover:bg-red-100 rounded" title="刪除">
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <StandardTable
+        data={filteredData}
+        columns={templateColumns}
+        title="通知範本"
+        emptyMessage="沒有找到通知範本"
+        emptyDescription="請調整篩選條件或建立新的通知範本"
+        emptyIcon={BellIcon}
+      />
     </>
   );
 
@@ -614,18 +1047,6 @@ const NotificationManagement = () => {
       );
     };
 
-    const formatCondition = (condition) => {
-      const operatorMap = {
-        'equals': '等於',
-        'not_equals': '不等於',
-        'greater_than': '大於',
-        'less_than': '小於',
-        'contains': '包含',
-        'not_contains': '不包含'
-      };
-      return `${condition.field} ${operatorMap[condition.operator] || condition.operator} ${condition.value}`;
-    };
-
     return (
       <div className="space-y-6">
         <div className="glass rounded-2xl p-6">
@@ -668,75 +1089,14 @@ const NotificationManagement = () => {
           </div>
         </div>
 
-        <div className="glass rounded-2xl overflow-visible">
-          <div className="overflow-x-auto overflow-y-visible">{/* 允許垂直溢出以顯示下拉選單 */}
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-[#cc824d] to-[#b3723f] text-white">
-                <tr>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">觸發器名稱</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">分類</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">觸發條件</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">關聯範本</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">觸發次數</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">狀態</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {triggers.map(trigger => (
-                  <tr key={trigger.id} className="hover:bg-white/30">
-                    <td className="px-4 py-3">
-                      <div>
-                        <div className="font-medium font-chinese">{trigger.name}</div>
-                        <div className="text-sm text-gray-500 font-chinese">{trigger.description}</div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">{getCategoryBadge(trigger.category)}</td>
-                    <td className="px-4 py-3">
-                      <div className="space-y-1">
-                        {trigger.conditions.map((condition, idx) => (
-                          <div key={idx} className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
-                            {formatCondition(condition)}
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="space-y-1">
-                        {trigger.templates.map((template, idx) => (
-                          <span key={idx} className="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded font-chinese mr-1">
-                            {template}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="font-bold">{trigger.triggerCount}</div>
-                      <div className="text-xs text-gray-500">{trigger.lastTriggered}</div>
-                    </td>
-                    <td className="px-4 py-3">{getStatusBadge(trigger.status)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex space-x-2">
-                        <button className="p-1 text-blue-600 hover:bg-blue-100 rounded" title="查看詳情">
-                          <EyeIcon className="w-4 h-4" />
-                        </button>
-                        <button className="p-1 text-green-600 hover:bg-green-100 rounded" title="編輯">
-                          <PencilIcon className="w-4 h-4" />
-                        </button>
-                        <button className="p-1 text-purple-600 hover:bg-purple-100 rounded" title="手動觸發">
-                          <PlayIcon className="w-4 h-4" />
-                        </button>
-                        <button className="p-1 text-red-600 hover:bg-red-100 rounded" title="刪除">
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <StandardTable
+          data={triggers}
+          columns={triggerColumns}
+          title="觸發器管理"
+          emptyMessage="沒有找到觸發器"
+          emptyDescription="請建立新的觸發器以自動發送通知"
+          emptyIcon={BellIcon}
+        />
       </div>
     );
   };
@@ -1217,88 +1577,14 @@ const NotificationManagement = () => {
           </div>
         </div>
 
-        <div className="glass rounded-2xl overflow-visible">
-          <div className="overflow-x-auto overflow-y-visible">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-[#cc824d] to-[#b3723f] text-white">
-                <tr>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">通知ID</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">範本</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">收件人</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">渠道</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">狀態</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">發送時間</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">互動</th>
-                  <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredHistory.map(item => (
-                  <tr key={item.id} className="hover:bg-white/30">
-                    <td className="px-4 py-3">
-                      <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                        {item.id}
-                      </code>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <div className="font-medium font-chinese">{item.templateName}</div>
-                        <div className="text-sm text-gray-500 font-chinese truncate max-w-xs">
-                          {item.subject}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm font-mono">{item.recipient}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {getChannelBadge(item.channel)}
-                    </td>
-                    <td className="px-4 py-3">
-                      {getStatusBadge(item.status)}
-                      {item.errorMessage && (
-                        <div className="text-xs text-red-500 mt-1 font-chinese">
-                          {item.errorMessage}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">{item.sentAt}</div>
-                      {item.deliveredAt && (
-                        <div className="text-xs text-gray-500">送達: {item.deliveredAt}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="space-y-1">
-                        {item.openedAt && (
-                          <div className="text-xs text-blue-600">開啟: {item.openedAt}</div>
-                        )}
-                        {item.clickedAt && (
-                          <div className="text-xs text-purple-600">點擊: {item.clickedAt}</div>
-                        )}
-                        {!item.openedAt && !item.clickedAt && item.status === 'delivered' && (
-                          <div className="text-xs text-gray-400">無互動</div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex space-x-2">
-                        <button className="p-1 text-blue-600 hover:bg-blue-100 rounded" title="查看詳情">
-                          <EyeIcon className="w-4 h-4" />
-                        </button>
-                        {item.status === 'failed' && (
-                          <button className="p-1 text-green-600 hover:bg-green-100 rounded" title="重新發送">
-                            <PlayIcon className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <StandardTable
+          data={filteredHistory}
+          columns={historyColumns}
+          title="通知歷史記錄"
+          emptyMessage="沒有找到通知記錄"
+          emptyDescription="調整篩選條件以查看相關記錄"
+          emptyIcon={BellIcon}
+        />
       </div>
     );
   };
@@ -1347,18 +1633,6 @@ const NotificationManagement = () => {
         return rate >= 5 ? 'text-green-600' : rate >= 2 ? 'text-yellow-600' : 'text-red-600';
       }
       return 'text-gray-600';
-    };
-
-    const getChannelIcon = (channel) => {
-      const channelConfig = {
-        'email_html': '📧',
-        'email_text': '📧',
-        'sms': '💬',
-        'line_text': '💬',
-        'line_flex': '💬',
-        'push_web': '🌐'
-      };
-      return channelConfig[channel] || '📤';
     };
 
     return (
@@ -1411,119 +1685,24 @@ const NotificationManagement = () => {
         </div>
 
         {/* 渠道效果分析 */}
-        <div className="glass rounded-2xl overflow-visible">
-          <div className="bg-gradient-to-r from-[#cc824d] to-[#b3723f] text-white px-6 py-4">
-            <h4 className="text-lg font-bold font-chinese">渠道效果分析</h4>
-          </div>
-          <div className="overflow-x-auto overflow-y-visible">{/* 允許垂直溢出以顯示下拉選單 */}
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">渠道</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">發送數</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">送達率</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">開啟率</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">點擊率</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">效果評級</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {analyticsData.channelPerformance.map(channel => {
-                  const overallScore = (channel.deliveryRate * 0.3 + channel.openRate * 0.4 + channel.clickRate * 0.3);
-                  const grade = overallScore >= 80 ? '優秀' : overallScore >= 60 ? '良好' : overallScore >= 40 ? '普通' : '需改善';
-                  const gradeColor = overallScore >= 80 ? 'text-green-600' : overallScore >= 60 ? 'text-blue-600' : overallScore >= 40 ? 'text-yellow-600' : 'text-red-600';
-                  
-                  return (
-                    <tr key={channel.channel} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className="text-lg mr-2">{getChannelIcon(channel.channel)}</span>
-                          <span className="font-medium font-chinese">{channel.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">{channel.sent.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`font-bold ${getPerformanceColor(channel.deliveryRate, 'delivery')}`}>
-                          {channel.deliveryRate}%
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`font-bold ${getPerformanceColor(channel.openRate, 'open')}`}>
-                          {channel.openRate}%
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`font-bold ${getPerformanceColor(channel.clickRate, 'click')}`}>
-                          {channel.clickRate}%
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`font-bold font-chinese ${gradeColor}`}>{grade}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <StandardTable
+          data={analyticsData.channelPerformance}
+          columns={channelAnalyticsColumns}
+          title="渠道效果分析"
+          emptyMessage="沒有渠道效果數據"
+          emptyDescription="請先配置並使用通知渠道"
+          emptyIcon={BellIcon}
+        />
 
         {/* 範本效果分析 */}
-        <div className="glass rounded-2xl overflow-visible">
-          <div className="bg-gradient-to-r from-[#cc824d] to-[#b3723f] text-white px-6 py-4">
-            <h4 className="text-lg font-bold font-chinese">範本效果分析</h4>
-          </div>
-          <div className="overflow-x-auto overflow-y-visible">{/* 允許垂直溢出以顯示下拉選單 */}
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">範本名稱</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">發送數</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">送達率</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">開啟率</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">點擊率</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">建議</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {analyticsData.templatePerformance.map(template => {
-                  let suggestion = '';
-                  if (template.deliveryRate < 95) suggestion = '優化發送設定';
-                  else if (template.openRate < 20) suggestion = '改善主旨行';
-                  else if (template.clickRate < 5) suggestion = '優化內容與CTA';
-                  else suggestion = '表現良好';
-                  
-                  return (
-                    <tr key={template.template} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <span className="font-medium font-chinese">{template.template}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">{template.sent.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`font-bold ${getPerformanceColor(template.deliveryRate, 'delivery')}`}>
-                          {template.deliveryRate}%
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`font-bold ${getPerformanceColor(template.openRate, 'open')}`}>
-                          {template.openRate}%
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className={`font-bold ${getPerformanceColor(template.clickRate, 'click')}`}>
-                          {template.clickRate}%
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <span className="text-sm text-gray-600 font-chinese">{suggestion}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <StandardTable
+          data={analyticsData.templatePerformance}
+          columns={templateAnalyticsColumns}
+          title="範本效果分析"
+          emptyMessage="沒有範本效果數據"
+          emptyDescription="請先使用通知範本發送通知"
+          emptyIcon={BellIcon}
+        />
 
         {/* 趨勢圖表（簡化顯示） */}
         <div className="glass rounded-2xl p-6">

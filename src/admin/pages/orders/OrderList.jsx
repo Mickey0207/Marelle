@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import StandardTable from '../../components/StandardTable';
 import orderDataManager, { 
   OrderStatus, 
   PaymentStatus, 
@@ -36,7 +37,6 @@ const OrderList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [statistics, setStatistics] = useState({});
   const [selectedOrders, setSelectedOrders] = useState([]);
-  const [showBatchActions, setShowBatchActions] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -117,7 +117,6 @@ const OrderList = () => {
       if (result.success) {
         alert(`成功更新 ${result.results.successful.length} 個訂單`);
         setSelectedOrders([]);
-        setShowBatchActions(false);
         loadOrders();
         loadStatistics();
       } else {
@@ -132,7 +131,6 @@ const OrderList = () => {
         ? prev.filter(id => id !== orderId)
         : [...prev, orderId];
       
-      setShowBatchActions(newSelection.length > 0);
       return newSelection;
     });
   };
@@ -140,11 +138,9 @@ const OrderList = () => {
   const handleSelectAll = () => {
     if (selectedOrders.length === orders.length) {
       setSelectedOrders([]);
-      setShowBatchActions(false);
     } else {
       const allOrderIds = orders.map(order => order.id);
       setSelectedOrders(allOrderIds);
-      setShowBatchActions(true);
     }
   };
 
@@ -286,6 +282,107 @@ const OrderList = () => {
       minute: '2-digit'
     });
   };
+
+  // 定義表格列
+  const columns = [
+    {
+      key: 'orderInfo',
+      label: '訂單資訊',
+      sortable: true,
+      render: (_, order) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
+          <div className="text-sm text-gray-500">{order.customerName}</div>
+          <div className="text-xs text-gray-400">{formatDate(order.orderDate)}</div>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: '訂單狀態',
+      sortable: true,
+      render: (_, order) => getStatusBadge(order.status)
+    },
+    {
+      key: 'paymentStatus',
+      label: '付款狀態',
+      sortable: true,
+      render: (_, order) => getPaymentStatusBadge(order.paymentStatus)
+    },
+    {
+      key: 'totalAmount',
+      label: '訂單金額',
+      sortable: true,
+      render: (_, order) => (
+        <div className="text-sm font-medium text-gray-900">
+          {formatCurrency(order.totalAmount)}
+        </div>
+      )
+    },
+    {
+      key: 'priority',
+      label: '優先級',
+      sortable: true,
+      render: (_, order) => getPriorityBadge(order.priority)
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (_, order) => (
+        <div className="flex items-center space-x-2">
+          <Link
+            to={`/admin/orders/${order.id}`}
+            className="text-blue-600 hover:text-blue-900"
+          >
+            <EyeIcon className="w-4 h-4" />
+          </Link>
+          <Link
+            to={`/admin/orders/${order.id}/edit`}
+            className="text-green-600 hover:text-green-900"
+          >
+            <PencilIcon className="w-4 h-4" />
+          </Link>
+          <button
+            onClick={() => handleDeleteOrder(order.id)}
+            className="text-red-600 hover:text-red-900"
+          >
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  // 批量操作配置
+  const batchActions = [
+    {
+      label: '標記為已確認',
+      icon: CheckCircleIcon,
+      onClick: (selectedIds) => handleBatchStatusUpdate(OrderStatus.CONFIRMED)
+    },
+    {
+      label: '標記為處理中',
+      icon: ClockIcon,
+      onClick: (selectedIds) => handleBatchStatusUpdate(OrderStatus.PROCESSING)
+    },
+    {
+      label: '標記為已出貨',
+      icon: TruckIcon,
+      onClick: (selectedIds) => handleBatchStatusUpdate(OrderStatus.SHIPPED)
+    },
+    {
+      label: '刪除選中項目',
+      icon: TrashIcon,
+      variant: 'danger',
+      onClick: (selectedIds) => {
+        if (window.confirm(`確定要刪除 ${selectedIds.length} 個訂單嗎？`)) {
+          selectedIds.forEach(id => handleDeleteOrder(id));
+          setSelectedOrders([]);
+        }
+      }
+    }
+  ];
 
   if (loading) {
     return (
@@ -476,198 +573,21 @@ const OrderList = () => {
         )}
       </div>
 
-      {/* 批次操作工具列 */}
-      {showBatchActions && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <span className="text-blue-800 font-medium">
-              已選擇 {selectedOrders.length} 個訂單
-            </span>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleBatchStatusUpdate(OrderStatus.CONFIRMED)}
-                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-              >
-                批次確認
-              </button>
-              <button
-                onClick={() => handleBatchStatusUpdate(OrderStatus.SHIPPED)}
-                className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-              >
-                批次出貨
-              </button>
-              <button
-                onClick={() => handleBatchStatusUpdate(OrderStatus.CANCELLED)}
-                className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-              >
-                批次取消
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedOrders([]);
-                  setShowBatchActions(false);
-                }}
-                className="px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm"
-              >
-                取消選擇
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* 訂單表格 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-visible">
-        <div className="overflow-x-auto overflow-y-visible">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-[#fdf8f2]/50">
-              <tr>
-                <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selectedOrders.length === orders.length && orders.length > 0}
-                    onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-[#cc824d] focus:ring-[#cc824d]"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  訂單資訊
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  客戶資訊
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  狀態
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  金額
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  建立時間
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white/50 divide-y divide-gray-200">
-              {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-[#fdf8f2]/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedOrders.includes(order.id)}
-                      onChange={() => handleSelectOrder(order.id)}
-                      className="rounded border-gray-300 text-[#cc824d] focus:ring-[#cc824d]"
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900 font-mono">
-                        {order.orderNumber}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {order.items.length} 件商品
-                      </div>
-                      {order.priority !== OrderPriority.NORMAL && (
-                        <div className="mt-1">
-                          {getPriorityBadge(order.priority)}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {order.customerEmail}
-                      </div>
-                      {order.customerPhone && (
-                        <div className="text-sm text-gray-500">
-                          {order.customerPhone}
-                        </div>
-                      )}
-                      <div className="text-xs text-gray-400">
-                        {order.customerType === 'member' ? '會員' : '訪客'}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="space-y-2">
-                      {getStatusBadge(order.status)}
-                      {getPaymentStatusBadge(order.paymentStatus)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {formatCurrency(order.totalAmount)}
-                      </div>
-                      {order.discountAmount > 0 && (
-                        <div className="text-xs text-green-600">
-                          折扣 {formatCurrency(order.discountAmount)}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {formatDate(order.createdAt)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <Link
-                        to={`/admin/orders/${order.id}`}
-                        className="text-[#cc824d] hover:text-[#b3723f] transition-colors"
-                        title="查看詳情"
-                      >
-                        <EyeIcon className="w-5 h-5" />
-                      </Link>
-                      <Link
-                        to={`/admin/orders/${order.id}/edit`}
-                        className="text-blue-600 hover:text-blue-800 transition-colors"
-                        title="編輯"
-                      >
-                        <PencilIcon className="w-5 h-5" />
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteOrder(order.id)}
-                        className="text-red-600 hover:text-red-800 transition-colors"
-                        title="刪除"
-                      >
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {orders.length === 0 && (
-          <div className="text-center py-12">
-            <ShoppingBagIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">沒有找到訂單</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchQuery || selectedStatus || selectedPaymentStatus || selectedType || selectedPriority
-                ? '嘗試調整搜尋條件或篩選器'
-                : '開始建立您的第一個訂單'
-              }
-            </p>
-            {!searchQuery && !selectedStatus && !selectedPaymentStatus && !selectedType && !selectedPriority && (
-              <div className="mt-6">
-                <Link
-                  to="/admin/orders/add"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#cc824d] hover:bg-[#b3723f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#cc824d]"
-                >
-                  <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-                  新增訂單
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
+      <div className="glass rounded-2xl overflow-visible">
+        <StandardTable
+          data={orders}
+          columns={columns}
+          title="訂單列表"
+          enableBatchSelection={true}
+          selectedItems={selectedOrders}
+          onSelectedItemsChange={setSelectedOrders}
+          batchActions={batchActions}
+          getRowId={(order) => order.id}
+          emptyMessage="目前沒有訂單資料"
+          emptyDescription="暫時沒有符合條件的訂單"
+          emptyIcon={ShoppingBagIcon}
+        />
       </div>
     </div>
   );

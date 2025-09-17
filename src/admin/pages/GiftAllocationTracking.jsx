@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StandardTable from '../components/StandardTable';
 import {
   ChartBarIcon,
   CalendarDaysIcon,
@@ -271,6 +272,149 @@ const GiftAllocationTracking = () => {
     { value: 'month', label: '本月' }
   ];
 
+  // 分配記錄表格列配置
+  const allocationColumns = [
+    {
+      key: 'memberInfo',
+      label: '會員資訊',
+      sortable: true,
+      render: (_, allocation) => (
+        <div className="flex items-center">
+          <div className="flex-shrink-0 h-10 w-10">
+            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+              <UserIcon className="w-5 h-5 text-gray-600" />
+            </div>
+          </div>
+          <div className="ml-4">
+            <div className="text-sm font-medium text-gray-900 font-chinese">
+              {allocation?.memberName || 'N/A'}
+            </div>
+            <div className="text-sm text-gray-500">
+              {allocation?.memberEmail || 'N/A'}
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'orderId',
+      label: '訂單編號',
+      sortable: true,
+      render: (_, allocation) => (
+        <div className="text-sm font-medium text-gray-900">
+          {allocation?.orderId || 'N/A'}
+        </div>
+      )
+    },
+    {
+      key: 'allocatedDate',
+      label: '分配日期',
+      sortable: true,
+      render: (_, allocation) => (
+        <div className="text-sm text-gray-900">
+          {allocation?.allocatedDate ? allocation.allocatedDate.toLocaleDateString() : 'N/A'}
+        </div>
+      )
+    },
+    {
+      key: 'gifts',
+      label: '贈品數量',
+      sortable: true,
+      render: (_, allocation) => (
+        <div className="text-sm text-gray-900">
+          {allocation?.gifts ? allocation.gifts.reduce((sum, gift) => sum + (gift?.quantity || 0), 0) : 0} 件
+        </div>
+      )
+    },
+    {
+      key: 'totalCost',
+      label: '總成本',
+      sortable: true,
+      render: (_, allocation) => (
+        <div className="text-sm font-medium text-gray-900">
+          NT$ {allocation?.totalCost ? allocation.totalCost.toLocaleString() : '0'}
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (_, allocation) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(allocation?.status)}`}>
+          {getStatusText(allocation?.status)}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (_, allocation) => (
+        <button
+          onClick={() => setSelectedAllocation(allocation)}
+          className="text-blue-600 hover:text-blue-900 transition-colors"
+        >
+          <EyeIcon className="w-4 h-4" />
+        </button>
+      )
+    }
+  ];
+
+  // 贈品明細表格列配置
+  const giftDetailColumns = [
+    {
+      key: 'giftName',
+      label: '贈品名稱',
+      sortable: true,
+      render: (_, gift) => (
+        <span className="text-sm text-gray-900 font-chinese">
+          {getGiftName(gift?.giftId)}
+        </span>
+      )
+    },
+    {
+      key: 'quantity',
+      label: '數量',
+      sortable: true,
+      render: (_, gift) => (
+        <span className="text-sm text-gray-900">
+          {gift?.quantity || 0}
+        </span>
+      )
+    },
+    {
+      key: 'unitCost',
+      label: '單價',
+      sortable: true,
+      render: (_, gift) => (
+        <span className="text-sm text-gray-900">
+          NT$ {gift?.unitCost || 0}
+        </span>
+      )
+    },
+    {
+      key: 'totalCost',
+      label: '小計',
+      sortable: true,
+      render: (_, gift) => (
+        <span className="text-sm text-gray-900">
+          NT$ {(gift?.quantity || 0) * (gift?.unitCost || 0)}
+        </span>
+      )
+    },
+    {
+      key: 'selectionType',
+      label: '選擇方式',
+      sortable: true,
+      render: (_, gift) => (
+        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+          {getSelectionTypeText(gift?.selectionType)}
+        </span>
+      )
+    }
+  ];
+
   return (
     <div className="bg-[#fdf8f2] min-h-screen p-6">
       <div>
@@ -362,100 +506,13 @@ const GiftAllocationTracking = () => {
 
         {/* 分配記錄表格 */}
         <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-white/20 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/20">
-              <thead className="bg-white/20">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                    會員資訊
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                    訂單編號
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                    分配日期
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                    贈品數量
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                    總成本
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                    狀態
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/20">
-                {filteredAllocations.map((allocation) => (
-                  <tr key={allocation.id} className="hover:bg-white/20 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <UserIcon className="w-5 h-5 text-gray-600" />
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900 font-chinese">{allocation.memberName}</div>
-                          <div className="text-sm text-gray-500">
-                            <span className={`px-2 py-1 text-xs rounded-full ${getTierColor(allocation.memberTier)}`}>
-                              {allocation.memberTier}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {allocation.orderId}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <CalendarDaysIcon className="w-4 h-4 text-gray-400 mr-2" />
-                        {allocation.allocatedDate.toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <GiftIcon className="w-4 h-4 text-[#cc824d] mr-2" />
-                        {allocation.gifts.length} 份
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <CurrencyDollarIcon className="w-4 h-4 text-green-600 mr-2" />
-                        NT$ {allocation.totalCost.toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(allocation.status)}`}>
-                        {getStatusText(allocation.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleViewDetails(allocation)}
-                        className="text-[#cc824d] hover:text-[#b3723f] transition-colors"
-                      >
-                        <EyeIcon className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredAllocations.length === 0 && (
-            <div className="text-center py-12">
-              <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900 font-chinese">沒有分配記錄</h3>
-              <p className="mt-1 text-sm text-gray-500 font-chinese">目前沒有符合條件的分配記錄</p>
-            </div>
-          )}
+          <StandardTable
+            data={filteredAllocations}
+            columns={allocationColumns}
+            emptyMessage="沒有分配記錄"
+            emptyDescription="目前沒有符合條件的分配記錄"
+            emptyIcon={ChartBarIcon}
+          />
         </div>
       </div>
 
@@ -532,61 +589,20 @@ const GiftAllocationTracking = () => {
             <div>
               <h3 className="text-lg font-bold font-chinese mb-4">贈品明細</h3>
               <div className="bg-white/40 rounded-lg border border-white/30 overflow-hidden">
-                <table className="min-w-full divide-y divide-white/20">
-                  <thead className="bg-white/20">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                        贈品名稱
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                        數量
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                        單價
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                        小計
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                        選擇方式
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/10">
-                    {selectedAllocation.gifts.map((gift, index) => (
-                      <tr key={index}>
-                        <td className="px-4 py-3 text-sm text-gray-900 font-chinese">
-                          {getGiftName(gift.giftId)}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          {gift.quantity}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          NT$ {gift.unitCost}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900">
-                          NT$ {gift.quantity * gift.unitCost}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900 font-chinese">
-                          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                            {getSelectionTypeText(gift.selectionType)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-white/20">
-                    <tr>
-                      <td colSpan="3" className="px-4 py-3 text-sm font-medium text-gray-900 font-chinese">
-                        總計
-                      </td>
-                      <td className="px-4 py-3 text-sm font-bold text-gray-900">
-                        NT$ {selectedAllocation.totalCost}
-                      </td>
-                      <td className="px-4 py-3"></td>
-                    </tr>
-                  </tfoot>
-                </table>
+                <StandardTable
+                  data={selectedAllocation.gifts}
+                  columns={giftDetailColumns}
+                  emptyMessage="暫無贈品明細"
+                  emptyDescription="此分配記錄沒有贈品項目"
+                />
+                <div className="bg-white/20 px-4 py-3 border-t border-white/20">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-900 font-chinese">總計</span>
+                    <span className="text-sm font-bold text-gray-900">
+                      NT$ {selectedAllocation.totalCost}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 

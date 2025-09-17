@@ -12,6 +12,7 @@ import {
   ExclamationTriangleIcon,
   XCircleIcon
 } from '@heroicons/react/24/outline';
+import StandardTable from '../../components/StandardTable';
 
 const SupplierProductAssociation = () => {
   const [suppliers, setSuppliers] = useState([]);
@@ -469,129 +470,112 @@ const SupplierProductAssociation = () => {
       )}
 
       {/* 商品關聯表格 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50/80">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  供應商
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  商品資訊
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  價格
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  訂購量
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  交期
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  庫存狀態
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white/50 divide-y divide-gray-200">
-              {supplierProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50/80 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {getSupplierName(product.supplierId)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {product.supplierProductName}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        代碼: {product.supplierProductCode}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      ${product.supplierPrice.toLocaleString()} {product.currency}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      最小: {product.minOrderQuantity.toLocaleString()}
-                      {product.maxOrderQuantity && (
-                        <div className="text-xs text-gray-500">
-                          最大: {product.maxOrderQuantity.toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <ClockIcon className="w-4 h-4 mr-1 text-gray-400" />
-                      {product.leadTimeDays} 天
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getAvailabilityBadge(product.availability)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="text-blue-600 hover:text-blue-800 transition-colors"
-                        title="編輯"
-                      >
-                        <PencilIcon className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (window.confirm('確定要刪除這個關聯嗎？')) {
-                            // 刪除邏輯
-                            console.log('Delete product association:', product.id);
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-800 transition-colors"
-                        title="刪除"
-                      >
-                        <TrashIcon className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {supplierProducts.length === 0 && (
-          <div className="text-center py-12">
-            <TruckIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">沒有找到商品關聯</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchQuery || selectedSupplier
-                ? '嘗試調整搜尋條件'
-                : '開始新增商品關聯'
-              }
-            </p>
-            {!searchQuery && !selectedSupplier && (
-              <div className="mt-6">
+      <StandardTable
+        data={supplierProducts}
+        columns={[
+          {
+            label: '供應商',
+            sortable: true,
+            render: (product) => (
+              <div className="text-sm font-medium text-gray-900">
+                {getSupplierName(product.supplierId)}
+              </div>
+            )
+          },
+          {
+            label: '商品資訊',
+            sortable: true,
+            render: (product) => (
+              <div>
+                <div className="text-sm font-medium text-gray-900">
+                  {product.supplierProductName}
+                </div>
+                <div className="text-sm text-gray-500">
+                  代碼: {product.supplierProductCode}
+                </div>
+              </div>
+            )
+          },
+          {
+            label: '價格',
+            sortable: true,
+            render: (product) => (
+              <div className="text-sm text-gray-900">
+                ${product.supplierPrice.toLocaleString()} {product.currency}
+              </div>
+            )
+          },
+          {
+            label: '訂購量',
+            sortable: true,
+            render: (product) => (
+              <div className="text-sm text-gray-900">
+                最小: {product.minOrderQuantity.toLocaleString()}
+                {product.maxOrderQuantity && (
+                  <div className="text-xs text-gray-500">
+                    最大: {product.maxOrderQuantity.toLocaleString()}
+                  </div>
+                )}
+              </div>
+            )
+          },
+          {
+            label: '交期',
+            sortable: true,
+            render: (product) => (
+              <div className="flex items-center text-sm text-gray-900">
+                <ClockIcon className="w-4 h-4 mr-1 text-gray-400" />
+                {product.leadTimeDays} 天
+              </div>
+            )
+          },
+          {
+            label: '庫存狀態',
+            sortable: true,
+            render: (product) => getAvailabilityBadge(product.availability)
+          },
+          {
+            label: '操作',
+            render: (product) => (
+              <div className="flex space-x-2">
                 <button
-                  onClick={() => setShowAddForm(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#cc824d] hover:bg-[#b3723f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#cc824d]"
+                  onClick={() => handleEdit(product)}
+                  className="text-blue-600 hover:text-blue-800 transition-colors"
+                  title="編輯"
                 >
-                  <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
-                  新增商品關聯
+                  <PencilIcon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => {
+                    if (window.confirm('確定要刪除這個關聯嗎？')) {
+                      console.log('Delete product association:', product.id);
+                    }
+                  }}
+                  className="text-red-600 hover:text-red-800 transition-colors"
+                  title="刪除"
+                >
+                  <TrashIcon className="w-5 h-5" />
                 </button>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+            )
+          }
+        ]}
+        emptyMessage={
+          !searchQuery && !selectedSupplier ? (
+            <div className="text-center">
+              <p className="text-gray-500 mb-4">沒有找到商品關聯，開始新增商品關聯</p>
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#cc824d] hover:bg-[#b3723f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#cc824d]"
+              >
+                <PlusIcon className="-ml-1 mr-2 h-5 w-5" />
+                新增商品關聯
+              </button>
+            </div>
+          ) : "沒有找到符合條件的商品關聯，嘗試調整搜尋條件"
+        }
+        exportFileName="supplier_products"
+      />
     </div>
   );
 };

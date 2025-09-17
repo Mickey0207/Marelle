@@ -20,6 +20,7 @@ import {
 import { giftDataManager, GiftStatus, GiftCategory } from '../data/giftDataManager';
 import GlassModal from '../../components/GlassModal';
 import CustomSelect from '../components/CustomSelect';
+import StandardTable from '../../components/StandardTable';
 
 const GiftManagement = () => {
   const [gifts, setGifts] = useState([]);
@@ -372,117 +373,111 @@ const GiftManagement = () => {
         </div>
 
         {/* 贈品列表 */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-200/50">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-[#cc824d]/20 to-[#b3723f]/20">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider font-chinese">
-                    贈品資訊
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider font-chinese">
-                    分類
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider font-chinese">
-                    庫存狀態
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider font-chinese">
-                    狀態
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider font-chinese">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200/50">
-                {filteredGifts.map((gift) => (
-                  <tr key={gift.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-12 w-12">
-                          <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-[#cc824d]/20 to-[#b3723f]/20 flex items-center justify-center">
-                            <GiftIcon className="w-6 h-6 text-[#cc824d]" />
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900 font-chinese">
-                            {gift.name}
-                          </div>
-                          <div className="text-sm text-gray-500 font-chinese max-w-xs truncate">
-                            {gift.description}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100/80 text-blue-800 font-chinese">
-                        {getCategoryText(gift.category)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-chinese">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-600">可用:</span>
-                          <span className={`font-medium ${gift.inventory.available <= gift.inventory.alertThreshold ? 'text-red-600' : 'text-green-600'}`}>
-                            {gift.inventory.available}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-600">總計:</span>
-                          <span className="font-medium">{gift.inventory.total}</span>
-                        </div>
-                        {gift.inventory.available <= gift.inventory.alertThreshold && (
-                          <div className="text-xs text-red-600 font-chinese">庫存不足警告</div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon(gift.status)}
-                        <span className="text-sm font-chinese">{getStatusText(gift.status)}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleViewGift(gift)}
-                          className="p-2 text-[#cc824d] hover:bg-[#cc824d]/10 rounded-lg transition-colors"
-                          title="查看詳情"
-                        >
-                          <EyeIcon className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleEditGift(gift)}
-                          className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                          title="編輯"
-                        >
-                          <PencilIcon className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteGift(gift)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          title="刪除"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredGifts.length === 0 && (
-            <div className="text-center py-12">
-              <GiftIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900 font-chinese">沒有找到贈品</h3>
-              <p className="mt-1 text-sm text-gray-500 font-chinese">
-                {searchTerm || selectedCategory || selectedStatus ? '請調整搜尋條件' : '開始創建您的第一個贈品'}
-              </p>
-            </div>
-          )}
-        </div>
+        <StandardTable
+          data={filteredGifts}
+          columns={[
+            {
+              key: 'name',
+              label: '贈品資訊',
+              sortable: true,
+              render: (_, gift) => (
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 h-12 w-12">
+                    <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-[#cc824d]/20 to-[#b3723f]/20 flex items-center justify-center">
+                      <GiftIcon className="w-6 h-6 text-[#cc824d]" />
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-sm font-medium text-gray-900 font-chinese">
+                      {gift?.name || 'N/A'}
+                    </div>
+                    <div className="text-sm text-gray-500 font-chinese max-w-xs truncate">
+                      {gift?.description || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+              )
+            },
+            {
+              key: 'category',
+              label: '分類',
+              sortable: true,
+              render: (_, gift) => (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100/80 text-blue-800 font-chinese">
+                  {getCategoryText(gift?.category)}
+                </span>
+              )
+            },
+            {
+              key: 'inventory',
+              label: '庫存狀態',
+              sortable: true,
+              render: (_, gift) => (
+                <div className="text-sm font-chinese">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-600">可用:</span>
+                    <span className={`font-medium ${(gift?.inventory?.available || 0) <= (gift?.inventory?.alertThreshold || 0) ? 'text-red-600' : 'text-green-600'}`}>
+                      {gift?.inventory?.available || 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-600">總計:</span>
+                    <span className="font-medium">{gift?.inventory?.total || 0}</span>
+                  </div>
+                  {(gift?.inventory?.available || 0) <= (gift?.inventory?.alertThreshold || 0) && (
+                    <div className="text-xs text-red-600 font-chinese">庫存不足警告</div>
+                  )}
+                </div>
+              )
+            },
+            {
+              key: 'status',
+              label: '狀態',
+              sortable: true,
+              render: (_, gift) => (
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon(gift?.status)}
+                  <span className="text-sm font-chinese">{getStatusText(gift?.status)}</span>
+                </div>
+              )
+            },
+            {
+              key: 'actions',
+              label: '操作',
+              render: (_, gift) => (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleViewGift(gift)}
+                    className="p-2 text-[#cc824d] hover:bg-[#cc824d]/10 rounded-lg transition-colors"
+                    title="查看詳情"
+                  >
+                    <EyeIcon className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleEditGift(gift)}
+                    className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                    title="編輯"
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteGift(gift)}
+                    className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                    title="刪除"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              )
+            }
+          ]}
+          emptyMessage={
+            searchTerm || selectedCategory || selectedStatus 
+              ? "沒有找到符合條件的贈品，請調整搜尋條件" 
+              : "沒有找到贈品，開始創建您的第一個贈品"
+          }
+          exportFileName="gifts"
+        />
       </div>
 
       {/* 贈品詳情/編輯模態框 */}

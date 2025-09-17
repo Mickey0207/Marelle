@@ -116,9 +116,10 @@ const SupplierList = () => {
   // 表格列配置
   const columns = [
     {
+      key: 'companyName',
       label: '供應商資訊',
       sortable: true,
-      render: (supplier) => (
+      render: (_, supplier) => (
         <div className="flex items-center">
           <div className="flex-shrink-0 h-12 w-12">
             <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-[#cc824d] to-[#b3723f] flex items-center justify-center">
@@ -127,12 +128,12 @@ const SupplierList = () => {
           </div>
           <div className="ml-4">
             <div className="text-sm font-medium text-gray-900 font-chinese">
-              {supplier.companyName}
+              {supplier?.companyName || 'N/A'}
             </div>
             <div className="text-sm text-gray-500">
-              統編: {supplier.taxId} | {supplier.industry}
+              統編: {supplier?.taxId || 'N/A'} | {supplier?.industry || 'N/A'}
             </div>
-            {supplier.website && (
+            {supplier?.website && (
               <div className="text-sm text-blue-600 hover:text-blue-800">
                 <a href={supplier.website} target="_blank" rel="noopener noreferrer">
                   {supplier.website}
@@ -144,65 +145,70 @@ const SupplierList = () => {
       )
     },
     {
+      key: 'companyType',
       label: '公司類型',
       sortable: true,
-      render: (supplier) => (
+      render: (_, supplier) => (
         <div>
-          <div className="text-sm text-gray-900">{supplier.companyType}</div>
-          <div className="text-sm text-gray-500">{supplier.scale}</div>
+          <div className="text-sm text-gray-900">{supplier?.companyType || 'N/A'}</div>
+          <div className="text-sm text-gray-500">{supplier?.scale || 'N/A'}</div>
         </div>
       )
     },
     {
+      key: 'status',
       label: '狀態/分級',
       sortable: true,
-      render: (supplier) => (
+      render: (_, supplier) => (
         <div className="space-y-2">
-          {getStatusBadge(supplier.status)}
-          {getGradeBadge(supplier.grade)}
+          {getStatusBadge(supplier?.status)}
+          {getGradeBadge(supplier?.grade)}
         </div>
       )
     },
     {
+      key: 'overallRating',
       label: '評分',
       sortable: true,
-      render: (supplier) => renderStarRating(supplier.overallRating)
+      render: (_, supplier) => renderStarRating(supplier?.overallRating || 0)
     },
     {
+      key: 'contacts',
       label: '關聯數據',
-      render: (supplier) => (
+      render: (_, supplier) => (
         <div className="text-sm text-gray-900">
           <div className="flex items-center space-x-1">
             <PhoneIcon className="w-4 h-4 text-gray-400" />
-            <span>{supplier.contactsCount} 聯絡人</span>
+            <span>{supplier?.contactsCount || 0} 聯絡人</span>
           </div>
           <div className="flex items-center space-x-1">
             <BuildingOfficeIcon className="w-4 h-4 text-gray-400" />
-            <span>{supplier.productsCount} 關聯商品</span>
+            <span>{supplier?.productsCount || 0} 關聯商品</span>
           </div>
         </div>
       )
     },
     {
+      key: 'actions',
       label: '操作',
-      render: (supplier) => (
+      render: (_, supplier) => (
         <div className="flex space-x-2">
           <Link
-            to={`/admin/suppliers/${supplier.id}`}
+            to={`/admin/suppliers/${supplier?.id}`}
             className="text-[#cc824d] hover:text-[#b3723f] transition-colors"
             title="查看詳情"
           >
             <EyeIcon className="w-5 h-5" />
           </Link>
           <Link
-            to={`/admin/suppliers/${supplier.id}/edit`}
+            to={`/admin/suppliers/${supplier?.id}/edit`}
             className="text-blue-600 hover:text-blue-900 transition-colors"
             title="編輯"
           >
             <PencilIcon className="w-5 h-5" />
           </Link>
           <button
-            onClick={() => handleDeleteSupplier(supplier.id)}
+            onClick={() => handleDeleteSupplier(supplier?.id)}
             className="text-red-600 hover:text-red-900 transition-colors"
             title="刪除"
           >

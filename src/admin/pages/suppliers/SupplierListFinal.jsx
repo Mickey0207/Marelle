@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import StandardTable from '../../components/StandardTable';
+import { Star, Users, Shield, Package } from 'lucide-react';
 
 // 直接導入 supplierDataManager
 import supplierDataManager from '../../data/supplierDataManager';
@@ -66,6 +68,84 @@ const SupplierListFinal = () => {
     thisMonth: 0
   };
 
+  // 定義表格列
+  const columns = [
+    {
+      key: 'companyInfo',
+      label: '供應商資訊',
+      sortable: true,
+      render: (supplier) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">{supplier.companyName}</div>
+          <div className="text-sm text-gray-500">{supplier.companyNameEn || 'N/A'}</div>
+          <div className="text-xs text-gray-400">統編: {supplier.taxId || 'N/A'}</div>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (supplier) => (
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+          supplier.status === 'active' 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-red-100 text-red-800'
+        }`}>
+          {supplier.status === 'active' ? '啟用' : '停用'}
+        </span>
+      )
+    },
+    {
+      key: 'grade',
+      label: '等級',
+      sortable: true,
+      render: (supplier) => {
+        const gradeMap = {
+          'A_STRATEGIC': { text: 'A級', class: 'bg-purple-100 text-purple-800' },
+          'B_CORE': { text: 'B級', class: 'bg-blue-100 text-blue-800' },
+          'C_STANDARD': { text: 'C級', class: 'bg-gray-100 text-gray-800' },
+          'D_ALTERNATIVE': { text: 'D級', class: 'bg-yellow-100 text-yellow-800' }
+        };
+        const grade = gradeMap[supplier.grade] || { text: supplier.grade || 'N/A', class: 'bg-gray-100 text-gray-800' };
+        return (
+          <span className={`px-2 py-1 text-xs font-medium rounded-full ${grade.class}`}>
+            {grade.text}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'rating',
+      label: '評分',
+      sortable: true,
+      render: (supplier) => (
+        <div className="flex items-center">
+          <Star className="w-4 h-4 text-yellow-400 fill-current" />
+          <span className="ml-1 text-sm">{supplier.rating || 'N/A'}</span>
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (supplier) => (
+        <div className="flex gap-2">
+          <Link
+            to={`/admin/suppliers/${supplier.id}`}
+            className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+          >
+            查看
+          </Link>
+          <button className="text-green-600 hover:text-green-900 text-sm font-medium">
+            編輯
+          </button>
+        </div>
+      )
+    }
+  ];
+
   return (
     <div className="p-6">
       {/* 頁面標題 */}
@@ -102,94 +182,16 @@ const SupplierListFinal = () => {
       </div>
 
       {/* 搜尋和篩選 */}
+      
       {/* 供應商表格 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-hidden">
-        {suppliers.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50/80">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    供應商資訊
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    狀態
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    等級
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    評分
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    聯絡人/商品
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white/50 divide-y divide-gray-200">
-                {suppliers.map((supplier) => (
-                  <tr key={supplier.id} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {supplier.companyName}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {supplier.companyNameEn}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          統編: {supplier.taxId}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        supplier.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {supplier.status === 'active' ? '活躍' : '其他'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        {supplier.grade?.includes('A') ? 'A級' : supplier.grade?.includes('B') ? 'B級' : 'C級'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {supplier.overallRating?.toFixed(1) || '0.0'} ⭐
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {supplier.contactsCount || 0} 聯絡人 / {supplier.productsCount || 0} 商品
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                      <Link
-                        to={`/admin/suppliers/${supplier.id}`}
-                        className="text-[#cc824d] hover:text-[#b8704a] font-medium"
-                      >
-                        查看
-                      </Link>
-                      <Link
-                        to={`/admin/suppliers/${supplier.id}/edit`}
-                        className="text-blue-600 hover:text-blue-500 font-medium"
-                      >
-                        編輯
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-gray-500 text-lg">目前沒有供應商資料</div>
-            <p className="text-gray-400 mt-2">點擊上方「新增供應商」按鈕開始新增供應商</p>
-          </div>
-        )}
+      <div className="glass rounded-2xl overflow-visible">
+        <StandardTable
+          data={suppliers}
+          columns={columns}
+          emptyMessage="目前沒有供應商資料"
+          emptyDescription="點擊上方「新增供應商」按鈕開始新增供應商"
+          emptyIcon={Users}
+        />
       </div>
     </div>
   );

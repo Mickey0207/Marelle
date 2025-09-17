@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StandardTable from '../../components/StandardTable';
 import { gsap } from 'gsap';
 import { 
   CheckCircle, 
@@ -83,6 +84,103 @@ const ApprovalWorkflowSystem = () => {
       setLoading(false);
     }
   };
+
+  // 定義表格列配置
+  const columns = [
+    {
+      key: 'documentNumber',
+      label: '單據資訊',
+      sortable: true,
+      render: (_, approval) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900 font-chinese">
+            {approval.documentNumber}
+          </div>
+          <div className="text-sm text-gray-500 font-chinese">
+            {approval.title || '無標題'}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'type',
+      label: '類型',
+      sortable: true,
+      render: (_, approval) => (
+        <span className="text-sm text-gray-500 font-chinese">
+          {getTypeDisplayName(approval.type)}
+        </span>
+      )
+    },
+    {
+      key: 'totalAmount',
+      label: '金額',
+      sortable: true,
+      render: (_, approval) => (
+        <span className="text-sm text-gray-900 font-chinese">
+          {formatCurrency(approval.totalAmount)}
+        </span>
+      )
+    },
+    {
+      key: 'createdBy',
+      label: '提交人',
+      sortable: true,
+      render: (_, approval) => (
+        <span className="text-sm text-gray-900 font-chinese">
+          {approval.createdBy || '系統'}
+        </span>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (_, approval) => (
+        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(approval.status)} font-chinese`}>
+          {getStatusDisplayName(approval.status)}
+        </span>
+      )
+    },
+    {
+      key: 'documentDate',
+      label: '提交日期',
+      sortable: true,
+      render: (_, approval) => (
+        <span className="text-sm text-gray-500 font-chinese">
+          {formatDate(approval.documentDate)}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (_, approval) => (
+        <div className="flex items-center gap-2">
+          <button className="text-blue-600 hover:text-blue-900 transition-colors">
+            <Eye className="w-4 h-4" />
+          </button>
+          {['submitted', 'pending_approval'].includes(approval.status) && (
+            <>
+              <button 
+                onClick={() => handleApprove(approval.id)}
+                className="text-green-600 hover:text-green-900 transition-colors"
+              >
+                <CheckCircle className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => handleReject(approval.id)}
+                className="text-red-600 hover:text-red-900 transition-colors"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            </>
+          )}
+        </div>
+      )
+    }
+  ];
 
   const filteredApprovals = approvals.filter(approval => {
     let matches = true;
@@ -374,90 +472,13 @@ const ApprovalWorkflowSystem = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  單據資訊
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  類型
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  金額
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  提交人
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  狀態
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  提交日期
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredApprovals.slice(0, 20).map((approval) => (
-                <tr key={approval.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900 font-chinese">
-                        {approval.documentNumber}
-                      </div>
-                      <div className="text-sm text-gray-500 font-chinese">
-                        {approval.title || '無標題'}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-chinese">
-                    {getTypeDisplayName(approval.type)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-chinese">
-                    {formatCurrency(approval.totalAmount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-chinese">
-                    {approval.createdBy || '系統'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(approval.status)} font-chinese`}>
-                      {getStatusDisplayName(approval.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-chinese">
-                    {formatDate(approval.documentDate)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-900 transition-colors">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      {['submitted', 'pending_approval'].includes(approval.status) && (
-                        <>
-                          <button 
-                            onClick={() => handleApprove(approval.id)}
-                            className="text-green-600 hover:text-green-900 transition-colors"
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleReject(approval.id)}
-                            className="text-red-600 hover:text-red-900 transition-colors"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <StandardTable
+          data={filteredApprovals.slice(0, 20)}
+          columns={columns}
+          emptyMessage="沒有找到審批單據"
+          emptyDescription="目前沒有符合條件的審批記錄"
+          emptyIcon={FileText}
+        />
         </div>
 
         {filteredApprovals.length === 0 && (
@@ -490,7 +511,6 @@ const ApprovalWorkflowSystem = () => {
               </div>
             </div>
           ))}
-        </div>
         </div>
       </div>
     </div>

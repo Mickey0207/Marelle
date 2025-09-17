@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StandardTable from '../components/StandardTable';
 import { 
   UserGroupIcon, 
   PlusIcon, 
@@ -191,78 +192,88 @@ const AdminRoleManagement = () => {
       </div>
 
       {/* 角色列表 */}
-      <div className="glass rounded-2xl overflow-visible">
-        <div className="overflow-x-auto overflow-y-visible">
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-[#cc824d] to-[#b3723f] text-white">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold font-chinese">角色名稱</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold font-chinese">工號前綴</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold font-chinese">權限數量</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold font-chinese">系統角色</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold font-chinese">創建時間</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold font-chinese">操作</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredRoles.map((role) => (
-                <tr key={role.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <ShieldCheckIcon className="w-5 h-5 mr-3 text-[#cc824d]" />
-                      <span className="font-medium text-gray-900 font-chinese">{role.roleName}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-[#cc824d] text-white rounded-lg text-sm font-bold">
-                      {role.rolePrefix}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="text-gray-900 font-medium">
-                      {getPermissionCount(role.permissions)}/56
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {role.isSystemRole ? (
-                      <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-chinese">
-                        系統角色
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-chinese">
-                        自訂角色
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-center text-gray-500 text-sm font-chinese">
-                    {new Date(role.createdAt).toLocaleDateString('zh-TW')}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-center space-x-2">
-                      <button
-                        onClick={() => handleOpenModal(role)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="編輯角色"
-                      >
-                        <PencilIcon className="w-4 h-4" />
-                      </button>
-                      {!role.isSystemRole && (
-                        <button
-                          onClick={() => handleDelete(role)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="刪除角色"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <StandardTable
+        data={filteredRoles}
+        columns={[
+          {
+            label: '角色名稱',
+            sortable: true,
+            render: (role) => (
+              <div className="flex items-center">
+                <ShieldCheckIcon className="w-5 h-5 mr-3 text-[#cc824d]" />
+                <span className="font-medium text-gray-900 font-chinese">{role.roleName}</span>
+              </div>
+            )
+          },
+          {
+            label: '工號前綴',
+            sortable: true,
+            render: (role) => (
+              <span className="px-3 py-1 bg-[#cc824d] text-white rounded-lg text-sm font-bold">
+                {role.rolePrefix}
+              </span>
+            )
+          },
+          {
+            label: '權限數量',
+            sortable: true,
+            render: (role) => (
+              <span className="text-gray-900 font-medium">
+                {getPermissionCount(role.permissions)}/56
+              </span>
+            )
+          },
+          {
+            label: '系統角色',
+            sortable: true,
+            render: (role) => (
+              role.isSystemRole ? (
+                <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-chinese">
+                  系統角色
+                </span>
+              ) : (
+                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-chinese">
+                  自訂角色
+                </span>
+              )
+            )
+          },
+          {
+            label: '創建時間',
+            sortable: true,
+            render: (role) => (
+              <span className="text-gray-500 text-sm font-chinese">
+                {new Date(role.createdAt).toLocaleDateString('zh-TW')}
+              </span>
+            )
+          },
+          {
+            label: '操作',
+            render: (role) => (
+              <div className="flex items-center justify-center space-x-2">
+                <button
+                  onClick={() => handleOpenModal(role)}
+                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="編輯角色"
+                >
+                  <PencilIcon className="w-4 h-4" />
+                </button>
+                {!role.isSystemRole && (
+                  <button
+                    onClick={() => handleDelete(role)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="刪除角色"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )
+          }
+        ]}
+        emptyMessage="沒有找到符合條件的角色"
+        exportFileName="admin_roles"
+      />
 
       {/* 新增/編輯角色模態框 */}
       <GlassModal

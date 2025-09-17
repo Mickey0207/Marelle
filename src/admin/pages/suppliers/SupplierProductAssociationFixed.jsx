@@ -41,7 +41,7 @@ const SupplierProductAssociationFixed = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-[#fdf8f2] p-6">
       {/* 頁面標題 */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">商品關聯管理</h1>

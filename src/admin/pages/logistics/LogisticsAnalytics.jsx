@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import logisticsDataManager from '../../data/logisticsDataManager';
 import SearchableSelect from '../../../components/SearchableSelect';
+import StandardTable from '../../components/StandardTable';
 
 const LogisticsAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
@@ -262,53 +263,66 @@ const LogisticsAnalytics = () => {
         </div>
 
         {/* 詳細數據表格 */}
-        <div className="mt-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
+        <div className="mt-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">詳細數據</h2>
           
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    配送方式
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    訂單數量
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    總成本
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    平均成本
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    成功率
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {analytics.detailedStats.map((stat, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {stat.method}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {stat.orderCount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(stat.totalCost)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatCurrency(stat.avgCost)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatPercentage(stat.successRate)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <StandardTable
+            data={analytics.detailedStats}
+            columns={[
+              {
+                key: 'method',
+                label: '配送方式',
+                sortable: true,
+                render: (_, stat) => (
+                  <span className="text-sm font-medium text-gray-900">
+                    {stat?.method || 'N/A'}
+                  </span>
+                )
+              },
+              {
+                key: 'orderCount',
+                label: '訂單數量',
+                sortable: true,
+                render: (_, stat) => (
+                  <span className="text-sm text-gray-900">
+                    {stat?.orderCount || 0}
+                  </span>
+                )
+              },
+              {
+                key: 'totalCost',
+                label: '總成本',
+                sortable: true,
+                render: (_, stat) => (
+                  <span className="text-sm text-gray-900">
+                    {formatCurrency(stat?.totalCost || 0)}
+                  </span>
+                )
+              },
+              {
+                key: 'avgCost',
+                label: '平均成本',
+                sortable: true,
+                render: (_, stat) => (
+                  <span className="text-sm text-gray-900">
+                    {formatCurrency(stat?.avgCost || 0)}
+                  </span>
+                )
+              },
+              {
+                key: 'successRate',
+                label: '成功率',
+                sortable: true,
+                render: (_, stat) => (
+                  <span className="text-sm text-gray-900">
+                    {formatPercentage(stat?.successRate || 0)}
+                  </span>
+                )
+              }
+            ]}
+            emptyMessage="沒有找到詳細統計數據"
+            exportFileName="logistics_analytics"
+          />
         </div>
       </div>
     </div>

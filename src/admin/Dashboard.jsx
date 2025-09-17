@@ -30,6 +30,9 @@ import {
   SparklesIcon
 } from '@heroicons/react/24/outline';
 
+// Import admin styles configuration
+import { ADMIN_STYLES, ADMIN_COLORS, GSAP_ANIMATIONS } from './styles/adminStyles';
+
 // Import admin pages
 import AdminOverview from './pages/Overview';
 import AdminProducts from './pages/Products';
@@ -41,7 +44,7 @@ import AdminAnalytics from './pages/Analytics';
 import AdminSettings from './pages/Settings';
 import Inventory from './pages/Inventory';
 import MemberManagement from './pages/MemberManagement';
-import NotificationManagement from './pages/NotificationManagement';
+import NotificationManagementContainer from './pages/notifications/NotificationManagementContainer';
 import AdminManagement from './pages/AdminManagement';
 import GiftManagementContainer from './pages/GiftManagementContainer';
 import SupplierManagementContainer from './pages/suppliers/SupplierManagementContainer';
@@ -109,19 +112,11 @@ const AdminDashboard = () => {
       navigate('/admin/login');
     }
 
-    // Animate dashboard on load
+    // Animate dashboard on load using unified animation config
     gsap.fromTo(
       '.admin-content',
-      {
-        opacity: 0,
-        y: 20,
-      },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        ease: 'power2.out',
-      }
+      GSAP_ANIMATIONS.pageLoad.from,
+      GSAP_ANIMATIONS.pageLoad.to
     );
   }, [navigate]);
 
@@ -326,7 +321,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fdf8f2] flex">
+    <div className={`${ADMIN_STYLES.pageContainer} flex`}>
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -517,7 +512,7 @@ const AdminDashboard = () => {
         </header>
 
         {/* Page content */}
-        <main className="admin-content flex-1 p-6 bg-[#fdf8f2] overflow-auto">
+        <main className={`admin-content flex-1 ${ADMIN_STYLES.contentContainer} overflow-auto`}>
           <Routes>
             <Route index element={<DashboardOverview />} />
             <Route path="tasks" element={<TaskManagement />} />
@@ -547,7 +542,7 @@ const AdminDashboard = () => {
             <Route path="gifts/*" element={<GiftManagementContainer />} />
             <Route path="suppliers/*" element={<SupplierManagementContainer />} />
             <Route path="procurement/*" element={<ProcurementManagementContainer />} />
-            <Route path="notifications/*" element={<NotificationManagement />} />
+            <Route path="notifications/*" element={<NotificationManagementContainer />} />
             <Route path="analytics/*" element={<AdminAnalytics />} />
             <Route path="admin-management/*" element={<AdminManagement />} />
             <Route path="settings/*" element={<AdminSettings />} />

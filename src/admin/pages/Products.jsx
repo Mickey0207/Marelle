@@ -11,6 +11,7 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { mockProducts, formatPrice } from '../../utils/data';
+import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from '../styles/adminStyles';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState(mockProducts);
@@ -24,44 +25,47 @@ const AdminProducts = () => {
   // 表格列配置
   const columns = [
     {
+      key: 'name',
       label: '商品',
       sortable: true,
-      render: (product) => (
+      render: (_, product) => (
         <div className="flex items-center">
           <img
-            src={product.image}
-            alt={product.name}
+            src={product?.image || '/placeholder-image.jpg'}
+            alt={product?.name || '商品圖片'}
             className="w-12 h-12 object-cover rounded-lg mr-4"
           />
           <div>
             <div className="font-medium text-gray-900 font-chinese">
-              {product.name}
+              {product?.name || '未知商品'}
             </div>
             <div className="text-sm text-gray-500 font-chinese">
-              ID: {product.id}
+              ID: {product?.id || 'N/A'}
             </div>
           </div>
         </div>
       )
     },
     {
+      key: 'category',
       label: '分類',
       sortable: true,
-      render: (product) => (
+      render: (_, product) => (
         <span className="inline-flex px-2 py-1 text-xs font-medium bg-apricot-100 text-apricot-800 rounded-full font-chinese">
-          {product.category}
+          {product?.category || '未分類'}
         </span>
       )
     },
     {
+      key: 'price',
       label: '價格',
       sortable: true,
-      render: (product) => (
+      render: (_, product) => (
         <div>
           <div className="text-gray-900 font-bold">
-            {formatPrice(product.price)}
+            {product?.price ? formatPrice(product.price) : 'N/A'}
           </div>
-          {product.originalPrice && (
+          {product?.originalPrice && (
             <div className="text-sm text-gray-500 line-through">
               {formatPrice(product.originalPrice)}
             </div>
@@ -70,10 +74,11 @@ const AdminProducts = () => {
       )
     },
     {
+      key: 'inStock',
       label: '庫存狀態',
       sortable: true,
-      render: (product) => {
-        const stockStatus = getStockStatus(product.inStock);
+      render: (_, product) => {
+        const stockStatus = getStockStatus(product?.inStock);
         return (
           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${stockStatus.color} font-chinese`}>
             {stockStatus.text}
@@ -82,29 +87,32 @@ const AdminProducts = () => {
       }
     },
     {
+      key: 'rating',
       label: '評分',
       sortable: true,
-      render: (product) => (
+      render: (_, product) => (
         <div className="flex items-center">
           <span className="text-sm text-gray-900">
-            {product.rating}
+            {product?.rating || 0}
           </span>
           <span className="text-yellow-400 ml-1">★</span>
           <span className="text-xs text-gray-500 ml-2">
-            ({product.reviews})
+            ({product?.reviews || 0})
           </span>
         </div>
       )
     },
     {
+      key: 'actions',
       label: '操作',
-      render: (product) => (
+      sortable: false,
+      render: (_, product) => (
         <div className="flex items-center space-x-2">
           <button className="p-2 text-gray-400 hover:text-blue-500 transition-colors">
             <EyeIcon className="w-4 h-4" />
           </button>
           <Link
-            to={`/admin/products/edit/${product.id}`}
+            to={`/admin/products/edit/${product?.id}`}
             className="p-2 text-gray-400 hover:text-green-500 transition-colors"
           >
             <PencilIcon className="w-4 h-4" />
@@ -118,21 +126,21 @@ const AdminProducts = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className={ADMIN_STYLES.sectionSpacing}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 font-chinese">商品管理</h1>
-          <p className="text-gray-600 mt-2 font-chinese">
+          <h1 className={ADMIN_STYLES.pageTitle}>商品管理</h1>
+          <p className={ADMIN_STYLES.pageSubtitle}>
             管理商品資訊、變體和庫存
           </p>
         </div>
         <div className="flex items-center space-x-3 mt-4 sm:mt-0">
           <Link 
             to="/admin/products/add"
-            className="px-6 py-3 bg-[#cc824d] text-white rounded-xl hover:bg-[#b3723f] transition-all duration-200 shadow-lg font-chinese text-lg font-semibold flex items-center"
+            className={ADMIN_STYLES.btnPrimary}
           >
-            <PlusIcon className="w-6 h-6 mr-3" />
+            <PlusIcon className="w-5 h-5 mr-2" />
             新增商品
           </Link>
         </div>
@@ -140,7 +148,7 @@ const AdminProducts = () => {
 
       {/* Products Table */}
       <StandardTable 
-        title="商品管理"
+        title="商品列表"
         columns={columns}
         data={products}
         exportFileName="products"

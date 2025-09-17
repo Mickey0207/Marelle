@@ -80,65 +80,72 @@ const PurchaseOrderList = () => {
   // 表格列配置
   const columns = [
     {
+      key: 'poNumber',
       label: '採購單號',
       sortable: true,
-      render: (order) => (
+      render: (_, order) => (
         <Link
-          to={`/admin/procurement/orders/${order.id}`}
+          to={`/admin/procurement/orders/${order?.id}`}
           className="text-[#cc824d] hover:text-[#b3723f] font-medium"
         >
-          {order.poNumber}
+          {order?.poNumber || 'N/A'}
         </Link>
       )
     },
     {
+      key: 'supplierName',
       label: '供應商',
       sortable: true,
-      render: (order) => (
-        <span className="text-gray-900">{order.supplierName}</span>
+      render: (_, order) => (
+        <span className="text-gray-900">{order?.supplierName || 'N/A'}</span>
       )
     },
     {
+      key: 'status',
       label: '狀態',
       sortable: true,
-      render: (order) => getStatusBadge(order.status)
+      render: (_, order) => getStatusBadge(order?.status)
     },
     {
+      key: 'priority',
       label: '優先級',
       sortable: true,
-      render: (order) => getPriorityBadge(order.priority)
+      render: (_, order) => getPriorityBadge(order?.priority)
     },
     {
+      key: 'totalWithTax',
       label: '總金額',
       sortable: true,
-      render: (order) => (
+      render: (_, order) => (
         <span className="text-gray-900 font-medium">
-          ${order.totalWithTax.toLocaleString()}
+          ${order?.totalWithTax ? order.totalWithTax.toLocaleString() : '0'}
         </span>
       )
     },
     {
+      key: 'createdAt',
       label: '建立日期',
       sortable: true,
-      render: (order) => (
+      render: (_, order) => (
         <span className="text-gray-500">
-          {new Date(order.createdAt).toLocaleDateString()}
+          {order?.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
         </span>
       )
     },
     {
+      key: 'actions',
       label: '操作',
-      render: (order) => (
+      render: (_, order) => (
         <div className="flex space-x-2">
           <Link
-            to={`/admin/procurement/orders/${order.id}`}
+            to={`/admin/procurement/orders/${order?.id}`}
             className="text-[#cc824d] hover:text-[#b3723f]"
             title="查看詳情"
           >
             <EyeIcon className="w-4 h-4" />
           </Link>
           <Link
-            to={`/admin/procurement/orders/edit/${order.id}`}
+            to={`/admin/procurement/orders/edit/${order?.id}`}
             className="text-green-600 hover:text-green-900"
             title="編輯"
           >

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import StandardTable from '../../components/StandardTable';
 import couponDataManager, { 
   CouponType, 
   CouponStatus, 

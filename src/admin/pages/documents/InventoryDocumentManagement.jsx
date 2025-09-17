@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import StandardTable from '../../components/StandardTable';
 import { gsap } from 'gsap';
 import { 
   Package, 
@@ -82,6 +83,88 @@ const InventoryDocumentManagement = () => {
       setLoading(false);
     }
   };
+
+  // 定義表格列配置
+  const columns = [
+    {
+      key: 'documentNumber',
+      label: '單據編號',
+      sortable: true,
+      render: (_, doc) => (
+        <span className="font-medium text-gray-900 font-chinese">
+          {doc.documentNumber}
+        </span>
+      )
+    },
+    {
+      key: 'type',
+      label: '類型',
+      sortable: true,
+      render: (_, doc) => (
+        <span className="text-gray-500 font-chinese">
+          {getTypeDisplayName(doc.type)}
+        </span>
+      )
+    },
+    {
+      key: 'description',
+      label: '說明',
+      sortable: true,
+      render: (_, doc) => (
+        <span className="text-gray-900 font-chinese">
+          {doc.title || doc.description || '無說明'}
+        </span>
+      )
+    },
+    {
+      key: 'totalAmount',
+      label: '金額',
+      sortable: true,
+      render: (_, doc) => (
+        <span className="text-gray-900 font-chinese">
+          {formatCurrency(doc.totalAmount)}
+        </span>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (_, doc) => (
+        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(doc.status)} font-chinese`}>
+          {getStatusDisplayName(doc.status)}
+        </span>
+      )
+    },
+    {
+      key: 'documentDate',
+      label: '日期',
+      sortable: true,
+      render: (_, doc) => (
+        <span className="text-gray-500 font-chinese">
+          {formatDate(doc.documentDate)}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (_, doc) => (
+        <div className="flex items-center gap-2">
+          <button className="text-blue-600 hover:text-blue-900 transition-colors">
+            <Eye className="w-4 h-4" />
+          </button>
+          <button className="text-green-600 hover:text-green-900 transition-colors">
+            <Edit className="w-4 h-4" />
+          </button>
+          <button className="text-red-600 hover:text-red-900 transition-colors">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
 
   const filteredDocuments = documents.filter(doc => {
     let matches = true;
@@ -450,82 +533,13 @@ const InventoryDocumentManagement = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  單據編號
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  類型
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  說明
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  金額
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  狀態
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  日期
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-chinese">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredDocuments.slice(0, 20).map((doc) => (
-                <tr key={doc.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 font-chinese">
-                    {doc.documentNumber}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-chinese">
-                    {getTypeDisplayName(doc.type)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-chinese">
-                    {doc.title || doc.description || '無說明'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-chinese">
-                    {formatCurrency(doc.totalAmount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(doc.status)} font-chinese`}>
-                      {getStatusDisplayName(doc.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-chinese">
-                    {formatDate(doc.documentDate)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-900 transition-colors">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="text-green-600 hover:text-green-900 transition-colors">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredDocuments.length === 0 && (
-          <div className="text-center py-12">
-            <Clipboard className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2 font-chinese">沒有找到庫存單據</h3>
-            <p className="text-gray-500 font-chinese">請調整搜尋條件或新增第一個庫存單據</p>
-          </div>
-        )}
+        <StandardTable
+          data={filteredDocuments.slice(0, 20)}
+          columns={columns}
+          emptyMessage="沒有找到庫存單據"
+          emptyDescription="請調整搜尋條件或新增第一個庫存單據"
+          emptyIcon={Clipboard}
+        />
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import StandardTable from '../../components/StandardTable';
 import supplierDataManager, { SupplierStatus, SupplierGrade, ContactType } from '../../data/supplierDataManager';
 import {
   ArrowLeftIcon,

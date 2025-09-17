@@ -6,6 +6,7 @@ import SearchableSelect from '../../../components/SearchableSelect';
 const ShipmentManagement = () => {
   const [shipments, setShipments] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
@@ -19,7 +20,7 @@ const ShipmentManagement = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [shipments, statusFilter, typeFilter, dateFilter]);
+  }, [shipments, searchTerm, statusFilter, typeFilter, dateFilter]);
 
   const loadShipments = () => {
     const allShipments = logisticsDataManager.getAllShipments();
@@ -28,6 +29,17 @@ const ShipmentManagement = () => {
 
   const applyFilters = () => {
     let filtered = [...shipments];
+
+    // 搜尋篩選
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(shipment => 
+        shipment.orderNumber?.toLowerCase().includes(term) ||
+        shipment.trackingNumber?.toLowerCase().includes(term) ||
+        shipment.receiverInfo?.name?.toLowerCase().includes(term) ||
+        shipment.receiverInfo?.phone?.includes(term)
+      );
+    }
 
     // 狀態篩選
     if (statusFilter !== 'all') {
@@ -227,6 +239,18 @@ const ShipmentManagement = () => {
 
         {/* 篩選器 */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
+          {/* 搜尋欄 */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">搜尋</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="搜尋訂單編號、追蹤號碼、收件人姓名或電話..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
             {/* 狀態篩選 */}
