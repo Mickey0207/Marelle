@@ -40,8 +40,8 @@ const AccountingOverview = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fdf8f2] p-6">
-        <div className="max-w-7xl mx-auto">
+      <div>
+        <div>
           <div className="flex items-center justify-center h-64">
             <div className="flex items-center space-x-2">
               <ArrowPathIcon className="h-6 w-6 animate-spin text-[#cc824d]" />
@@ -66,8 +66,8 @@ const AccountingOverview = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fdf8f2] p-6">
-      <div className="max-w-7xl mx-auto">
+    <div>
+      <div>
         {/* 頁面標題 */}
         <div className="flex items-center justify-between mb-8">
           <div>

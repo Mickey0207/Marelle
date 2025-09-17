@@ -21,6 +21,7 @@ import NestedVariantManager from '../components/NestedVariantManager';
 import QRCodeGenerator from '../components/QRCodeGenerator';
 import CategoryManager from '../components/CategoryManager';
 import ProductStatusManager from '../components/ProductStatusManager';
+import SearchableSelect from '../../components/SearchableSelect';
 
 const AddProductAdvanced = () => {
   const navigate = useNavigate();
@@ -410,18 +411,16 @@ const AddProductAdvanced = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
                 商品分類 <span className="text-red-500">*</span>
               </label>
-              <select
+              <SearchableSelect
+                options={[
+                  { value: '', label: '請選擇分類' },
+                  ...categories.map(cat => ({ value: cat.value, label: cat.label }))
+                ]}
                 value={formData.category}
-                onChange={(e) => handleInputChange('category', e.target.value)}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent transition-colors font-chinese ${
-                  errors.category ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                <option value="">請選擇分類</option>
-                {categories.map(cat => (
-                  <option key={cat.value} value={cat.value}>{cat.label}</option>
-                ))}
-              </select>
+                onChange={(value) => handleInputChange('category', value)}
+                placeholder="搜尋商品分類..."
+                className={`w-full ${errors.category ? 'border-red-500' : ''}`}
+              />
               {errors.category && (
                 <p className="mt-1 text-sm text-red-600 font-chinese">{errors.category}</p>
               )}
@@ -872,24 +871,28 @@ const AddProductAdvanced = () => {
         </div>
 
         <div className="flex items-center space-x-3">
-          <select
+          <SearchableSelect
+            options={[
+              { value: 'zh-TW', label: '繁體中文' },
+              { value: 'en', label: 'English' }
+            ]}
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent font-chinese"
-          >
-            <option value="zh-TW">繁體中文</option>
-            <option value="en">English</option>
-          </select>
+            onChange={setLanguage}
+            placeholder="選擇語言"
+            className="min-w-[140px]"
+          />
           
-          <select
+          <SearchableSelect
+            options={[
+              { value: 'draft', label: '草稿' },
+              { value: 'active', label: '啟用' },
+              { value: 'inactive', label: '停用' }
+            ]}
             value={formData.status}
-            onChange={(e) => handleInputChange('status', e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent font-chinese"
-          >
-            <option value="draft">草稿</option>
-            <option value="active">啟用</option>
-            <option value="inactive">停用</option>
-          </select>
+            onChange={(value) => handleInputChange('status', value)}
+            placeholder="選擇狀態"
+            className="min-w-[120px]"
+          />
         </div>
       </div>
 

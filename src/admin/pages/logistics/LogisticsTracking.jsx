@@ -144,7 +144,7 @@ const LogisticsTracking = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf8f2] p-6">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center">

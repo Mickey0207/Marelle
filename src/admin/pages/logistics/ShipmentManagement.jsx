@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import logisticsDataManager, { LogisticsStatus, LogisticsType } from '../../data/logisticsDataManager';
+import SearchableSelect from '../../../components/SearchableSelect';
 
 const ShipmentManagement = () => {
   const [shipments, setShipments] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
@@ -19,7 +19,7 @@ const ShipmentManagement = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [shipments, searchTerm, statusFilter, typeFilter, dateFilter]);
+  }, [shipments, statusFilter, typeFilter, dateFilter]);
 
   const loadShipments = () => {
     const allShipments = logisticsDataManager.getAllShipments();
@@ -28,11 +28,6 @@ const ShipmentManagement = () => {
 
   const applyFilters = () => {
     let filtered = [...shipments];
-
-    // 搜尋篩選
-    if (searchTerm) {
-      filtered = logisticsDataManager.searchShipments(searchTerm);
-    }
 
     // 狀態篩選
     if (statusFilter !== 'all') {
@@ -54,10 +49,6 @@ const ShipmentManagement = () => {
     }
 
     setFilteredShipments(filtered);
-  };
-
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
   };
 
   const handleSelectShipment = (shipmentId) => {
@@ -207,7 +198,7 @@ const ShipmentManagement = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf8f2] p-6">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -236,56 +227,42 @@ const ShipmentManagement = () => {
 
         {/* 篩選器 */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* 搜尋 */}
-            <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">搜尋</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  placeholder="搜尋訂單編號、追蹤編號、收件人..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                />
-                <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
             {/* 狀態篩選 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">狀態</label>
-              <select
+              <SearchableSelect
+                options={[
+                  { value: 'all', label: '全部狀態' },
+                  ...Object.values(LogisticsStatus).map(status => ({
+                    value: status,
+                    label: getStatusDisplayName(status)
+                  }))
+                ]}
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-              >
-                <option value="all">全部狀態</option>
-                {Object.values(LogisticsStatus).map(status => (
-                  <option key={status} value={status}>
-                    {getStatusDisplayName(status)}
-                  </option>
-                ))}
-              </select>
+                onChange={setStatusFilter}
+                placeholder="選擇狀態"
+                className="w-full"
+              />
             </div>
 
             {/* 配送方式篩選 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">配送方式</label>
-              <select
+              <SearchableSelect
+                options={[
+                  { value: 'all', label: '全部方式' },
+                  ...Object.values(LogisticsType).map(type => ({
+                    value: type,
+                    label: getLogisticsTypeDisplayName(type)
+                  }))
+                ]}
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-              >
-                <option value="all">全部方式</option>
-                {Object.values(LogisticsType).map(type => (
-                  <option key={type} value={type}>
-                    {getLogisticsTypeDisplayName(type)}
-                  </option>
-                ))}
-              </select>
+                onChange={setTypeFilter}
+                placeholder="選擇配送方式"
+                className="w-full"
+              />
             </div>
 
             {/* 日期篩選 */}
@@ -363,8 +340,8 @@ const ShipmentManagement = () => {
         )}
 
         {/* 配送單列表 */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg overflow-visible">
+          <div className="overflow-x-auto overflow-y-visible">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -461,19 +438,20 @@ const ShipmentManagement = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         {/* 狀態更新下拉選單 */}
-                        <select
+                        <SearchableSelect
+                          options={[
+                            { value: shipment.status, label: getStatusDisplayName(shipment.status) },
+                            ...getAvailableStatusTransitions(shipment.status).map(status => ({
+                              value: status,
+                              label: `更新為: ${getStatusDisplayName(status)}`
+                            }))
+                          ]}
                           value={shipment.status}
-                          onChange={(e) => handleUpdateStatus(shipment.id, e.target.value)}
+                          onChange={(value) => handleUpdateStatus(shipment.id, value)}
                           disabled={loading}
-                          className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                        >
-                          <option value={shipment.status}>{getStatusDisplayName(shipment.status)}</option>
-                          {getAvailableStatusTransitions(shipment.status).map(status => (
-                            <option key={status} value={status}>
-                              更新為: {getStatusDisplayName(status)}
-                            </option>
-                          ))}
-                        </select>
+                          placeholder="選擇狀態"
+                          className="min-w-[120px] text-xs"
+                        />
                         
                         {/* 查看詳情 */}
                         <Link

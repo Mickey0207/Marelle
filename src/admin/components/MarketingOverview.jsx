@@ -16,6 +16,7 @@ import {
   StopIcon
 } from '@heroicons/react/24/outline';
 import marketingDataManager from '../utils/marketingDataManager';
+import SearchableSelect from '../../components/SearchableSelect';
 
 const MarketingOverview = () => {
   const [analytics, setAnalytics] = useState({});
@@ -103,7 +104,7 @@ const MarketingOverview = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#fdf8f2' }}>
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="p-6">
         {/* 頁面標題 */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -112,14 +113,16 @@ const MarketingOverview = () => {
               <p className="text-gray-600">統一管理檔期活動、廣告投放與客戶關係</p>
             </div>
             <div className="flex items-center space-x-4">
-              <select
+              <SearchableSelect
+                options={[
+                  { value: '7d', label: '過去7天' },
+                  { value: '30d', label: '過去30天' }
+                ]}
                 value={selectedTimeRange}
-                onChange={(e) => setSelectedTimeRange(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-              >
-                <option value="7d">過去7天</option>
-                <option value="30d">過去30天</option>
-              </select>
+                onChange={setSelectedTimeRange}
+                placeholder="選擇時間範圍"
+                className="min-w-[140px]"
+              />
               <button className="bg-[#cc824d] text-white px-4 py-2 rounded-lg hover:bg-[#b8753f] transition-colors flex items-center">
                 <BellIcon className="h-5 w-5 mr-2" />
                 即時警報

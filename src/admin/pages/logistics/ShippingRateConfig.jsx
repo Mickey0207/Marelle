@@ -185,7 +185,7 @@ const ShippingRateConfig = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf8f2] p-6">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center">
@@ -317,7 +317,7 @@ const ShippingRateConfig = () => {
                       ...prev,
                       logisticsType: e.target.value
                     }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
+                    className="glass-select w-full font-chinese"
                   >
                     {Object.values(LogisticsType).map(type => (
                       <option key={type} value={type}>
@@ -499,7 +499,7 @@ const ShippingRateConfig = () => {
                     <select
                       value={formData.calculationMethod}
                       onChange={(e) => handleInputChange('calculationMethod', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
+                      className="glass-select w-full font-chinese"
                     >
                       {Object.values(CalculationMethod).map(method => (
                         <option key={method} value={method}>

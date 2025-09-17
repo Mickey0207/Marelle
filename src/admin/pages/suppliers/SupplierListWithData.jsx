@@ -109,21 +109,6 @@ const SupplierListWithData = () => {
         </div>
       </div>
 
-      {/* 搜尋和篩選 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-gray-200/50">
-        <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="搜尋供應商名稱、統編或行業..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* 供應商表格 */}
       <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-hidden">
         {suppliers.length > 0 ? (

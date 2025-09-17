@@ -14,6 +14,7 @@ import { adminDataManager } from '../data/adminDataManager.js';
 import { validatePassword } from '../data/adminConfig.js';
 import CustomSelect from '../components/CustomSelect.jsx';
 import GlassModal from '../../components/GlassModal.jsx';
+import StandardTable from '../../components/StandardTable.jsx';
 
 const AdminUserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -258,6 +259,134 @@ const AdminUserManagement = () => {
     return user.lockedUntil && new Date(user.lockedUntil) > new Date();
   };
 
+  // 定義表格列配置
+  const columns = [
+    {
+      key: 'user',
+      label: '管理員',
+      sortable: true,
+      render: (value, user) => (
+        <div className="flex items-center">
+          {user.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.displayName}
+              className="w-10 h-10 rounded-full mr-3"
+            />
+          ) : (
+            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+              <UserIcon className="w-6 h-6 text-gray-500" />
+            </div>
+          )}
+          <div>
+            <p className="font-medium text-gray-900 font-chinese">{user.displayName}</p>
+            <p className="text-sm text-gray-500">{user.email}</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'employeeId',
+      label: '工號',
+      sortable: true,
+      render: (value) => (
+        <span className="px-3 py-1 bg-[#cc824d] text-white rounded-lg text-sm font-bold">
+          {value}
+        </span>
+      )
+    },
+    {
+      key: 'roleId',
+      label: '角色',
+      sortable: true,
+      render: (value) => <span className="text-gray-900 font-chinese">{getRoleName(value)}</span>
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: false,
+      render: (value, user) => {
+        if (isUserLocked(user)) {
+          return (
+            <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-chinese">
+              🔒 已鎖定
+            </span>
+          );
+        } else if (user.isActive) {
+          return (
+            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-chinese">
+              ✅ 啟用中
+            </span>
+          );
+        } else {
+          return (
+            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-chinese">
+              ❌ 已停用
+            </span>
+          );
+        }
+      }
+    },
+    {
+      key: 'lastLoginAt',
+      label: '最後登入',
+      sortable: true,
+      render: (value) => (
+        <span className="text-gray-500 text-sm font-chinese">
+          {value ? new Date(value).toLocaleDateString('zh-TW') : '從未登入'}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (value, user) => (
+        <div className="flex items-center justify-center space-x-2">
+          <button
+            onClick={() => handleOpenModal(user)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="編輯管理員"
+          >
+            <PencilIcon className="w-4 h-4" />
+          </button>
+          
+          {isUserLocked(user) ? (
+            <button
+              onClick={() => handleUnlock(user)}
+              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              title="解鎖帳號"
+            >
+              <LockOpenIcon className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              onClick={() => handleToggleStatus(user)}
+              className={`p-2 rounded-lg transition-colors ${
+                user.isActive 
+                  ? 'text-orange-600 hover:bg-orange-50' 
+                  : 'text-green-600 hover:bg-green-50'
+              }`}
+              title={user.isActive ? '停用帳號' : '啟用帳號'}
+            >
+              {user.isActive ? <LockClosedIcon className="w-4 h-4" /> : <LockOpenIcon className="w-4 h-4" />}
+            </button>
+          )}
+          
+          {getRolePrefix(user.roleId) !== 'S' && (
+            <button
+              onClick={() => handleDelete(user)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="刪除管理員"
+            >
+              <TrashIcon className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )
+    }
+  ];
+
   return (
     <div className="space-y-6">
       {/* 頁面標題 */}
@@ -280,16 +409,7 @@ const AdminUserManagement = () => {
 
       {/* 篩選列 */}
       <div className="glass rounded-2xl p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <input
-              type="text"
-              placeholder="搜尋姓名、郵箱或工號..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#cc824d] focus:border-transparent font-chinese"
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <CustomSelect
               value={roleFilter}
@@ -315,119 +435,13 @@ const AdminUserManagement = () => {
       </div>
 
       {/* 管理員列表 */}
-      <div className="glass rounded-2xl overflow-visible">
-        <div className="overflow-x-auto overflow-y-visible">
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-[#cc824d] to-[#b3723f] text-white">
-              <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold font-chinese">管理員</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold font-chinese">工號</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold font-chinese">角色</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold font-chinese">狀態</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold font-chinese">最後登入</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold font-chinese">操作</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      {user.avatarUrl ? (
-                        <img
-                          src={user.avatarUrl}
-                          alt={user.displayName}
-                          className="w-10 h-10 rounded-full mr-3"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                          <UserIcon className="w-6 h-6 text-gray-500" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-medium text-gray-900 font-chinese">{user.displayName}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-[#cc824d] text-white rounded-lg text-sm font-bold">
-                      {user.employeeId}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-gray-900 font-chinese">{getRoleName(user.roleId)}</span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {isUserLocked(user) ? (
-                      <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-chinese">
-                        🔒 已鎖定
-                      </span>
-                    ) : user.isActive ? (
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-chinese">
-                        ✅ 啟用中
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-chinese">
-                        ❌ 已停用
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-center text-gray-500 text-sm font-chinese">
-                    {user.lastLoginAt ? 
-                      new Date(user.lastLoginAt).toLocaleDateString('zh-TW') : 
-                      '從未登入'
-                    }
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-center space-x-2">
-                      <button
-                        onClick={() => handleOpenModal(user)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="編輯管理員"
-                      >
-                        <PencilIcon className="w-4 h-4" />
-                      </button>
-                      
-                      {isUserLocked(user) ? (
-                        <button
-                          onClick={() => handleUnlock(user)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="解鎖帳號"
-                        >
-                          <LockOpenIcon className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleToggleStatus(user)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            user.isActive 
-                              ? 'text-orange-600 hover:bg-orange-50' 
-                              : 'text-green-600 hover:bg-green-50'
-                          }`}
-                          title={user.isActive ? '停用帳號' : '啟用帳號'}
-                        >
-                          {user.isActive ? <LockClosedIcon className="w-4 h-4" /> : <LockOpenIcon className="w-4 h-4" />}
-                        </button>
-                      )}
-                      
-                      {getRolePrefix(user.roleId) !== 'S' && (
-                        <button
-                          onClick={() => handleDelete(user)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="刪除管理員"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <StandardTable
+        data={filteredUsers}
+        columns={columns}
+        title="管理員清單"
+        emptyMessage="沒有找到符合條件的管理員"
+        exportFileName="管理員清單"
+      />
 
       {/* 新增/編輯管理員模態框 */}
       <GlassModal

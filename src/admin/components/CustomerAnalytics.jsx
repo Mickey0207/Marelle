@@ -23,6 +23,7 @@ import {
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import analyticsDataManager from '../utils/analyticsDataManager';
+import SearchableSelect from '../../components/SearchableSelect';
 
 const CustomerAnalytics = () => {
   const [customerData, setCustomerData] = useState({});
@@ -454,28 +455,29 @@ const CustomerAnalytics = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4">
-            <select
+            <SearchableSelect
+              options={segmentOptions.map(option => ({ 
+                value: option.value, 
+                label: option.label 
+              }))}
               value={selectedSegment}
-              onChange={(e) => setSelectedSegment(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-            >
-              {segmentOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedSegment}
+              placeholder="選擇客戶群組"
+              className="min-w-[160px]"
+            />
             
-            <select
+            <SearchableSelect
+              options={[
+                { value: '7days', label: '最近7天' },
+                { value: '30days', label: '最近30天' },
+                { value: '90days', label: '最近90天' },
+                { value: '1year', label: '最近1年' }
+              ]}
               value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-            >
-              <option value="7days">最近7天</option>
-              <option value="30days">最近30天</option>
-              <option value="90days">最近90天</option>
-              <option value="1year">最近1年</option>
-            </select>
+              onChange={setSelectedPeriod}
+              placeholder="選擇時間範圍"
+              className="min-w-[140px]"
+            />
           </div>
         </div>
 

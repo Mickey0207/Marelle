@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import logisticsDataManager from '../../data/logisticsDataManager';
+import SearchableSelect from '../../../components/SearchableSelect';
 
 const LogisticsAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
@@ -30,7 +31,7 @@ const LogisticsAnalytics = () => {
   if (!analytics) {
     return (
       <div className="min-h-screen bg-[#fdf8f2] p-6">
-        <div className="max-w-7xl mx-auto">
+        <div>
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
             <div className="animate-pulse">
               <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
@@ -47,7 +48,7 @@ const LogisticsAnalytics = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf8f2] p-6">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center">
@@ -56,16 +57,18 @@ const LogisticsAnalytics = () => {
               <p className="text-gray-600">詳細數據分析、成本分析、效率報表、趨勢圖表</p>
             </div>
             <div className="flex gap-3">
-              <select
+              <SearchableSelect
+                options={[
+                  { value: '7days', label: '最近7天' },
+                  { value: '30days', label: '最近30天' },
+                  { value: '90days', label: '最近90天' },
+                  { value: '1year', label: '最近一年' }
+                ]}
                 value={dateRange}
-                onChange={(e) => setDateRange(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-              >
-                <option value="7days">最近7天</option>
-                <option value="30days">最近30天</option>
-                <option value="90days">最近90天</option>
-                <option value="1year">最近一年</option>
-              </select>
+                onChange={setDateRange}
+                placeholder="選擇時間範圍"
+                className="min-w-[140px]"
+              />
               <button className="bg-[#cc824d] text-white px-4 py-2 rounded-lg hover:bg-[#b3723f] transition-colors">
                 匯出報表
               </button>
@@ -225,15 +228,17 @@ const LogisticsAnalytics = () => {
             <h2 className="text-xl font-bold text-gray-900 mb-4">趨勢分析</h2>
             
             <div className="mb-4">
-              <select
+              <SearchableSelect
+                options={[
+                  { value: 'cost', label: '成本趨勢' },
+                  { value: 'volume', label: '出貨量趨勢' },
+                  { value: 'efficiency', label: '效率趨勢' }
+                ]}
                 value={selectedMetric}
-                onChange={(e) => setSelectedMetric(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-              >
-                <option value="cost">成本趨勢</option>
-                <option value="volume">出貨量趨勢</option>
-                <option value="efficiency">效率趨勢</option>
-              </select>
+                onChange={setSelectedMetric}
+                placeholder="選擇指標"
+                className="min-w-[140px]"
+              />
             </div>
             
             {/* 簡化的趨勢圖表展示 */}

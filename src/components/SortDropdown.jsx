@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 const SORT_OPTIONS = [
@@ -10,7 +11,26 @@ const SORT_OPTIONS = [
 
 export const SortDropdown = ({ value, onChange, size = 'md' }) => {
   const [open, setOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const ref = useRef(null);
+
+  const updateDropdownPosition = () => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 2,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  };
+
+  const handleToggle = () => {
+    if (!open) {
+      updateDropdownPosition();
+    }
+    setOpen(!open);
+  };
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -29,28 +49,34 @@ export const SortDropdown = ({ value, onChange, size = 'md' }) => {
       <button
         type="button"
         className="sort-trigger"
-        onClick={() => setOpen(o => !o)}
+        onClick={handleToggle}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
         <span>{current.label}</span>
         <ChevronDownIcon className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && (
-        <ul className="sort-menu" role="listbox" tabIndex={-1}>
+      {open && createPortal(
+        <div 
+          className="glass-dropdown fixed z-[99999]"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`,
+            zIndex: 99999
+          }}
+        >
           {SORT_OPTIONS.map(opt => (
-            <li key={opt.value}>
-              <button
-                role="option"
-                aria-selected={opt.value === value}
-                className={`sort-option ${opt.value === value ? 'active' : ''}`}
-                onClick={() => { onChange(opt.value); setOpen(false); }}
-              >
-                {opt.label}
-              </button>
-            </li>
+            <button
+              key={opt.value}
+              className={`glass-dropdown-option font-chinese ${opt.value === value ? 'selected' : ''}`}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+            >
+              {opt.label}
+            </button>
           ))}
-        </ul>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -65,7 +65,7 @@ const GiftManagementContainer = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#fdf8f2 !important' }}>
       {/* 頁面標題 */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
-        <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="px-6 py-6">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-gradient-to-r from-[#cc824d] to-[#b3723f] rounded-xl">
               <GiftIcon className="w-8 h-8 text-white" />

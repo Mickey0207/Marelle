@@ -195,7 +195,7 @@ const FestivalAnalytics = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf8f2] p-6">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* 頁面標題 */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
@@ -452,7 +452,7 @@ const FestivalAnalytics = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900">趨勢分析</h2>
             <div className="flex items-center space-x-4">
-              <select className="px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#cc824d] focus:border-transparent">
+              <select className="glass-select text-sm font-chinese">
                 <option value="views">瀏覽量</option>
                 <option value="participation">參與人次</option>
                 <option value="revenue">收益</option>

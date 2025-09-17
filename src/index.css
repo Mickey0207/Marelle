@@ -214,6 +214,116 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 
+  /* 玻璃態下拉選單系統 */
+  .glass-dropdown {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3), 
+                0 8px 32px rgba(0, 0, 0, 0.1), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+  }
+
+  .glass-dropdown-search {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-dropdown-search input {
+    width: 100%;
+    padding: 0.625rem 0.75rem 0.625rem 2.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .glass-dropdown-search input:focus {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: #CC824D;
+    box-shadow: 0 0 0 2px rgba(204, 130, 77, 0.2);
+  }
+
+  .glass-dropdown-option {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: none;
+    cursor: pointer;
+    color: #374151;
+  }
+
+  .glass-dropdown-option:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(249, 237, 224, 0.2));
+    color: #703f24;
+  }
+
+  .glass-dropdown-option.selected {
+    background: linear-gradient(135deg, rgba(249, 237, 224, 0.8), rgba(242, 216, 191, 0.6));
+    color: #703f24;
+    border-right: 4px solid #CC824D;
+  }
+
+  .glass-dropdown-create {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #374151;
+  }
+
+  .glass-dropdown-create:hover {
+    background: linear-gradient(135deg, rgba(249, 237, 224, 0.3), rgba(242, 216, 191, 0.2));
+    color: #703f24;
+  }
+
+  .glass-dropdown-empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #6B7280;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-dropdown-more {
+    padding: 0.5rem 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6B7280;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(249, 237, 224, 0.2));
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
   .input-glass {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(8px);
@@ -567,4 +677,144 @@
 ::selection {
   background-color: rgba(204, 130, 77, 0.2);
   color: #666666;
+}
+
+/* 原生 select 元素的玻璃態樣式 */
+.glass-select {
+  padding: 12px 40px 12px 16px;
+  border: 1px solid rgba(204, 130, 77, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  color: #374151;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: 
+    linear-gradient(45deg, transparent 50%, #CC824D 50%),
+    linear-gradient(135deg, #CC824D 50%, transparent 50%);
+  background-position: 
+    calc(100% - 20px) calc(1em + 2px),
+    calc(100% - 15px) calc(1em + 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.glass-select:focus {
+  border-color: #CC824D;
+  box-shadow: 0 0 0 3px rgba(204, 130, 77, 0.1);
+}
+
+.glass-select:hover {
+  border-color: rgba(204, 130, 77, 0.5);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.glass-select option {
+  background: rgba(255, 255, 255, 0.95);
+  color: #374151;
+  padding: 8px;
+}
+
+/* StandardTable 樣式 */
+.standard-table {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 
+              0 4px 16px rgba(0, 0, 0, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.standard-table-header {
+  background: #f9fafb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+  transition: all 0.2s ease;
+}
+
+.standard-table-header.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.standard-table-header.sortable:hover {
+  background: #f3f4f6;
+  color: #CC824D;
+}
+
+.standard-table-row {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  transition: all 0.2s ease;
+}
+
+.standard-table-row:hover {
+  background: rgba(249, 250, 251, 0.8);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.standard-table-cell {
+  padding: 1rem 1.5rem;
+  color: #374151;
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.standard-table-sort-icon {
+  margin-left: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  color: #9CA3AF;
+  transition: color 0.2s ease;
+}
+
+.standard-table-sort-icon.active {
+  color: #CC824D;
+}
+
+.standard-table-export-btn {
+  background: rgba(204, 130, 77, 0.1);
+  color: #CC824D;
+  border: 1px solid rgba(204, 130, 77, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.standard-table-export-btn:hover {
+  background: rgba(204, 130, 77, 0.2);
+  border-color: rgba(204, 130, 77, 0.5);
+  transform: translateY(-1px);
+}
+
+.standard-table-empty {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #6B7280;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.standard-table-empty-icon {
+  margin: 0 auto 1rem auto;
+  color: #D1D5DB;
+  width: 3rem;
+  height: 3rem;
 }

@@ -328,7 +328,7 @@ const MemberGiftBenefits = () => {
 
   return (
     <div className="bg-[#fdf8f2] min-h-screen p-6">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* 操作按鈕 */}
         <div className="flex justify-end mb-8">
           <button

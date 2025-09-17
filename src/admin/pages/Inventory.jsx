@@ -7,11 +7,11 @@ import {
   ExclamationTriangleIcon,
   QrCodeIcon,
   TruckIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
   BuildingStorefrontIcon
 } from '@heroicons/react/24/outline';
 import CustomSelect from '../components/CustomSelect';
+import SearchableSelect from '../../components/SearchableSelect';
+import StandardTable from '../../components/StandardTable';
 
 // 模擬整合庫存數據
 const mockInventoryData = [
@@ -78,53 +78,20 @@ const mockInventoryData = [
 ];
 
 const Inventory = () => {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedWarehouse, setSelectedWarehouse] = useState('全部');
   const [selectedCategory, setSelectedCategory] = useState('全部');
-  const [sortField, setSortField] = useState('sku');
-  const [sortDirection, setSortDirection] = useState('asc');
-  const [editingRow, setEditingRow] = useState(null);
 
-  // 篩選和排序數據
+  // 篩選數據
   const filteredData = useMemo(() => {
     let filtered = mockInventoryData.filter(item => {
-      const matchSearch = item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.barcode.includes(searchTerm);
       const matchWarehouse = selectedWarehouse === '全部' || item.warehouse === selectedWarehouse;
       const matchCategory = selectedCategory === '全部' || item.category === selectedCategory;
       
-      return matchSearch && matchWarehouse && matchCategory;
-    });
-
-    // 排序
-    filtered.sort((a, b) => {
-      let aVal = a[sortField];
-      let bVal = b[sortField];
-      
-      if (typeof aVal === 'string') {
-        aVal = aVal.toLowerCase();
-        bVal = bVal.toLowerCase();
-      }
-      
-      if (sortDirection === 'asc') {
-        return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-      } else {
-        return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
-      }
+      return matchWarehouse && matchCategory;
     });
 
     return filtered;
-  }, [searchTerm, selectedWarehouse, selectedCategory, sortField, sortDirection]);
-
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
+  }, [selectedWarehouse, selectedCategory]);
 
   const getStatusBadge = (item) => {
     if (item.status === 'presale') {
@@ -138,12 +105,90 @@ const Inventory = () => {
     }
   };
 
-  const SortIcon = ({ field }) => {
-    if (sortField !== field) return null;
-    return sortDirection === 'asc' ? 
-      <ArrowUpIcon className="w-4 h-4 inline ml-1" /> : 
-      <ArrowDownIcon className="w-4 h-4 inline ml-1" />;
-  };
+  // 定義表格列配置
+  const columns = [
+    {
+      key: 'sku',
+      label: 'SKU',
+      sortable: true,
+      render: (value) => <span className="font-mono text-sm">{value}</span>
+    },
+    {
+      key: 'name',
+      label: '商品名稱',
+      sortable: true,
+      render: (value) => <span className="font-chinese">{value}</span>
+    },
+    {
+      key: 'warehouse',
+      label: '倉庫',
+      sortable: true,
+      render: (value) => <span className="font-chinese">{value}</span>
+    },
+    {
+      key: 'currentStock',
+      label: '庫存量',
+      sortable: true,
+      render: (value, item) => (
+        <span className={`font-bold ${value < 0 ? 'text-purple-600' : value < item.safeStock ? 'text-red-600' : 'text-green-600'}`}>
+          {value}
+        </span>
+      )
+    },
+    {
+      key: 'safeStock',
+      label: '安全庫存',
+      sortable: true
+    },
+    {
+      key: 'avgCost',
+      label: '平均成本',
+      sortable: true,
+      render: (value) => `NT$ ${value}`
+    },
+    {
+      key: 'totalValue',
+      label: '庫存價值',
+      sortable: true,
+      render: (value) => (
+        <span className={`font-bold ${value < 0 ? 'text-purple-600' : 'text-gray-900'}`}>
+          NT$ {value.toLocaleString()}
+        </span>
+      )
+    },
+    {
+      key: 'barcode',
+      label: '條碼',
+      sortable: false,
+      render: (value) => (
+        <div className="flex items-center space-x-1">
+          <QrCodeIcon className="w-4 h-4 text-gray-400" />
+          <span className="font-mono text-xs">{value}</span>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: false,
+      render: (value, item) => getStatusBadge(item)
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (value, item) => (
+        <div className="flex space-x-2">
+          <button className="p-1 text-blue-600 hover:bg-blue-100 rounded" title="編輯">
+            <PencilIcon className="w-4 h-4" />
+          </button>
+          <button className="p-1 text-green-600 hover:bg-green-100 rounded" title="物流">
+            <TruckIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ];
 
   return (
     <div className="bg-[#fdf8f2] min-h-screen">
@@ -153,45 +198,37 @@ const Inventory = () => {
         <h1 className="text-3xl font-bold text-gray-800 font-chinese">整合庫存管理</h1>
       </div>
 
-      {/* 搜尋和篩選區域 */}
+      {/* 篩選區域 */}
       <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center space-x-2">
-            <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="搜尋 SKU、商品名稱或條碼..."
-              className="input w-64"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
           
           <div className="flex items-center space-x-2">
             <BuildingStorefrontIcon className="w-5 h-5 text-gray-400" />
-            <CustomSelect
+            <SearchableSelect
+              options={[
+                { value: '全部', label: '全部倉庫' },
+                { value: '主倉庫', label: '主倉庫' },
+                { value: '分倉庫A', label: '分倉庫A' }
+              ]}
               value={selectedWarehouse}
               onChange={setSelectedWarehouse}
-              options={[
-                { value: '全部', label: '全部倉庫', icon: '🏢' },
-                { value: '主倉庫', label: '主倉庫', icon: '🏪', description: '主要庫存倉庫' },
-                { value: '分倉庫A', label: '分倉庫A', icon: '🏬', description: '分店庫存倉庫' }
-              ]}
+              placeholder="選擇倉庫"
               className="w-36"
             />
           </div>
 
           <div className="flex items-center space-x-2">
             <FunnelIcon className="w-5 h-5 text-gray-400" />
-            <CustomSelect
-              value={selectedCategory}
-              onChange={setSelectedCategory}
+            <SearchableSelect
               options={[
                 { value: '全部', label: '全部分類' },
-                { value: '服飾', label: '服飾', icon: '👔', description: '服裝商品' },
-                { value: '配件', label: '配件', icon: '👜', description: '配件商品' },
-                { value: '贈品', label: '贈品', icon: '🎁', description: '促銷贈品' }
+                { value: '服飾', label: '服飾' },
+                { value: '配件', label: '配件' },
+                { value: '贈品', label: '贈品' }
               ]}
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              placeholder="選擇商品分類"
               className="w-32"
             />
           </div>
@@ -203,78 +240,13 @@ const Inventory = () => {
       </div>
 
       {/* 主要庫存表格 */}
-      <div className="glass rounded-2xl overflow-visible">
-        <div className="overflow-x-auto overflow-y-visible">{/* 允許垂直溢出以顯示下拉選單 */}
-          <table className="w-full">
-            <thead className="bg-gradient-to-r from-[#cc824d] to-[#b3723f] text-white" style={{ position: 'relative', zIndex: 1 }}>{/* 設定較低的z-index */}
-              <tr>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('sku')}>
-                  SKU <SortIcon field="sku" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('name')}>
-                  商品名稱 <SortIcon field="name" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('warehouse')}>
-                  倉庫 <SortIcon field="warehouse" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('currentStock')}>
-                  庫存量 <SortIcon field="currentStock" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('safeStock')}>
-                  安全庫存 <SortIcon field="safeStock" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('avgCost')}>
-                  平均成本 <SortIcon field="avgCost" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese cursor-pointer" onClick={() => handleSort('totalValue')}>
-                  庫存價值 <SortIcon field="totalValue" />
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">條碼</th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">狀態</th>
-                <th className="px-4 py-4 text-left text-sm font-semibold font-chinese">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredData.map(item => (
-                <tr key={item.id} className="hover:bg-white/30">
-                  <td className="px-4 py-3 font-mono text-sm">{item.sku}</td>
-                  <td className="px-4 py-3 font-chinese">{item.name}</td>
-                  <td className="px-4 py-3 font-chinese">{item.warehouse}</td>
-                  <td className="px-4 py-3">
-                    <span className={`font-bold ${item.currentStock < 0 ? 'text-purple-600' : item.currentStock < item.safeStock ? 'text-red-600' : 'text-green-600'}`}>
-                      {item.currentStock}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{item.safeStock}</td>
-                  <td className="px-4 py-3">NT$ {item.avgCost}</td>
-                  <td className="px-4 py-3">
-                    <span className={`font-bold ${item.totalValue < 0 ? 'text-purple-600' : 'text-gray-900'}`}>
-                      NT$ {item.totalValue.toLocaleString()}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center space-x-1">
-                      <QrCodeIcon className="w-4 h-4 text-gray-400" />
-                      <span className="font-mono text-xs">{item.barcode}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">{getStatusBadge(item)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex space-x-2">
-                      <button className="p-1 text-blue-600 hover:bg-blue-100 rounded" title="編輯">
-                        <PencilIcon className="w-4 h-4" />
-                      </button>
-                      <button className="p-1 text-green-600 hover:bg-green-100 rounded" title="物流">
-                        <TruckIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <StandardTable
+        data={filteredData}
+        columns={columns}
+        title="庫存清單"
+        emptyMessage="沒有找到符合條件的庫存資料"
+        exportFileName="庫存清單"
+      />
 
       {/* 統計摘要 */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -21,6 +21,7 @@ import {
 } from '@heroicons/react/24/outline';
 import NotificationTestPanel from '../components/NotificationTestPanel';
 import CustomSelect from '../components/CustomSelect';
+import SearchableSelect from '../../components/SearchableSelect';
 
 // 模擬通知範本數據
 const mockTemplateData = [
@@ -91,7 +92,6 @@ const mockTemplateData = [
 ];
 
 const NotificationManagement = () => {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('全部');
   const [selectedStatus, setSelectedStatus] = useState('全部');
   const [sortField, setSortField] = useState('updatedAt');
@@ -110,13 +110,10 @@ const NotificationManagement = () => {
   // 篩選和排序數據
   const filteredData = useMemo(() => {
     let filtered = mockTemplateData.filter(template => {
-      const matchSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.trigger.toLowerCase().includes(searchTerm.toLowerCase());
       const matchCategory = selectedCategory === '全部' || template.category === selectedCategory;
       const matchStatus = selectedStatus === '全部' || template.status === selectedStatus;
       
-      return matchSearch && matchCategory && matchStatus;
+      return matchCategory && matchStatus;
     });
 
     // 排序
@@ -137,7 +134,7 @@ const NotificationManagement = () => {
     });
 
     return filtered;
-  }, [searchTerm, selectedCategory, selectedStatus, sortField, sortDirection]);
+  }, [selectedCategory, selectedStatus, sortField, sortDirection]);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -253,35 +250,25 @@ const NotificationManagement = () => {
 
   const renderTemplatesTab = () => (
     <>
-      {/* 搜尋和篩選區域 */}
+      {/* 篩選區域 */}
       <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center space-x-2">
-            <MagnifyingGlassIcon className="w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="搜尋範本名稱、描述或觸發條件..."
-              className="input w-80"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
           
           <div className="flex items-center space-x-2">
             <FunnelIcon className="w-5 h-5 text-gray-400" />
-            <CustomSelect
-              value={selectedCategory}
-              onChange={setSelectedCategory}
+            <SearchableSelect
               options={[
                 { value: '全部', label: '全部分類' },
-                { value: 'order', label: '訂單', icon: '📦', description: '訂單相關通知' },
-                { value: 'user', label: '用戶', icon: '👤', description: '用戶相關通知' },
-                { value: 'product', label: '商品', icon: '🛍️', description: '商品相關通知' },
-                { value: 'marketing', label: '行銷', icon: '🎯', description: '行銷活動通知' },
-                { value: 'system', label: '系統', icon: '⚙️', description: '系統相關通知' }
+                { value: 'order', label: '訂單' },
+                { value: 'user', label: '用戶' },
+                { value: 'product', label: '商品' },
+                { value: 'marketing', label: '行銷' },
+                { value: 'system', label: '系統' }
               ]}
-              className="w-48"
+              value={selectedCategory}
+              onChange={setSelectedCategory}
               placeholder="選擇分類"
+              className="w-48"
             />
           </div>
 

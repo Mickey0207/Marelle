@@ -273,7 +273,7 @@ const GiftAllocationTracking = () => {
 
   return (
     <div className="bg-[#fdf8f2] min-h-screen p-6">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* 操作按鈕 */}
         <div className="flex justify-end mb-8">
           <button
@@ -336,19 +336,9 @@ const GiftAllocationTracking = () => {
           </div>
         </div>
 
-        {/* 搜尋和過濾 */}
+        {/* 過濾 */}
         <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-white/20 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="搜尋會員姓名、訂單編號或分配ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#cc824d] focus:border-transparent font-chinese bg-white/70 backdrop-blur-sm"
-              />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             <div>
               <CustomSelect

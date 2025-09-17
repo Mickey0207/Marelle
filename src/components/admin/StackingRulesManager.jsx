@@ -223,15 +223,6 @@ const StackingRulesManager = () => {
 
           {/* Filters */}
           <div className="flex gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="搜尋規則名稱或描述..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-              />
-            </div>
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}

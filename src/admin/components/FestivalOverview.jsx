@@ -111,7 +111,7 @@ const FestivalOverview = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf8f2] p-6">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* 頁面標題 */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">節慶管理總覽</h1>

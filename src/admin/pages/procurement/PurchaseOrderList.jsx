@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import StandardTable from '../../components/StandardTable';
 import procurementDataManager, { PurchaseOrderStatus, PurchasePriority } from '../../data/procurementDataManager';
 import {
   MagnifyingGlassIcon,
@@ -59,6 +60,94 @@ const PurchaseOrderList = () => {
       </span>
     );
   };
+
+  const getPriorityBadge = (priority) => {
+    const priorityConfig = {
+      [PurchasePriority.LOW]: { label: '低', className: 'bg-gray-100 text-gray-800' },
+      [PurchasePriority.MEDIUM]: { label: '中', className: 'bg-blue-100 text-blue-800' },
+      [PurchasePriority.HIGH]: { label: '高', className: 'bg-yellow-100 text-yellow-800' },
+      [PurchasePriority.URGENT]: { label: '緊急', className: 'bg-red-100 text-red-800' }
+    };
+
+    const config = priorityConfig[priority] || priorityConfig[PurchasePriority.MEDIUM];
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}>
+        {config.label}
+      </span>
+    );
+  };
+
+  // 表格列配置
+  const columns = [
+    {
+      label: '採購單號',
+      sortable: true,
+      render: (order) => (
+        <Link
+          to={`/admin/procurement/orders/${order.id}`}
+          className="text-[#cc824d] hover:text-[#b3723f] font-medium"
+        >
+          {order.poNumber}
+        </Link>
+      )
+    },
+    {
+      label: '供應商',
+      sortable: true,
+      render: (order) => (
+        <span className="text-gray-900">{order.supplierName}</span>
+      )
+    },
+    {
+      label: '狀態',
+      sortable: true,
+      render: (order) => getStatusBadge(order.status)
+    },
+    {
+      label: '優先級',
+      sortable: true,
+      render: (order) => getPriorityBadge(order.priority)
+    },
+    {
+      label: '總金額',
+      sortable: true,
+      render: (order) => (
+        <span className="text-gray-900 font-medium">
+          ${order.totalWithTax.toLocaleString()}
+        </span>
+      )
+    },
+    {
+      label: '建立日期',
+      sortable: true,
+      render: (order) => (
+        <span className="text-gray-500">
+          {new Date(order.createdAt).toLocaleDateString()}
+        </span>
+      )
+    },
+    {
+      label: '操作',
+      render: (order) => (
+        <div className="flex space-x-2">
+          <Link
+            to={`/admin/procurement/orders/${order.id}`}
+            className="text-[#cc824d] hover:text-[#b3723f]"
+            title="查看詳情"
+          >
+            <EyeIcon className="w-4 h-4" />
+          </Link>
+          <Link
+            to={`/admin/procurement/orders/edit/${order.id}`}
+            className="text-green-600 hover:text-green-900"
+            title="編輯"
+          >
+            <PencilIcon className="w-4 h-4" />
+          </Link>
+        </div>
+      )
+    }
+  ];
 
   const StatCard = ({ title, value, icon: Icon, color }) => {
     const colorClasses = {
@@ -133,19 +222,6 @@ const PurchaseOrderList = () => {
       {/* 搜尋和篩選 */}
       <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 mb-6">
         <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="搜尋採購單號、供應商..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-          
           <div className="flex gap-3">
             <select
               value={selectedStatus}
@@ -165,84 +241,13 @@ const PurchaseOrderList = () => {
       </div>
 
       {/* 訂單列表 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  採購單號
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  供應商
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  狀態
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  總金額
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  建立日期
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Link
-                      to={`/admin/procurement/orders/${order.id}`}
-                      className="text-[#cc824d] hover:text-[#b3723f] font-medium"
-                    >
-                      {order.poNumber}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                    {order.supplierName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(order.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                    ${order.totalWithTax.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <Link
-                        to={`/admin/procurement/orders/${order.id}`}
-                        className="text-[#cc824d] hover:text-[#b3723f]"
-                      >
-                        <EyeIcon className="w-4 h-4" />
-                      </Link>
-                      <Link
-                        to={`/admin/procurement/orders/edit/${order.id}`}
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        <PencilIcon className="w-4 h-4" />
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {orders.length === 0 && (
-          <div className="text-center py-12">
-            <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">沒有找到採購單</h3>
-            <p className="mt-1 text-sm text-gray-500">開始建立第一個採購單吧</p>
-          </div>
-        )}
-      </div>
+      <StandardTable 
+        title="採購單清單"
+        columns={columns}
+        data={orders}
+        exportFileName="purchase-orders"
+        emptyMessage="沒有找到採購單，開始建立第一個採購單吧"
+      />
     </div>
   );
 };

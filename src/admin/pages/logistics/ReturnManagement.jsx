@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import logisticsDataManager, { ReturnMethod, ReturnFeePolicy, LogisticsStatus } from '../../data/logisticsDataManager';
+import SearchableSelect from '../../../components/SearchableSelect';
 
 const ReturnManagement = () => {
   const [returns, setReturns] = useState([]);
@@ -119,7 +120,7 @@ const ReturnManagement = () => {
 
   return (
     <div className="min-h-screen bg-[#fdf8f2] p-6">
-      <div className="max-w-7xl mx-auto">
+      <div>
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center">
@@ -294,27 +295,29 @@ const ReturnManagement = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">退貨方式</label>
-                    <select
+                    <SearchableSelect
+                      options={Object.values(ReturnMethod).map(method => ({
+                        value: method,
+                        label: getMethodDisplayName(method)
+                      }))}
                       value={formData.method}
-                      onChange={(e) => handleInputChange('method', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                    >
-                      {Object.values(ReturnMethod).map(method => (
-                        <option key={method} value={method}>{getMethodDisplayName(method)}</option>
-                      ))}
-                    </select>
+                      onChange={(value) => handleInputChange('method', value)}
+                      placeholder="選擇退貨方式"
+                      className="w-full"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">費用政策</label>
-                    <select
+                    <SearchableSelect
+                      options={Object.values(ReturnFeePolicy).map(policy => ({
+                        value: policy,
+                        label: getFeePolicyDisplayName(policy)
+                      }))}
                       value={formData.feePolicy}
-                      onChange={(e) => handleInputChange('feePolicy', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                    >
-                      {Object.values(ReturnFeePolicy).map(policy => (
-                        <option key={policy} value={policy}>{getFeePolicyDisplayName(policy)}</option>
-                      ))}
-                    </select>
+                      onChange={(value) => handleInputChange('feePolicy', value)}
+                      placeholder="選擇費用政策"
+                      className="w-full"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">退款金額</label>
@@ -347,16 +350,18 @@ const ReturnManagement = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">狀態</label>
-                    <select
+                    <SearchableSelect
+                      options={[
+                        { value: 'pending', label: '待處理' },
+                        { value: 'processing', label: '處理中' },
+                        { value: 'completed', label: '已完成' },
+                        { value: 'rejected', label: '已拒絕' }
+                      ]}
                       value={formData.status}
-                      onChange={(e) => handleInputChange('status', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                    >
-                      <option value="pending">待處理</option>
-                      <option value="processing">處理中</option>
-                      <option value="completed">已完成</option>
-                      <option value="rejected">已拒絕</option>
-                    </select>
+                      onChange={(value) => handleInputChange('status', value)}
+                      placeholder="選擇狀態"
+                      className="w-full"
+                    />
                   </div>
                 </div>
                 <div className="p-6 border-t border-gray-200 flex justify-end gap-3">

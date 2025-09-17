@@ -90,44 +90,38 @@ const CustomSelect = ({
       {isOpen && (
         <Portal>
           <div 
-            className="custom-select-dropdown bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm" 
+            className="glass-dropdown fixed z-[999999]" 
             style={{ 
-              position: 'absolute',
               top: dropdownPosition.top,
               left: dropdownPosition.left,
               width: dropdownPosition.width,
               zIndex: 999999 
             }}
           >
-            <div className="max-h-60 overflow-y-auto bg-white">
+            <div className="max-h-60 overflow-y-auto">
               {options.map((option, index) => (
                 <button
                   key={option.value || index}
                   type="button"
                   onClick={() => handleSelect(option.value)}
-                  className={`
-                    w-full text-left px-4 py-3 hover:bg-amber-50 hover:text-amber-900
-                    transition-colors duration-150 font-chinese
-                  ${value === option.value ? 'bg-amber-100 text-amber-900' : 'text-gray-700'}
-                  ${index !== options.length - 1 ? 'border-b border-gray-100' : ''}
-                `}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center">
-                    {option.icon && <span className="mr-3 text-lg">{option.icon}</span>}
-                    <div>
-                      <div className="font-medium">{option.label}</div>
-                      {option.description && (
-                        <div className="text-xs text-gray-500 mt-0.5">{option.description}</div>
-                      )}
-                    </div>
-                  </span>
-                  {value === option.value && (
-                    <CheckIcon className="w-4 h-4 text-amber-600" />
-                  )}
-                </div>
-              </button>
-            ))}
+                  className={`glass-dropdown-option font-chinese ${value === option.value ? 'selected' : ''}`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="flex items-center">
+                      {option.icon && <span className="mr-3 text-lg">{option.icon}</span>}
+                      <div>
+                        <div className="font-medium">{option.label}</div>
+                        {option.description && (
+                          <div className="text-xs text-gray-500 mt-0.5">{option.description}</div>
+                        )}
+                      </div>
+                    </span>
+                    {value === option.value && (
+                      <CheckIcon className="w-4 h-4" style={{ color: '#CC824D' }} />
+                    )}
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </Portal>

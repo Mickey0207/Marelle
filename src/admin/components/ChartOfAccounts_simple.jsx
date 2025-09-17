@@ -53,8 +53,7 @@ const ChartOfAccounts = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf8f2] p-6">
-      <div className="max-w-7xl mx-auto">
+    <div>
         {/* 頁面標題 */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">會計科目管理</h1>
@@ -64,17 +63,6 @@ const ChartOfAccounts = () => {
         {/* 操作工具列 */}
         <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-white/20 shadow-lg mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              {/* 搜尋框 */}
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="搜尋科目代碼或名稱..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent min-w-64"
-                />
-              </div>
-            </div>
 
             <div className="flex gap-3">
               <button className="flex items-center gap-2 px-4 py-2 bg-[#cc824d] text-white rounded-lg hover:bg-[#b3723f] transition-colors">
@@ -165,7 +153,6 @@ const ChartOfAccounts = () => {
             </button>
           </div>
         )}
-      </div>
     </div>
   );
 };

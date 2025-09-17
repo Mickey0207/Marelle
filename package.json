@@ -13,6 +13,7 @@
     "@heroicons/react": "^2.0.18",
     "framer-motion": "^10.16.14",
     "gsap": "^3.12.2",
+    "lucide-react": "^0.544.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",

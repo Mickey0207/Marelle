@@ -19,6 +19,7 @@ import {
   DocumentArrowDownIcon
 } from '@heroicons/react/24/outline';
 import analyticsDataManager from '../utils/analyticsDataManager';
+import SearchableSelect from '../../components/SearchableSelect';
 
 const SalesAnalytics = () => {
   const [salesData, setSalesData] = useState({});
@@ -130,17 +131,16 @@ const SalesAnalytics = () => {
           
           <div className="flex flex-col sm:flex-row gap-4">
             {/* 時間範圍選擇 */}
-            <select
+            <SearchableSelect
+              options={periodOptions.map(option => ({ 
+                value: option.value, 
+                label: option.label 
+              }))}
               value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-            >
-              {periodOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedPeriod}
+              placeholder="選擇時間範圍"
+              className="min-w-[160px]"
+            />
 
             {/* 刷新按鈕 */}
             <button

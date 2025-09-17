@@ -6,6 +6,7 @@ import orderDataManager, {
   OrderType, 
   OrderPriority 
 } from '../../data/orderDataManager';
+import SearchableSelect from '../../../components/SearchableSelect';
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -28,7 +29,6 @@ import {
 
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState('');
   const [selectedType, setSelectedType] = useState('');
@@ -42,7 +42,7 @@ const OrderList = () => {
   useEffect(() => {
     loadOrders();
     loadStatistics();
-  }, [searchQuery, selectedStatus, selectedPaymentStatus, selectedType, selectedPriority]);
+  }, [selectedStatus, selectedPaymentStatus, selectedType, selectedPriority]);
 
   const loadOrders = () => {
     setLoading(true);
@@ -54,7 +54,7 @@ const OrderList = () => {
         priority: selectedPriority || null
       };
       
-      const results = orderDataManager.searchOrders(searchQuery, filters);
+      const results = orderDataManager.searchOrders('', filters);
       setOrders(results);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -380,22 +380,9 @@ const OrderList = () => {
         </div>
       </div>
 
-      {/* 搜尋和篩選工具列 */}
+      {/* 篩選工具列 */}
       <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 mb-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <div className="flex-1 max-w-lg">
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="搜尋訂單編號、客戶信箱、電話..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-              />
-            </div>
-          </div>
-
           <div className="flex space-x-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -413,68 +400,76 @@ const OrderList = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">訂單狀態</label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '全部狀態' },
+                    { value: OrderStatus.PENDING, label: '待處理' },
+                    { value: OrderStatus.PAYMENT_PENDING, label: '待付款' },
+                    { value: OrderStatus.CONFIRMED, label: '已確認' },
+                    { value: OrderStatus.PROCESSING, label: '處理中' },
+                    { value: OrderStatus.SHIPPED, label: '已出貨' },
+                    { value: OrderStatus.DELIVERED, label: '已送達' },
+                    { value: OrderStatus.COMPLETED, label: '已完成' },
+                    { value: OrderStatus.CANCELLED, label: '已取消' }
+                  ]}
                   value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                >
-                  <option value="">全部狀態</option>
-                  <option value={OrderStatus.PENDING}>待處理</option>
-                  <option value={OrderStatus.PAYMENT_PENDING}>待付款</option>
-                  <option value={OrderStatus.CONFIRMED}>已確認</option>
-                  <option value={OrderStatus.PROCESSING}>處理中</option>
-                  <option value={OrderStatus.SHIPPED}>已出貨</option>
-                  <option value={OrderStatus.DELIVERED}>已送達</option>
-                  <option value={OrderStatus.COMPLETED}>已完成</option>
-                  <option value={OrderStatus.CANCELLED}>已取消</option>
-                </select>
+                  onChange={setSelectedStatus}
+                  placeholder="選擇訂單狀態"
+                  className="w-full"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">付款狀態</label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '全部狀態' },
+                    { value: PaymentStatus.UNPAID, label: '未付款' },
+                    { value: PaymentStatus.PAID, label: '已付款' },
+                    { value: PaymentStatus.CONFIRMED, label: '已確認' },
+                    { value: PaymentStatus.FAILED, label: '失敗' },
+                    { value: PaymentStatus.REFUNDED, label: '已退款' }
+                  ]}
                   value={selectedPaymentStatus}
-                  onChange={(e) => setSelectedPaymentStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                >
-                  <option value="">全部狀態</option>
-                  <option value={PaymentStatus.UNPAID}>未付款</option>
-                  <option value={PaymentStatus.PAID}>已付款</option>
-                  <option value={PaymentStatus.CONFIRMED}>已確認</option>
-                  <option value={PaymentStatus.FAILED}>失敗</option>
-                  <option value={PaymentStatus.REFUNDED}>已退款</option>
-                </select>
+                  onChange={setSelectedPaymentStatus}
+                  placeholder="選擇付款狀態"
+                  className="w-full"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">訂單類型</label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '全部類型' },
+                    { value: OrderType.NORMAL, label: '一般訂單' },
+                    { value: OrderType.PRE_ORDER, label: '預購訂單' },
+                    { value: OrderType.GIFT, label: '禮品訂單' },
+                    { value: OrderType.SAMPLE, label: '試用品' }
+                  ]}
                   value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                >
-                  <option value="">全部類型</option>
-                  <option value={OrderType.NORMAL}>一般訂單</option>
-                  <option value={OrderType.PRE_ORDER}>預購訂單</option>
-                  <option value={OrderType.GIFT}>禮品訂單</option>
-                  <option value={OrderType.SAMPLE}>試用品</option>
-                </select>
+                  onChange={setSelectedType}
+                  placeholder="選擇訂單類型"
+                  className="w-full"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">優先級</label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '全部優先級' },
+                    { value: OrderPriority.LOW, label: '低' },
+                    { value: OrderPriority.NORMAL, label: '一般' },
+                    { value: OrderPriority.HIGH, label: '高' },
+                    { value: OrderPriority.URGENT, label: '緊急' },
+                    { value: OrderPriority.VIP, label: 'VIP' }
+                  ]}
                   value={selectedPriority}
-                  onChange={(e) => setSelectedPriority(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                >
-                  <option value="">全部優先級</option>
-                  <option value={OrderPriority.LOW}>低</option>
-                  <option value={OrderPriority.NORMAL}>一般</option>
-                  <option value={OrderPriority.HIGH}>高</option>
-                  <option value={OrderPriority.URGENT}>緊急</option>
-                  <option value={OrderPriority.VIP}>VIP</option>
-                </select>
+                  onChange={setSelectedPriority}
+                  placeholder="選擇優先級"
+                  className="w-full"
+                />
               </div>
             </div>
           </div>
@@ -522,8 +517,8 @@ const OrderList = () => {
       )}
 
       {/* 訂單表格 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-visible">
+        <div className="overflow-x-auto overflow-y-visible">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-[#fdf8f2]/50">
               <tr>

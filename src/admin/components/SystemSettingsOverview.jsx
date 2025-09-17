@@ -21,6 +21,7 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import systemSettingsDataManager from '../utils/systemSettingsDataManager';
+import SearchableSelect from '../../components/SearchableSelect';
 
 const SystemSettingsOverview = () => {
   const [statistics, setStatistics] = useState({});
@@ -194,7 +195,7 @@ const SystemSettingsOverview = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#fdf8f2' }}>
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="p-6">
         {/* 頁面標題 */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -335,16 +336,18 @@ const SystemSettingsOverview = () => {
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <label className="block text-sm font-medium text-gray-700 mb-2">預設貨幣</label>
-                    <select
+                    <SearchableSelect
+                      options={[
+                        { value: 'TWD', label: '新台幣 (TWD)' },
+                        { value: 'USD', label: '美元 (USD)' },
+                        { value: 'EUR', label: '歐元 (EUR)' },
+                        { value: 'JPY', label: '日圓 (JPY)' }
+                      ]}
                       value={quickSettings['payment.currency'] || 'TWD'}
-                      onChange={(e) => handleQuickUpdate('payment_management', 'payment.currency', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                    >
-                      <option value="TWD">新台幣 (TWD)</option>
-                      <option value="USD">美元 (USD)</option>
-                      <option value="EUR">歐元 (EUR)</option>
-                      <option value="JPY">日圓 (JPY)</option>
-                    </select>
+                      onChange={(value) => handleQuickUpdate('payment_management', 'payment.currency', value)}
+                      placeholder="選擇貨幣"
+                      className="w-full"
+                    />
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <label className="block text-sm font-medium text-gray-700 mb-2">免運費門檻</label>
@@ -362,44 +365,6 @@ const SystemSettingsOverview = () => {
 
           {/* 右側邊欄 */}
           <div className="space-y-6">
-            {/* 搜尋設定 */}
-            <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <MagnifyingGlassIcon className="h-5 w-5 mr-2 text-[#cc824d]" />
-                搜尋設定
-              </h3>
-              <div className="relative mb-4">
-                <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="搜尋設定項目..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                />
-              </div>
-              
-              {searchResults.length > 0 && (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {searchResults.slice(0, 5).map((setting, index) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center space-x-2 mb-1">
-                        {getCategoryIcon(setting.category)}
-                        <span className="text-sm font-medium text-gray-900">{setting.displayName}</span>
-                      </div>
-                      <p className="text-xs text-gray-600">{getCategoryName(setting.category)}</p>
-                      <p className="text-xs text-gray-500 mt-1">{setting.description}</p>
-                    </div>
-                  ))}
-                  {searchResults.length > 5 && (
-                    <p className="text-sm text-gray-500 text-center py-2">
-                      還有 {searchResults.length - 5} 個結果...
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
             {/* 最近變更 */}
             <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">

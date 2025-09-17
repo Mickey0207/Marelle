@@ -49,6 +49,19 @@ import ProcurementManagementContainer from './pages/procurement/ProcurementManag
 import CouponManagementContainer from './pages/CouponManagementContainer';
 import LogisticsManagementContainer from './pages/logistics/LogisticsManagementContainer';
 
+// Import user tracking management components
+import UserTrackingOverview from './components/UserTrackingOverview';
+import UserBehaviorAnalytics from './components/UserBehaviorAnalytics';
+import RealTimeActivityMonitor from './components/RealTimeActivityMonitor';
+import UserSegmentManagement from './components/UserSegmentManagement';
+import PrivacySettings from './components/PrivacySettings';
+
+// Import dashboard management components
+import DashboardOverview from './components/DashboardOverview';
+import TaskManagement from './components/TaskManagement';
+import ApprovalWorkflowManagement from './components/ApprovalWorkflowManagement';
+import RealTimeMonitoringDashboard from './components/RealTimeMonitoringDashboard';
+
 // Import accounting system components
 import AccountingManagementContainer from './accounting/AccountingManagementContainer';
 
@@ -63,6 +76,13 @@ import MarketingOverview from './components/MarketingOverview';
 import CampaignManagement from './components/CampaignManagement';
 import AdvertisingManagement from './components/AdvertisingManagement';
 import AudienceManagement from './components/AudienceManagement';
+
+// Import document management components
+import DocumentOverview from './pages/DocumentOverview';
+import SalesDocumentManagement from './pages/documents/SalesDocumentManagement';
+import PurchaseDocumentManagement from './pages/documents/PurchaseDocumentManagement';
+import InventoryDocumentManagement from './pages/documents/InventoryDocumentManagement';
+import ApprovalWorkflowSystem from './pages/documents/ApprovalWorkflowSystem';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -118,16 +138,28 @@ const AdminDashboard = () => {
     { name: '供應商管理', href: '/admin/suppliers', icon: TruckIcon },
     { name: '採購管理', href: '/admin/procurement', icon: ShoppingCartIcon },
     { name: '會計管理', href: '/admin/accounting', icon: CalculatorIcon },
+    { name: '用戶追蹤', href: '/admin/user-tracking', icon: ChartBarIcon },
     { name: '通知管理', href: '/admin/notifications', icon: BellIcon },
     { name: '數據分析', href: '/admin/analytics', icon: ChartBarIcon },
     { name: '管理員系統', href: '/admin/admin-management', icon: KeyIcon },
     { name: '系統設定', href: '/admin/settings', icon: Cog6ToothIcon },
     { name: '庫存管理', href: '/admin/inventory', icon: CubeIcon },
+    { name: '單據管理', href: '/admin/documents', icon: DocumentTextIcon },
   ];
 
   // 獲取當前頁面的子頁籤配置
   const getSubTabs = () => {
     const path = location.pathname;
+    
+    // 根路徑 /admin 顯示儀表板管理的子選項
+    if (path === '/admin' || path.startsWith('/admin/tasks') || path.startsWith('/admin/approvals') || path.startsWith('/admin/monitoring')) {
+      return [
+        { name: '儀表板總覽', href: '/admin', icon: ChartBarIcon },
+        { name: '任務管理', href: '/admin/tasks', icon: ClipboardDocumentListIcon },
+        { name: '簽核流程', href: '/admin/approvals', icon: DocumentTextIcon },
+        { name: '即時監控', href: '/admin/monitoring', icon: SparklesIcon },
+      ];
+    }
     
     if (path.startsWith('/admin/products')) {
       return [
@@ -228,6 +260,16 @@ const AdminDashboard = () => {
       ];
     }
     
+    if (path.startsWith('/admin/user-tracking')) {
+      return [
+        { name: '追蹤總覽', href: '/admin/user-tracking', icon: ChartBarIcon },
+        { name: '行為分析', href: '/admin/user-tracking/behavior', icon: UsersIcon },
+        { name: '實時監控', href: '/admin/user-tracking/real-time', icon: SparklesIcon },
+        { name: '用戶分群', href: '/admin/user-tracking/segments', icon: UsersIcon },
+        { name: '隱私設定', href: '/admin/user-tracking/privacy', icon: ShieldCheckIcon },
+      ];
+    }
+    
     if (path.startsWith('/admin/analytics')) {
       return [
         { name: '分析總覽', href: '/admin/analytics', icon: ChartBarIcon },
@@ -247,6 +289,16 @@ const AdminDashboard = () => {
         { name: '通知設定', href: '/admin/settings/notifications', icon: BellIcon },
         { name: '付款設定', href: '/admin/settings/payments', icon: CreditCardIcon },
         { name: '物流設定', href: '/admin/settings/shipping', icon: TruckIcon },
+      ];
+    }
+    
+    if (path.startsWith('/admin/documents')) {
+      return [
+        { name: '單據總覽', href: '/admin/documents', icon: DocumentTextIcon },
+        { name: '銷售單據', href: '/admin/documents/sales', icon: ShoppingBagIcon },
+        { name: '採購單據', href: '/admin/documents/purchase', icon: ShoppingCartIcon },
+        { name: '庫存單據', href: '/admin/documents/inventory', icon: CubeIcon },
+        { name: '審核工作流', href: '/admin/documents/workflow', icon: ClipboardDocumentListIcon },
       ];
     }
     
@@ -467,7 +519,10 @@ const AdminDashboard = () => {
         {/* Page content */}
         <main className="admin-content flex-1 p-6 bg-[#fdf8f2] overflow-auto">
           <Routes>
-            <Route index element={<AdminOverview />} />
+            <Route index element={<DashboardOverview />} />
+            <Route path="tasks" element={<TaskManagement />} />
+            <Route path="approvals" element={<ApprovalWorkflowManagement />} />
+            <Route path="monitoring" element={<RealTimeMonitoringDashboard />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/add" element={<AddProductAdvanced />} />
             <Route path="products/edit/:id" element={<EditProduct />} />
@@ -483,6 +538,11 @@ const AdminDashboard = () => {
             <Route path="marketing/advertising" element={<AdvertisingManagement />} />
             <Route path="marketing/audiences" element={<AudienceManagement />} />
             <Route path="accounting/*" element={<AccountingManagementContainer />} />
+            <Route path="user-tracking" element={<UserTrackingOverview />} />
+            <Route path="user-tracking/behavior" element={<UserBehaviorAnalytics />} />
+            <Route path="user-tracking/real-time" element={<RealTimeActivityMonitor />} />
+            <Route path="user-tracking/segments" element={<UserSegmentManagement />} />
+            <Route path="user-tracking/privacy" element={<PrivacySettings />} />
             <Route path="members/*" element={<MemberManagement />} />
             <Route path="gifts/*" element={<GiftManagementContainer />} />
             <Route path="suppliers/*" element={<SupplierManagementContainer />} />
@@ -492,6 +552,11 @@ const AdminDashboard = () => {
             <Route path="admin-management/*" element={<AdminManagement />} />
             <Route path="settings/*" element={<AdminSettings />} />
             <Route path="inventory" element={<Inventory />} />
+            <Route path="documents" element={<DocumentOverview />} />
+            <Route path="documents/sales" element={<SalesDocumentManagement />} />
+            <Route path="documents/purchase" element={<PurchaseDocumentManagement />} />
+            <Route path="documents/inventory" element={<InventoryDocumentManagement />} />
+            <Route path="documents/workflow" element={<ApprovalWorkflowSystem />} />
           </Routes>
         </main>
       </div>

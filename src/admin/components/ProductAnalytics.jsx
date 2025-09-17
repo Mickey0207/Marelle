@@ -22,6 +22,7 @@ import {
   ArrowTrendingDownIcon
 } from '@heroicons/react/24/outline';
 import analyticsDataManager from '../utils/analyticsDataManager';
+import SearchableSelect from '../../components/SearchableSelect';
 
 const ProductAnalytics = () => {
   const [productData, setProductData] = useState({});
@@ -289,17 +290,16 @@ const ProductAnalytics = () => {
           </h3>
           
           <div className="flex items-center space-x-4">
-            <select
+            <SearchableSelect
+              options={sortOptions.map(option => ({ 
+                value: option.value, 
+                label: option.label 
+              }))}
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-            >
-              {sortOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onChange={setSortBy}
+              placeholder="選擇排序方式"
+              className="min-w-[140px] text-sm"
+            />
           </div>
         </div>
         
@@ -577,28 +577,29 @@ const ProductAnalytics = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4">
-            <select
+            <SearchableSelect
+              options={categoryOptions.map(option => ({ 
+                value: option.value, 
+                label: option.label 
+              }))}
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-            >
-              {categoryOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedCategory}
+              placeholder="選擇商品分類"
+              className="min-w-[160px]"
+            />
             
-            <select
+            <SearchableSelect
+              options={[
+                { value: '7days', label: '最近7天' },
+                { value: '30days', label: '最近30天' },
+                { value: '90days', label: '最近90天' },
+                { value: '1year', label: '最近1年' }
+              ]}
               value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-            >
-              <option value="7days">最近7天</option>
-              <option value="30days">最近30天</option>
-              <option value="90days">最近90天</option>
-              <option value="1year">最近1年</option>
-            </select>
+              onChange={setSelectedPeriod}
+              placeholder="選擇時間範圍"
+              className="min-w-[140px]"
+            />
           </div>
         </div>
 

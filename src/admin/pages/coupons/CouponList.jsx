@@ -5,6 +5,7 @@ import couponDataManager, {
   CouponStatus, 
   ConditionType 
 } from '../../data/couponDataManager';
+import SearchableSelect from '../../../components/SearchableSelect';
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -31,7 +32,6 @@ import {
 
 const CouponList = () => {
   const [coupons, setCoupons] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -44,13 +44,13 @@ const CouponList = () => {
   useEffect(() => {
     loadCoupons();
     loadStatistics();
-  }, [searchQuery, selectedStatus, selectedType, dateRange]);
+  }, [selectedStatus, selectedType, dateRange]);
 
   const loadCoupons = () => {
     setLoading(true);
     try {
       const filters = {
-        search: searchQuery,
+        search: '',
         status: selectedStatus,
         type: selectedType,
         startDate: dateRange.start,
@@ -299,22 +299,9 @@ const CouponList = () => {
         </div>
       </div>
 
-      {/* 搜尋和篩選 */}
+      {/* 篩選 */}
       <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 mb-6">
         <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
-          <div className="flex-1">
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                placeholder="搜尋優惠券名稱、代碼或說明..."
-              />
-            </div>
-          </div>
-          
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -331,36 +318,40 @@ const CouponList = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">狀態</label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '全部狀態' },
+                    { value: CouponStatus.ACTIVE, label: '啟用中' },
+                    { value: CouponStatus.DRAFT, label: '草稿' },
+                    { value: CouponStatus.PAUSED, label: '暫停' },
+                    { value: CouponStatus.EXPIRED, label: '已過期' },
+                    { value: CouponStatus.DEPLETED, label: '已用完' },
+                    { value: CouponStatus.CANCELLED, label: '已取消' }
+                  ]}
                   value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                >
-                  <option value="">全部狀態</option>
-                  <option value={CouponStatus.ACTIVE}>啟用中</option>
-                  <option value={CouponStatus.DRAFT}>草稿</option>
-                  <option value={CouponStatus.PAUSED}>暫停</option>
-                  <option value={CouponStatus.EXPIRED}>已過期</option>
-                  <option value={CouponStatus.DEPLETED}>已用完</option>
-                  <option value={CouponStatus.CANCELLED}>已取消</option>
-                </select>
+                  onChange={setSelectedStatus}
+                  placeholder="選擇狀態"
+                  className="w-full"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">類型</label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: '', label: '全部類型' },
+                    { value: CouponType.FIXED_AMOUNT, label: '固定金額' },
+                    { value: CouponType.PERCENTAGE, label: '百分比' },
+                    { value: CouponType.FREE_SHIPPING, label: '免運券' },
+                    { value: CouponType.BUY_ONE_GET_ONE, label: '買一送一' },
+                    { value: CouponType.MEMBER_EXCLUSIVE, label: '會員專屬' },
+                    { value: CouponType.NEW_USER_BONUS, label: '新會員優惠' }
+                  ]}
                   value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                >
-                  <option value="">全部類型</option>
-                  <option value={CouponType.FIXED_AMOUNT}>固定金額</option>
-                  <option value={CouponType.PERCENTAGE}>百分比</option>
-                  <option value={CouponType.FREE_SHIPPING}>免運券</option>
-                  <option value={CouponType.BUY_ONE_GET_ONE}>買一送一</option>
-                  <option value={CouponType.MEMBER_EXCLUSIVE}>會員專屬</option>
-                  <option value={CouponType.NEW_USER_BONUS}>新會員優惠</option>
-                </select>
+                  onChange={setSelectedType}
+                  placeholder="選擇類型"
+                  className="w-full"
+                />
               </div>
 
               <div>
@@ -428,8 +419,8 @@ const CouponList = () => {
       )}
 
       {/* 優惠券列表 */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 overflow-visible">
+        <div className="overflow-x-auto overflow-y-visible">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-[#fdf8f2]/50">
               <tr>
