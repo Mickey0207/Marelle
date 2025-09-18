@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import Navbar from '../components/Navbar';
+import Navbar from "../components/layout/Navbar";
 
 const FrontLogin = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });

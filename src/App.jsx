@@ -4,16 +4,16 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 // 導入頁面組件
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
+import Navbar from './components/layout/Navbar'
+import Footer from './components/layout/Footer'
 import Home from './pages/Home'
 import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import AdminDashboard from './admin/Dashboard'
-import AdminLogin from './admin/Login'
-import Register from './admin/Register'
+import AdminLogin from "./admin/modules/auth/pages/AdminLogin";
+import Register from "./admin/modules/auth/pages/Register";
 import FrontLogin from './pages/FrontLogin'
 import FrontRegister from './pages/FrontRegister'
 
@@ -43,6 +43,15 @@ function App() {
     <Router>
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50 to-apricot-50">
         <Routes>
+          {/* 後台路由 - 必須放在前面以優先匹配 */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/register" element={<Register />} />
+          <Route path="/admin/*" element={<AdminDashboard />} />
+          
+          {/* 前台登錄註冊 */}
+          <Route path="/login" element={<FrontLogin />} />
+          <Route path="/register" element={<FrontRegister />} />
+          
           {/* 前台路由 */}
           <Route path="/*" element={
             <>
@@ -59,13 +68,6 @@ function App() {
               <Footer />
             </>
           } />
-          
-          {/* 後台路由 */}
-          <Route path="/login" element={<FrontLogin />} />
-          <Route path="/register" element={<FrontRegister />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/register" element={<Register />} />
-          <Route path="/admin/*" element={<AdminDashboard />} />
         </Routes>
       </div>
     </Router>

@@ -9,8 +9,8 @@ import {
   StarIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import { mockProducts, formatPrice } from '../utils/data';
-import { useCart } from '../hooks';
+import { mockProducts, formatPrice } from "../utils/data";
+import { useCart } from "../hooks";
 
 const ProductDetail = () => {
   const { id } = useParams();

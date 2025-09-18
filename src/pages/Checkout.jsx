@@ -6,8 +6,8 @@ import {
   ShoppingBagIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
-import { formatPrice } from '../utils/data';
-import { useCart } from '../hooks';
+import { formatPrice } from "../utils/data";
+import { useCart } from "../hooks";
 
 const Checkout = () => {
   const navigate = useNavigate();

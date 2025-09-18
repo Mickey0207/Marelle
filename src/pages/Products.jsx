@@ -3,9 +3,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { HeartIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import { mockProducts, categories, formatPrice } from '../utils/data';
-import { useCart } from '../hooks';
-import SortDropdown from '../components/SortDropdown';
+import { mockProducts, categories, formatPrice } from "../utils/data";
+import { useCart } from "../hooks";
+import SortDropdown from "../components/ui/SortDropdown";
 
 const hierarchicalCategories = [
   { id: 'root-living', name: '家居生活', children: [ { id: 'home', name: '家居'}, { id: 'lifestyle', name: '生活用品'} ] },

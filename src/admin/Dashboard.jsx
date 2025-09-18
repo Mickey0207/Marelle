@@ -31,61 +31,66 @@ import {
 } from '@heroicons/react/24/outline';
 
 // Import admin styles configuration
-import { ADMIN_STYLES, ADMIN_COLORS, GSAP_ANIMATIONS } from './styles/adminStyles';
+import { ADMIN_STYLES, ADMIN_COLORS, GSAP_ANIMATIONS } from './shared/adminStyles';
 
 // Import admin pages
-import AdminOverview from './pages/Overview';
-import AdminProducts from './pages/Products';
-import AddProductAdvanced from './pages/AddProductAdvanced';
-import EditProduct from './pages/EditProduct';
-import AdminOrders from './pages/Orders';
-import AdminCustomers from './pages/Customers';
-import AdminAnalytics from './pages/Analytics';
-import AdminSettings from './pages/Settings';
-import Inventory from './pages/Inventory';
-import MemberManagement from './pages/MemberManagement';
-import NotificationManagementContainer from './pages/notifications/NotificationManagementContainer';
-import AdminManagement from './pages/AdminManagement';
-import GiftManagementContainer from './pages/GiftManagementContainer';
-import SupplierManagementContainer from './pages/suppliers/SupplierManagementContainer';
-import ProcurementManagementContainer from './pages/procurement/ProcurementManagementContainer';
-import CouponManagementContainer from './pages/CouponManagementContainer';
-import LogisticsManagementContainer from './pages/logistics/LogisticsManagementContainer';
+import AdminOverview from './modules/dashboard/pages/Overview';
+import SalesAnalytics from './modules/dashboard/pages/SalesAnalytics';
+import OperationsManagement from './modules/dashboard/pages/OperationsManagement';
+import FinanceReports from './modules/dashboard/pages/FinanceReports';
+import LogisticsManagement from './modules/dashboard/pages/LogisticsManagement';
+import DashboardTabs from './modules/dashboard/components/DashboardTabs';
+import AdminProducts from './modules/products/pages/Products';
+import AddProductAdvanced from './modules/products/pages/AddProductAdvanced';
+import EditProduct from './modules/products/pages/EditProduct';
+import AdminOrders from './modules/orders/pages/Orders';
+import AdminCustomers from './modules/members/pages/Customers';
+import AdminAnalytics from './modules/analytics/pages/Analytics';
+import AdminSettings from './modules/settings/pages/Settings';
+// import Inventory from './modules/products/pages/Inventory'; // Temporarily disabled due to encoding issues
+// import MemberManagement from './modules/members/pages/MemberManagement'; // Temporarily disabled due to encoding issues
+import NotificationManagementContainer from './modules/notifications/pages/NotificationManagementContainer';
+// import AdminManagement from './modules/admin/pages/AdminManagement'; // Temporarily disabled due to encoding issues
+import GiftManagementContainer from './modules/members/pages/GiftManagementContainer';
+import SupplierManagementContainer from './modules/suppliers/pages/SupplierManagementContainer';
+import ProcurementManagementContainer from './modules/procurement/pages/ProcurementManagementContainer';
+import CouponManagementContainer from './modules/coupons/pages/CouponManagementContainer';
+import LogisticsManagementContainer from './modules/logistics/pages/LogisticsManagementContainer';
 
 // Import user tracking management components
-import UserTrackingOverview from './components/UserTrackingOverview';
-import UserBehaviorAnalytics from './components/UserBehaviorAnalytics';
-import RealTimeActivityMonitor from './components/RealTimeActivityMonitor';
-import UserSegmentManagement from './components/UserSegmentManagement';
-import PrivacySettings from './components/PrivacySettings';
+import UserTrackingOverview from './shared/components/UserTrackingOverview';
+import UserBehaviorAnalytics from './shared/components/UserBehaviorAnalytics';
+import RealTimeActivityMonitor from './shared/components/RealTimeActivityMonitor';
+import UserSegmentManagement from './shared/components/UserSegmentManagement';
+import PrivacySettings from './shared/components/PrivacySettings';
 
 // Import dashboard management components
-import DashboardOverview from './components/DashboardOverview';
-import TaskManagement from './components/TaskManagement';
-import ApprovalWorkflowManagement from './components/ApprovalWorkflowManagement';
-import RealTimeMonitoringDashboard from './components/RealTimeMonitoringDashboard';
+import DashboardOverview from './shared/components/DashboardOverview';
+import TaskManagement from './shared/components/TaskManagement';
+import ApprovalWorkflowManagement from './shared/components/ApprovalWorkflowManagement';
+import RealTimeMonitoringDashboard from './shared/components/RealTimeMonitoringDashboard';
 
 // Import accounting system components
-import AccountingManagementContainer from './accounting/AccountingManagementContainer';
+import AccountingManagementContainer from './modules/accounting/pages/AccountingManagementContainer';
 
 // Import festival management components
-import FestivalOverview from './components/FestivalOverview';
-import FestivalManagement from './components/FestivalManagement';
-import PromotionSettings from './components/PromotionSettings';
-import FestivalAnalytics from './components/FestivalAnalytics';
+import FestivalOverview from './shared/components/FestivalOverview';
+import FestivalManagement from './shared/components/FestivalManagement';
+import PromotionSettings from './shared/components/PromotionSettings';
+import FestivalAnalytics from './shared/components/FestivalAnalytics';
 
 // Import marketing management components
-import MarketingOverview from './components/MarketingOverview';
-import CampaignManagement from './components/CampaignManagement';
-import AdvertisingManagement from './components/AdvertisingManagement';
-import AudienceManagement from './components/AudienceManagement';
+import MarketingOverview from './shared/components/MarketingOverview';
+import CampaignManagement from './shared/components/CampaignManagement';
+import AdvertisingManagement from './shared/components/AdvertisingManagement';
+import AudienceManagement from './shared/components/AudienceManagement';
 
-// Import document management components
-import DocumentOverview from './pages/DocumentOverview';
-import SalesDocumentManagement from './pages/documents/SalesDocumentManagement';
-import PurchaseDocumentManagement from './pages/documents/PurchaseDocumentManagement';
-import InventoryDocumentManagement from './pages/documents/InventoryDocumentManagement';
-import ApprovalWorkflowSystem from './pages/documents/ApprovalWorkflowSystem';
+// Document management components temporarily disabled due to encoding issues
+// import DocumentOverview from './modules/documents/pages/DocumentOverview';
+// import SalesDocumentManagement from './modules/documents/pages/SalesDocumentManagement';
+// import PurchaseDocumentManagement from './modules/documents/pages/PurchaseDocumentManagement';
+// import InventoryDocumentManagement from './modules/documents/pages/InventoryDocumentManagement';
+// import ApprovalWorkflowSystem from './modules/documents/pages/ApprovalWorkflowSystem';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -514,7 +519,11 @@ const AdminDashboard = () => {
         {/* Page content */}
         <main className={`admin-content flex-1 ${ADMIN_STYLES.contentContainer} overflow-auto`}>
           <Routes>
-            <Route index element={<DashboardOverview />} />
+            <Route index element={<DashboardTabs />} />
+            <Route path="sales" element={<SalesAnalytics />} />
+            <Route path="operations" element={<OperationsManagement />} />
+            <Route path="finance" element={<FinanceReports />} />
+            <Route path="logistics-dashboard" element={<LogisticsManagement />} />
             <Route path="tasks" element={<TaskManagement />} />
             <Route path="approvals" element={<ApprovalWorkflowManagement />} />
             <Route path="monitoring" element={<RealTimeMonitoringDashboard />} />
@@ -538,20 +547,21 @@ const AdminDashboard = () => {
             <Route path="user-tracking/real-time" element={<RealTimeActivityMonitor />} />
             <Route path="user-tracking/segments" element={<UserSegmentManagement />} />
             <Route path="user-tracking/privacy" element={<PrivacySettings />} />
-            <Route path="members/*" element={<MemberManagement />} />
+            {/* Temporarily disabled routes due to encoding issues */}
+            {/* <Route path="members/*" element={<MemberManagement />} /> */}
             <Route path="gifts/*" element={<GiftManagementContainer />} />
             <Route path="suppliers/*" element={<SupplierManagementContainer />} />
             <Route path="procurement/*" element={<ProcurementManagementContainer />} />
             <Route path="notifications/*" element={<NotificationManagementContainer />} />
             <Route path="analytics/*" element={<AdminAnalytics />} />
-            <Route path="admin-management/*" element={<AdminManagement />} />
+            {/* <Route path="admin-management/*" element={<AdminManagement />} /> */}
             <Route path="settings/*" element={<AdminSettings />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="documents" element={<DocumentOverview />} />
-            <Route path="documents/sales" element={<SalesDocumentManagement />} />
-            <Route path="documents/purchase" element={<PurchaseDocumentManagement />} />
-            <Route path="documents/inventory" element={<InventoryDocumentManagement />} />
-            <Route path="documents/workflow" element={<ApprovalWorkflowSystem />} />
+            {/* <Route path="inventory" element={<Inventory />} /> */}
+            {/* <Route path="documents" element={<DocumentOverview />} /> */}
+            {/* <Route path="documents/sales" element={<SalesDocumentManagement />} /> */}
+            {/* <Route path="documents/purchase" element={<PurchaseDocumentManagement />} /> */}
+            {/* <Route path="documents/inventory" element={<InventoryDocumentManagement />} /> */}
+            {/* <Route path="documents/workflow" element={<ApprovalWorkflowSystem />} /> */}
           </Routes>
         </main>
       </div>
