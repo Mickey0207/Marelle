@@ -10,9 +10,23 @@ export const getAppMode = () => {
     
     // 檢查開發環境
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-      // 可以根據 port 或 URL 參數來決定
+      const port = window.location.port;
+      
+      // 3001 端口固定為後台管理
+      if (port === '3001') {
+        return 'admin';
+      }
+      
+      // 檢查是否有明確的模式參數（作為備用方案）
       const searchParams = new URLSearchParams(window.location.search);
-      return searchParams.get('mode') || 'admin'; // 預設為 admin 以便開發
+      const modeParam = searchParams.get('mode');
+      
+      if (modeParam === 'admin') {
+        return 'admin';
+      }
+      
+      // 3000 端口固定為前台
+      return 'front';
     }
   }
   
