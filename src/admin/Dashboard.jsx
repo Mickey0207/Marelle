@@ -8,7 +8,6 @@ import {
   UsersIcon,
   ChartBarIcon,
   Cog6ToothIcon,
-  ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
   MagnifyingGlassIcon,
@@ -111,19 +110,13 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    // Check authentication
-    const isAdminLoggedIn = localStorage.getItem('marelle-admin-token');
-    if (!isAdminLoggedIn) {
-      navigate('/login');
-    }
-
     // Animate dashboard on load using unified animation config
     gsap.fromTo(
       '.admin-content',
       GSAP_ANIMATIONS.pageLoad.from,
       GSAP_ANIMATIONS.pageLoad.to
     );
-  }, [navigate]);
+  }, []);
 
   const navigation = [
     { name: '總覽', href: '/', icon: HomeIcon },
@@ -146,10 +139,6 @@ const AdminDashboard = () => {
 
 
 
-  const handleLogout = () => {
-    localStorage.removeItem('marelle-admin-token');
-    navigate('/login');
-  };
 
   const isActive = (path) => {
     if (path === '/') {
@@ -231,26 +220,11 @@ const AdminDashboard = () => {
             ))}
           </nav>
 
-          {/* Footer */}
+          {/* Footer - 移除登出按鈕 */}
           <div className="p-3 border-t border-gray-200">
-            <button
-              onClick={handleLogout}
-              className="flex items-center w-full px-3 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all duration-200 font-serif group"
-              title={!(sidebarHovered || sidebarOpen) ? '登出' : ''}
-            >
-              <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
-              <span className={`ml-3 transition-opacity duration-300 whitespace-nowrap ${
-                sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
-              }`}>
-                登出
-              </span>
-              {/* Tooltip for collapsed state */}
-              {!(sidebarHovered || sidebarOpen) && (
-                <div className="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                  登出
-                </div>
-              )}
-            </button>
+            <div className="text-xs text-gray-500 text-center">
+              Marelle 後台管理系統
+            </div>
           </div>
         </div>
       </div>

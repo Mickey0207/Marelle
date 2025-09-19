@@ -12,13 +12,9 @@ import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import AdminDashboard from './admin/Dashboard'
-import AdminLogin from "./admin/modules/auth/pages/AdminLogin";
-import Register from "./admin/modules/auth/pages/Register";
 import FrontLogin from './pages/FrontLogin'
 import FrontRegister from './pages/FrontRegister'
 
-// 導入 AuthProvider
-import { AuthProvider } from './admin/shared/components/AuthComponents'
 
 // 註冊 GSAP 插件
 gsap.registerPlugin(ScrollTrigger)
@@ -43,18 +39,14 @@ function App() {
   }, [])
 
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50 to-apricot-50">
-          <Routes>
-            {/* 後台路由 - 移除 /admin 前綴 */}
-            <Route path="/login" element={<AdminLogin />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/*" element={<AdminDashboard />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+    <Router>
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50 to-apricot-50">
+        <Routes>
+          {/* 後台路由 - 直接進入 Dashboard */}
+          <Route path="/*" element={<AdminDashboard />} />
+        </Routes>
+      </div>
+    </Router>
   )
 }
 

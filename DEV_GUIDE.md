@@ -3,29 +3,36 @@
 ## 本地開發服務器
 
 ### 前台（電商網站）
+
 ```bash
 npm run dev
 ```
-- URL: http://localhost:3000
+
+- URL: <http://localhost:3000>
 - 應用: FrontApp.jsx
 - 功能: 商品展示、購物車、結帳等電商功能
 
 ### 後台（管理系統）
+
 ```bash
 npm run dev:admin
 ```
-- URL: http://localhost:3001
-- 應用: App.jsx
+
+- URL: <http://localhost:3001>
+- 應用: App.jsx  
 - 功能: 商品管理、訂單管理、數據分析等後台功能
+- **注意**: 已移除登入功能，可直接訪問管理介面
 
 ## 生產環境部署
 
 ### 前台部署
+
 - 域名: marelle.com.tw
 - 指令: `npm run build`
 - 服務: FrontApp.jsx
 
 ### 後台部署
+
 - 域名: admin.marelle.com.tw
 - 指令: `npm run build:admin`
 - 服務: App.jsx
@@ -33,11 +40,20 @@ npm run dev:admin
 ## 備用開發方式
 
 如果需要在同一端口切換前後台（不推薦，但作為備用）：
-- 前台: http://localhost:3000
-- 後台: http://localhost:3000/?mode=admin
+
+- 前台: <http://localhost:3000>
+- 後台: <http://localhost:3000/?mode=admin>
 
 ## 建議的工作流程
 
 1. **前台開發**: 使用 `npm run dev` 在 3000 端口開發
 2. **後台開發**: 使用 `npm run dev:admin` 在 3001 端口開發
 3. **同時開發**: 可以同時運行兩個服務器，在不同瀏覽器標籤頁測試
+
+## 重要變更
+
+- ✅ **已移除前台登入功能**: 前台電商網站不再包含會員登入/註冊功能
+- ✅ **已移除後台登入功能**: 後台管理系統不再需要登入，可直接訪問
+- ✅ **固定端口**: 前台固定 3000，後台固定 3001，不會自動跳轉端口
+- ✅ **雙應用架構**: 完全分離的前後台應用
+- ✅ **簡化導航**: 前台 Navbar 移除登入按鈕，管理後台連結直接跳轉到 3001 端口
