@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useLogto } from '@logto/react';
 import { gsap } from 'gsap';
 import {
   HomeIcon,
@@ -8,6 +9,7 @@ import {
   UsersIcon,
   ChartBarIcon,
   Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
   MagnifyingGlassIcon,
@@ -98,6 +100,9 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Logto 認證 hooks
+  const { isAuthenticated, isLoading, signOut, getAccessToken, getIdTokenClaims } = useLogto();
 
   const handleGlobalSearch = (e) => {
     e.preventDefault();
@@ -117,6 +122,18 @@ const AdminDashboard = () => {
       GSAP_ANIMATIONS.pageLoad.to
     );
   }, []);
+
+  // 處理登出
+  const handleLogout = async () => {
+    try {
+      const postLogoutRedirectUri = window.location.hostname === 'localhost'
+        ? 'http://localhost:3001/'
+        : 'https://admin.marelle.com.tw/';
+      await signOut(postLogoutRedirectUri);
+    } catch (error) {
+      console.error('登出失敗:', error);
+    }
+  };
 
   const navigation = [
     { name: '總覽', href: '/', icon: HomeIcon },
@@ -220,11 +237,26 @@ const AdminDashboard = () => {
             ))}
           </nav>
 
-          {/* Footer - 移除登出按鈕 */}
+          {/* Footer */}
           <div className="p-3 border-t border-gray-200">
-            <div className="text-xs text-gray-500 text-center">
-              Marelle 後台管理系統
-            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-3 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all duration-200 font-serif group"
+              title={!(sidebarHovered || sidebarOpen) ? '登出' : ''}
+            >
+              <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
+              <span className={`ml-3 transition-opacity duration-300 whitespace-nowrap ${
+                sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
+              }`}>
+                登出
+              </span>
+              {/* Tooltip for collapsed state */}
+              {!(sidebarHovered || sidebarOpen) && (
+                <div className="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                  登出
+                </div>
+              )}
+            </button>
           </div>
         </div>
       </div>
