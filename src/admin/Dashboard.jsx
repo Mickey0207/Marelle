@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 import {
@@ -141,10 +141,7 @@ const AdminDashboard = () => {
     { name: '用戶追蹤', href: '/admin/user-tracking', icon: ChartBarIcon },
     { name: '通知管理', href: '/admin/notifications', icon: BellIcon },
     { name: '數據分析', href: '/admin/analytics', icon: ChartBarIcon },
-    { name: '管理員系統', href: '/admin/admin-management', icon: KeyIcon },
     { name: '系統設定', href: '/admin/settings', icon: Cog6ToothIcon },
-    { name: '庫存管理', href: '/admin/inventory', icon: CubeIcon },
-    { name: '單據管理', href: '/admin/documents', icon: DocumentTextIcon },
   ];
 
   // 獲取當前頁面的子頁籤配置
@@ -289,16 +286,6 @@ const AdminDashboard = () => {
         { name: '通知設定', href: '/admin/settings/notifications', icon: BellIcon },
         { name: '付款設定', href: '/admin/settings/payments', icon: CreditCardIcon },
         { name: '物流設定', href: '/admin/settings/shipping', icon: TruckIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/documents')) {
-      return [
-        { name: '單據總覽', href: '/admin/documents', icon: DocumentTextIcon },
-        { name: '銷售單據', href: '/admin/documents/sales', icon: ShoppingBagIcon },
-        { name: '採購單據', href: '/admin/documents/purchase', icon: ShoppingCartIcon },
-        { name: '庫存單據', href: '/admin/documents/inventory', icon: CubeIcon },
-        { name: '審核工作流', href: '/admin/documents/workflow', icon: ClipboardDocumentListIcon },
       ];
     }
     

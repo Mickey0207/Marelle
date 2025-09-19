@@ -77,15 +77,6 @@ const CouponManagementContainer = () => {
   };
 
   const renderOverview = () => (
-    <div className={ADMIN_STYLES.pageContainer}>
-      <div className={ADMIN_STYLES.contentContainer}>
-        {/* 頁面標題 */}
-        <div className="mb-6">
-          <h1 className={ADMIN_STYLES.pageTitle}>優惠券管理</h1>
-          <p className={ADMIN_STYLES.pageSubtitle}>管理和追蹤所有優惠券活動</p>
-        </div>
-
-  const renderOverview = () => (
     <>
       {/* 統計卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
