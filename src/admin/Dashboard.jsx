@@ -104,7 +104,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     if (searchTerm.trim()) {
       // Navigate to products page with search term
-      navigate(`/admin/products?search=${encodeURIComponent(searchTerm)}`);
+      navigate(`/products?search=${encodeURIComponent(searchTerm)}`);
       setSearchOpen(false);
       setSearchTerm('');
     }
@@ -114,7 +114,7 @@ const AdminDashboard = () => {
     // Check authentication
     const isAdminLoggedIn = localStorage.getItem('marelle-admin-token');
     if (!isAdminLoggedIn) {
-      navigate('/admin/login');
+      navigate('/login');
     }
 
     // Animate dashboard on load using unified animation config
@@ -126,191 +126,39 @@ const AdminDashboard = () => {
   }, [navigate]);
 
   const navigation = [
-    { name: '總覽', href: '/admin', icon: HomeIcon },
-    { name: '商品管理', href: '/admin/products', icon: ShoppingBagIcon },
-    { name: '訂單管理', href: '/admin/orders', icon: ClipboardDocumentListIcon },
-    { name: '物流管理', href: '/admin/logistics', icon: MapPinIcon },
-    { name: '優惠管理', href: '/admin/coupons', icon: TicketIcon },
-    { name: '節慶管理', href: '/admin/festivals', icon: CalendarDaysIcon },
-    { name: '行銷管理', href: '/admin/marketing', icon: SpeakerWaveIcon },
-    { name: '會員管理', href: '/admin/members', icon: UsersIcon },
-    { name: '贈品管理', href: '/admin/gifts', icon: GiftIcon },
-    { name: '供應商管理', href: '/admin/suppliers', icon: TruckIcon },
-    { name: '採購管理', href: '/admin/procurement', icon: ShoppingCartIcon },
-    { name: '會計管理', href: '/admin/accounting', icon: CalculatorIcon },
-    { name: '用戶追蹤', href: '/admin/user-tracking', icon: ChartBarIcon },
-    { name: '通知管理', href: '/admin/notifications', icon: BellIcon },
-    { name: '數據分析', href: '/admin/analytics', icon: ChartBarIcon },
-    { name: '系統設定', href: '/admin/settings', icon: Cog6ToothIcon },
+    { name: '總覽', href: '/', icon: HomeIcon },
+    { name: '商品管理', href: '/products', icon: ShoppingBagIcon },
+    { name: '訂單管理', href: '/orders', icon: ClipboardDocumentListIcon },
+    { name: '物流管理', href: '/logistics', icon: MapPinIcon },
+    { name: '優惠管理', href: '/coupons', icon: TicketIcon },
+    { name: '節慶管理', href: '/festivals', icon: CalendarDaysIcon },
+    { name: '行銷管理', href: '/marketing', icon: SpeakerWaveIcon },
+    { name: '會員管理', href: '/members', icon: UsersIcon },
+    { name: '贈品管理', href: '/gifts', icon: GiftIcon },
+    { name: '供應商管理', href: '/suppliers', icon: TruckIcon },
+    { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon },
+    { name: '會計管理', href: '/accounting', icon: CalculatorIcon },
+    { name: '用戶追蹤', href: '/user-tracking', icon: ChartBarIcon },
+    { name: '通知管理', href: '/notifications', icon: BellIcon },
+    { name: '數據分析', href: '/analytics', icon: ChartBarIcon },
+    { name: '系統設定', href: '/settings', icon: Cog6ToothIcon },
   ];
 
-  // 獲取當前頁面的子頁籤配置
-  const getSubTabs = () => {
-    const path = location.pathname;
-    
-    // 根路徑 /admin 顯示儀表板管理的子選項
-    if (path === '/admin' || path.startsWith('/admin/tasks') || path.startsWith('/admin/approvals') || path.startsWith('/admin/monitoring')) {
-      return [
-        { name: '儀表板總覽', href: '/admin', icon: ChartBarIcon },
-        { name: '任務管理', href: '/admin/tasks', icon: ClipboardDocumentListIcon },
-        { name: '簽核流程', href: '/admin/approvals', icon: DocumentTextIcon },
-        { name: '即時監控', href: '/admin/monitoring', icon: SparklesIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/products')) {
-      return [
-        { name: '商品列表', href: '/admin/products', icon: ShoppingBagIcon },
-        { name: '新增商品', href: '/admin/products/add', icon: PlusIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/gifts')) {
-      return [
-        { name: '贈品概覽', href: '/admin/gifts', icon: GiftIcon },
-        { name: '階梯規則', href: '/admin/gifts/tier-rules', icon: Cog6ToothIcon },
-        { name: '會員福利', href: '/admin/gifts/member-benefits', icon: UsersIcon },
-        { name: '分配追蹤', href: '/admin/gifts/allocation-tracking', icon: ChartBarIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/orders')) {
-      return [
-        { name: '訂單列表', href: '/admin/orders', icon: ClipboardDocumentListIcon },
-        { name: '新增訂單', href: '/admin/orders/new', icon: PlusIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/members')) {
-      return [
-        { name: '會員列表', href: '/admin/members', icon: UsersIcon },
-        { name: '會員分析', href: '/admin/members/analytics', icon: ChartBarIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/suppliers')) {
-      return [
-        { name: '供應商列表', href: '/admin/suppliers', icon: TruckIcon },
-        { name: '新增供應商', href: '/admin/suppliers/add', icon: PlusIcon },
-        { name: '商品關聯', href: '/admin/suppliers/products', icon: ShoppingBagIcon },
-        { name: '績效評估', href: '/admin/suppliers/performance', icon: ChartBarIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/procurement')) {
-      return [
-        { name: '採購總覽', href: '/admin/procurement', icon: ChartBarIcon },
-        { name: '採購單列表', href: '/admin/procurement/orders', icon: ClipboardDocumentListIcon },
-        { name: '新增採購單', href: '/admin/procurement/orders/add', icon: PlusIcon },
-        { name: '採購建議', href: '/admin/procurement/suggestions', icon: CubeIcon },
-        { name: '驗收入庫', href: '/admin/procurement/inspection', icon: ShoppingBagIcon },
-        { name: '成本分析', href: '/admin/procurement/analytics', icon: ChartBarIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/logistics')) {
-      return [
-        { name: '物流總覽', href: '/admin/logistics', icon: MapPinIcon },
-        { name: '出貨管理', href: '/admin/logistics/shipments', icon: TruckIcon },
-        { name: '運費設定', href: '/admin/logistics/shipping-rates', icon: Cog6ToothIcon },
-        { name: '物流追蹤', href: '/admin/logistics/tracking', icon: MapPinIcon },
-        { name: '退貨管理', href: '/admin/logistics/returns', icon: ArrowRightOnRectangleIcon },
-        { name: '分析報表', href: '/admin/logistics/analytics', icon: ChartBarIcon },
-        { name: '物流商管理', href: '/admin/logistics/providers', icon: TruckIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/coupons')) {
-      return [
-        { name: '優惠券列表', href: '/admin/coupons', icon: TicketIcon },
-        { name: '新增優惠券', href: '/admin/coupons/new', icon: PlusIcon },
-        { name: '疊加規則', href: '/admin/coupons/stacking-rules', icon: Cog6ToothIcon },
-        { name: '分享管理', href: '/admin/coupons/sharing', icon: GiftIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/festivals')) {
-      return [
-        { name: '節慶總覽', href: '/admin/festivals', icon: ChartBarIcon },
-        { name: '節慶管理', href: '/admin/festivals/management', icon: CalendarDaysIcon },
-        { name: '促銷設定', href: '/admin/festivals/promotions', icon: GiftIcon },
-        { name: '節慶分析', href: '/admin/festivals/analytics', icon: ChartBarIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/marketing')) {
-      return [
-        { name: '行銷總覽', href: '/admin/marketing', icon: ChartBarIcon },
-        { name: '檔期管理', href: '/admin/marketing/campaigns', icon: SpeakerWaveIcon },
-        { name: '廣告管理', href: '/admin/marketing/advertising', icon: TruckIcon },
-        { name: '受眾管理', href: '/admin/marketing/audiences', icon: UsersIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/accounting')) {
-      return [
-        { name: '會計總覽', href: '/admin/accounting', icon: ChartBarIcon },
-        { name: '會計科目', href: '/admin/accounting/chart-of-accounts', icon: CalculatorIcon },
-        { name: '會計分錄', href: '/admin/accounting/journal-entries', icon: DocumentTextIcon },
-        { name: '財務報表', href: '/admin/accounting/financial-reports', icon: DocumentTextIcon },
-        { name: '銀行對帳', href: '/admin/accounting/bank-reconciliation', icon: CreditCardIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/user-tracking')) {
-      return [
-        { name: '追蹤總覽', href: '/admin/user-tracking', icon: ChartBarIcon },
-        { name: '行為分析', href: '/admin/user-tracking/behavior', icon: UsersIcon },
-        { name: '實時監控', href: '/admin/user-tracking/real-time', icon: SparklesIcon },
-        { name: '用戶分群', href: '/admin/user-tracking/segments', icon: UsersIcon },
-        { name: '隱私設定', href: '/admin/user-tracking/privacy', icon: ShieldCheckIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/analytics')) {
-      return [
-        { name: '分析總覽', href: '/admin/analytics', icon: ChartBarIcon },
-        { name: '銷售分析', href: '/admin/analytics/sales', icon: ChartBarIcon },
-        { name: '客戶分析', href: '/admin/analytics/customers', icon: UsersIcon },
-        { name: '商品分析', href: '/admin/analytics/products', icon: ShoppingBagIcon },
-        { name: '營運分析', href: '/admin/analytics/operations', icon: Cog6ToothIcon },
-        { name: 'AI 洞察', href: '/admin/analytics/ai-insights', icon: SparklesIcon },
-      ];
-    }
-    
-    if (path.startsWith('/admin/settings')) {
-      return [
-        { name: '設定總覽', href: '/admin/settings', icon: ChartBarIcon },
-        { name: '一般設定', href: '/admin/settings/general', icon: Cog6ToothIcon },
-        { name: '安全設定', href: '/admin/settings/security', icon: ShieldCheckIcon },
-        { name: '通知設定', href: '/admin/settings/notifications', icon: BellIcon },
-        { name: '付款設定', href: '/admin/settings/payments', icon: CreditCardIcon },
-        { name: '物流設定', href: '/admin/settings/shipping', icon: TruckIcon },
-      ];
-    }
-    
-    return [];
-  };
 
-  const subTabs = getSubTabs();
-  const hasSubTabs = subTabs.length > 0;
 
   const handleLogout = () => {
     localStorage.removeItem('marelle-admin-token');
-    navigate('/admin/login');
+    navigate('/login');
   };
 
   const isActive = (path) => {
-    if (path === '/admin') {
-      return location.pathname === '/admin' || location.pathname === '/admin/';
+    if (path === '/') {
+      return location.pathname === '/' || location.pathname === '';
     }
     return location.pathname.startsWith(path);
   };
 
-  // 檢查子頁籤是否激活（只有完全匹配的路徑才激活）
-  const isSubTabActive = (href) => {
-    return location.pathname === href;
-  };
+
 
   return (
     <div className={`${ADMIN_STYLES.pageContainer} flex`}>
@@ -333,7 +181,7 @@ const AdminDashboard = () => {
         <div className="flex flex-col h-full bg-[#fdf8f2] border-r border-gray-200 shadow-sm">
           {/* Header */}
           <div className="flex items-center justify-between px-4 h-16 border-b border-gray-200">
-            <Link to="/admin" className="flex items-center space-x-3 min-w-0">
+            <Link to="/" className="flex items-center space-x-3 min-w-0">
               <div className="w-9 h-9 bg-[#cc824d] rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
                 <span className="text-white font-bold text-lg">M</span>
               </div>
@@ -420,34 +268,9 @@ const AdminDashboard = () => {
                 <Bars3Icon className="w-5 h-5" />
               </button>
               
-              {/* 子頁籤導航 */}
-              {hasSubTabs ? (
-                <div className="flex space-x-6">
-                  {subTabs.map((tab) => {
-                    const IconComponent = tab.icon;
-                    const isActive = isSubTabActive(tab.href);
-                    
-                    return (
-                      <Link
-                        key={tab.href}
-                        to={tab.href}
-                        className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium transition-all duration-200 border-b-2 hover:text-[#cc824d] ${
-                          isActive
-                            ? 'text-[#cc824d] border-[#cc824d]'
-                            : 'text-gray-600 border-transparent hover:border-gray-300'
-                        }`}
-                      >
-                        {IconComponent && <IconComponent className="w-4 h-4" />}
-                        <span className="font-chinese">{tab.name}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-sm text-gray-500 font-serif">
-                  <span className="text-gray-700">管理後台</span>
-                </div>
-              )}
+              <div className="text-sm text-gray-500 font-serif">
+                <span className="text-gray-700">管理後台</span>
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">

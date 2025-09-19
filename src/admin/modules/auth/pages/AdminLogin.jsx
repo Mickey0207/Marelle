@@ -23,7 +23,7 @@ const AdminLogin = () => {
       const result = login(formData);
       
       if (result.success) {
-        navigate('/admin');
+        navigate('/');
       } else {
         setError(result.message);
       }

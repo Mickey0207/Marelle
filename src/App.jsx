@@ -47,31 +47,10 @@ function App() {
       <Router>
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50 to-apricot-50">
           <Routes>
-            {/* 後台路由 - 必須放在前面以優先匹配 */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/register" element={<Register />} />
-            <Route path="/admin/*" element={<AdminDashboard />} />
-            
-            {/* 前台登錄註冊 */}
-            <Route path="/login" element={<FrontLogin />} />
-            <Route path="/register" element={<FrontRegister />} />
-            
-            {/* 前台路由 */}
-            <Route path="/*" element={
-              <>
-                <Navbar />
-                <main className="flex-grow">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/products/:id" element={<ProductDetail />} />
-                    <Route path="/cart" element={<Cart />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                  </Routes>
-                </main>
-                <Footer />
-              </>
-            } />
+            {/* 後台路由 - 移除 /admin 前綴 */}
+            <Route path="/login" element={<AdminLogin />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/*" element={<AdminDashboard />} />
           </Routes>
         </div>
       </Router>
