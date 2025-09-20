@@ -1,17 +1,19 @@
 {
-  "name": "marelle-backend",
+  "name": "marelle-ecommerce",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3001",
+    "dev": "vite",
+    "dev:admin": "vite --mode admin",
     "build": "vite build",
-    "lint": "eslint . --ext js,jsx,ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview --port 3001"
+    "build:admin": "vite build --mode admin",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "preview:admin": "vite preview --mode admin"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.18",
-    "@tailwindcss/postcss": "^4.1.13",
     "framer-motion": "^10.16.14",
     "gsap": "^3.12.2",
     "lucide-react": "^0.544.0",

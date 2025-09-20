@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
-import { formatPrice } from "../shared/utils/data";
+import { formatPrice } from "../../utils/data";
 
 const DynamicPriceDisplay = ({ 
   basePrice, 

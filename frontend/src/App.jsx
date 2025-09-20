@@ -11,11 +11,13 @@ import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
+import FrontLogin from './pages/FrontLogin'
+import FrontRegister from './pages/FrontRegister'
 
 // 註冊 GSAP 插件
 gsap.registerPlugin(ScrollTrigger)
 
-function FrontApp() {
+function App() {
   useEffect(() => {
     // 初始化頁面載入動畫
     gsap.fromTo(
@@ -49,6 +51,8 @@ function FrontApp() {
                   <Route path="/products/:id" element={<ProductDetail />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/login" element={<FrontLogin />} />
+                  <Route path="/register" element={<FrontRegister />} />
                 </Routes>
               </main>
               <Footer />
@@ -60,4 +64,4 @@ function FrontApp() {
   )
 }
 
-export default FrontApp
+export default App

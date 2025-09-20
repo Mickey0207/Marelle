@@ -5,6 +5,7 @@ import {
   MagnifyingGlassIcon,
   Bars3Icon,
   XMarkIcon,
+  UserIcon,
   GlobeAltIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
@@ -114,6 +115,9 @@ const Navbar = () => {
             <button className="p-2 rounded-lg transition-colors duration-200 text-lofi btn-ghost hidden md:inline-flex">
               <MagnifyingGlassIcon className="w-5 h-5" />
             </button>
+            <Link to="/login" className="p-2 rounded-lg transition-colors duration-200 text-lofi btn-ghost hidden md:inline-flex" aria-label="會員登入">
+              <UserIcon className="w-5 h-5" />
+            </Link>
             <Link to="/cart" className="relative p-2 rounded-lg transition-colors duration-200 text-lofi btn-ghost">
               <ShoppingBagIcon className="w-5 h-5" />
               {cartItemsCount > 0 && (
@@ -140,23 +144,7 @@ const Navbar = () => {
                 className={`block px-4 py-3 rounded-lg font-medium transition-colors duration-200 font-chinese text-lofi ${isActive(item.href) ? 'bg-primary-btn text-btn-white' : 'hover:bg-primary-btn/10 hover:text-primary-btn'}`}
               >{item.name}</Link>
             ))}
-            {secondaryNav.map(item => (
-              <Link
-                key={item.name}
-                to={item.href}
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 rounded-lg font-medium text-lofi hover:bg-primary-btn/10 hover:text-primary-btn transition-colors duration-200"
-              >{item.name}</Link>
-            ))}
-            <a 
-              href={window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://admin.marelle.com.tw'} 
-              onClick={() => setIsMenuOpen(false)} 
-              className="block px-4 py-3 rounded-lg font-medium text-lofi hover:bg-primary-btn/10 hover:text-primary-btn transition-colors duration-200 border-t mt-2 pt-4 font-chinese"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              管理後台
-            </a>
+            <Link to="/admin/login" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 rounded-lg font-medium text-lofi hover:bg-primary-btn/10 hover:text-primary-btn transition-colors duration-200 border-t mt-2 pt-4 font-chinese">管理後台</Link>
           </div>
         </div>
       )}

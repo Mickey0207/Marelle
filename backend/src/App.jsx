@@ -3,19 +3,10 @@ import { useEffect } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-// 導入頁面組件
-import Navbar from './components/layout/Navbar'
-import Footer from './components/layout/Footer'
-import Home from './pages/Home'
-import Products from './pages/Products'
-import ProductDetail from './pages/ProductDetail'
-import Cart from './pages/Cart'
-import Checkout from './pages/Checkout'
+// 導入後台組件
 import AdminDashboard from './admin/Dashboard'
 import AdminLogin from "./admin/modules/auth/pages/AdminLogin";
 import Register from "./admin/modules/auth/pages/Register";
-import FrontLogin from './pages/FrontLogin'
-import FrontRegister from './pages/FrontRegister'
 
 // 導入 AuthProvider
 import { AuthProvider } from './admin/shared/components/AuthComponents'
