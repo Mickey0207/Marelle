@@ -34,8 +34,15 @@ const FrontLogin = () => {
     <div className="min-h-screen flex flex-col bg-[#fdf8f2]">
       <Navbar />
       <main className="flex-1 flex flex-col items-center justify-center py-8 pt-16">
+        {/* LOGO 區域 */}
+        <div className="w-full max-w-md mx-auto mb-8 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#cc824d] to-[#b86c37] rounded-2xl mb-4 shadow-lg">
+            <span className="text-white text-3xl font-serif font-bold">M</span>
+          </div>
+          <h1 className="text-3xl font-serif font-bold text-[#2d1e0f] mb-2 tracking-wider">Marelle 登入</h1>
+        </div>
+        
         <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto bg-transparent flex flex-col items-center">
-          <h2 className="text-2xl font-serif font-bold text-[#2d1e0f] mb-8 mt-2 tracking-wider">登入</h2>
           <div className="w-full flex flex-col gap-6">
             <div>
               <input
@@ -85,36 +92,18 @@ const FrontLogin = () => {
             <span className="mx-4 text-[#bfae9b] text-sm font-serif">或使用社群帳號登入</span>
             <div className="flex-1 h-px bg-[#e5ded6]" />
           </div>
-          <div className="flex gap-6 justify-center mb-8">
-            <button type="button" className="w-12 h-12 rounded-full bg-[#00c300] flex items-center justify-center shadow hover:scale-105 transition-transform"><i className="fa-brands fa-line text-white text-2xl" /></button>
-            <button type="button" className="w-12 h-12 rounded-full bg-[#1877f2] flex items-center justify-center shadow hover:scale-105 transition-transform"><i className="fa-brands fa-facebook-f text-white text-2xl" /></button>
-          </div>
         </form>
+        <div className="w-full max-w-md mx-auto mb-8">
+          <button type="button" className="w-full bg-[#00c300] hover:bg-[#00b300] text-white text-base font-bold py-3 rounded transition-colors font-serif tracking-wider flex items-center justify-center gap-3">
+            <i className="fa-brands fa-line text-xl" />
+            <span>LINE 登入</span>
+          </button>
+        </div>
         <div className="w-full max-w-md mx-auto flex flex-col items-center mt-8">
           <h3 className="text-xl font-serif font-bold text-[#2d1e0f] mb-4 tracking-wider">還不是會員？</h3>
           <button onClick={() => navigate('/register')} className="w-full border border-[#cc824d] text-[#cc824d] text-base font-bold py-3 rounded transition-colors font-serif tracking-wider hover:bg-[#f7ede3]">註冊會員</button>
         </div>
       </main>
-      <footer className="w-full mt-24 px-8 pb-8 pt-16 bg-transparent text-[#bfae9b] text-sm">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <div className="font-serif font-bold mb-2">Lo-Fi warehouse</div>
-            <div className="mb-2 text-xs">A missing piece of homestyle<br />歡迎你的來過，帶走一個你喜歡的風格</div>
-          </div>
-          <div>
-            <div className="font-serif font-bold mb-2">品牌資訊</div>
-            <div className="text-xs leading-6">會員帳戶<br />品牌理念<br />品牌故事</div>
-          </div>
-          <div>
-            <div className="font-serif font-bold mb-2">常見問題</div>
-            <div className="text-xs leading-6">訂單狀態<br />購物須知<br />配送說明<br />退換貨服務</div>
-          </div>
-          <div>
-            <div className="font-serif font-bold mb-2">聯絡我們</div>
-            <div className="text-xs leading-6">LINE ID：@lofiwarehouse<br />客服時間：週一至週五 10:00 - 18:00<br />信箱：lofi-warehouse.service@lofi-house.com</div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

@@ -6,7 +6,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 // 導入後台組件
 import AdminDashboard from './admin/Dashboard'
 import AdminLogin from "./admin/modules/auth/pages/AdminLogin";
-import Register from "./admin/modules/auth/pages/Register";
 
 // 導入 AuthProvider
 import { AuthProvider } from './admin/shared/components/AuthComponents'
@@ -40,7 +39,6 @@ function App() {
           <Routes>
             {/* 後台路由 - 移除 /admin 前綴 */}
             <Route path="/login" element={<AdminLogin />} />
-            <Route path="/register" element={<Register />} />
             <Route path="/*" element={<AdminDashboard />} />
           </Routes>
         </div>
