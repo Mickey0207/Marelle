@@ -1,171 +1,105 @@
-# Marelle - 優雅電商平台
+# Marelle 電商平台
 
-Marelle 是一個採用杏色簡約設計風格的現代電商網站，結合了優雅的美學與實用的功能。
+一個現代化的電商平台，採用微服務架構設計，前後台分離，使用 Cloudflare Workers 作為統一 API 服務。
+
+## 🏗️ 專案架構
+
+```
+Marelle/
+├── frontend/          # 前台客戶網站 (Port 3000)
+├── backend/           # 後台管理系統 (Port 3001)
+├── Cloudflare_Workers/ # API 服務 (Port 8787)
+├── docs/              # 文件
+├── package.json       # Workspace 管理
+└── README.md          # 專案說明
+```
+
+## 🚀 快速開始
+
+### 一鍵啟動所有服務
+```bash
+npm run dev:all
+```
+
+### 分別啟動服務
+```bash
+# 啟動 API 服務
+npm run dev:workers
+
+# 啟動前台
+npm run dev:frontend
+
+# 啟動後台
+npm run dev:backend
+```
+
+### 安裝所有依賴
+```bash
+npm run install:all
+```
+
+## 📁 各專案說明
+
+### 🛍️ 前台 (Frontend)
+- **地址**: http://localhost:3000
+- **技術**: React + Vite + Tailwind CSS
+- **功能**: 商品瀏覽、購物車、結帳、會員系統
+
+### 🎛️ 後台 (Backend)
+- **地址**: http://localhost:3001
+- **技術**: React + Vite + Tailwind CSS
+- **功能**: 商品管理、訂單管理、會員管理、數據分析
+- **登入**: 
+  - 帳號: `admin`
+  - 密碼: `password`
+
+### 🔌 API 服務 (Workers)
+- **地址**: http://localhost:8787
+- **技術**: Cloudflare Workers + D1 Database + R2 Storage
+- **功能**: 認證系統、資料 API、檔案管理
+
+## 🔐 認證系統
+
+### 前台 API 端點
+- `POST /api/front/register` - 用戶註冊
+- `POST /api/front/login` - 用戶登入
+- `GET /api/front/profile` - 用戶資料
+- `GET /api/front/orders` - 用戶訂單
+
+### 後台 API 端點
+- `POST /api/admin/login` - 管理員登入
+- `POST /api/admin/create-admin` - 創建管理員
+- `GET /api/admin/users` - 用戶列表
+- `GET /api/admin/orders` - 訂單列表
+
+### 商品 API 端點
+- `GET /api/products` - 獲取商品列表
+- `POST /api/admin/products` - 創建商品 (僅管理員)
+
+## 🛠️ 開發指令
+
+```bash
+# 建置前台
+npm run build:frontend
+
+# 建置後台
+npm run build:backend
+
+# 部署 Workers (需要 Cloudflare 帳號)
+cd Cloudflare_Workers/my-worker
+npm run deploy
+```
 
 ## 🌟 特色功能
 
-### 前台功能
-- **優雅首頁** - 杏色主題的簡約設計，配合玻璃態效果
-- **商品展示** - 支援分類篩選、搜尋和排序功能
-- **商品詳情** - 詳細的商品資訊與多角度展示
-- **購物車** - 直觀的購物車管理功能
-- **結帳流程** - 完整的三步驟結帳體驗
-- **響應式設計** - 完美適配各種裝置
+- ✅ 前後台完全分離
+- ✅ 統一 API 服務
+- ✅ JWT 認證系統
+- ✅ 玻璃態 UI 設計
+- ✅ 響應式布局
+- ✅ 動畫效果 (GSAP)
+- ✅ 現代化技術棧
 
-### 後台管理
-- **管理儀表板** - 銷售數據總覽與快速操作
-- **商品管理** - 商品新增、編輯、刪除和庫存管理
-- **訂單管理** - 訂單狀態追蹤與處理
-- **客戶管理** - 客戶資料與關係管理
-- **數據分析** - 銷售報表與業績分析
-- **系統設定** - 網站配置與偏好設定
+## 📄 License
 
-## 🎨 設計特色
-
-- **杏色主題** - 溫暖優雅的杏色色調
-- **玻璃態效果** - 現代化的毛玻璃背景效果
-- **流暢動畫** - 使用 GSAP 實現的精緻動畫
-- **中文字體** - 專為中文使用者優化的字體選擇
-
-## 🛠️ 技術棧
-
-- **前端框架**: React 18
-- **構建工具**: Vite
-- **樣式框架**: Tailwind CSS
-- **動畫庫**: GSAP
-- **圖標**: Heroicons
-- **路由**: React Router DOM
-- **狀態管理**: React Hooks + Local Storage
-
-## 📦 安裝與運行
-
-### 環境要求
-- Node.js 16.0 或更高版本
-- npm 或 yarn
-
-### 安裝步驟
-
-1. **克隆專案**
-   ```bash
-   git clone <repository-url>
-   cd marelle
-   ```
-
-2. **安裝依賴**
-   ```bash
-   npm install
-   ```
-
-3. **啟動開發服務器**
-   ```bash
-   npm run dev
-   ```
-
-4. **建置生產版本**
-   ```bash
-   npm run build
-   ```
-
-5. **預覽生產版本**
-   ```bash
-   npm run preview
-   ```
-
-## 🚀 使用說明
-
-### 前台訪問
-- 網站首頁: `http://localhost:3000`
-- 商品頁面: `http://localhost:3000/products`
-- 購物車: `http://localhost:3000/cart`
-
-### 後台管理
-- 管理後台: `http://localhost:3000/admin/login`
-- 測試帳號: `admin`
-- 測試密碼: `password`
-
-## 📁 專案結構
-
-```
-src/
-├── components/          # 共用組件
-│   ├── Navbar.jsx      # 導航欄
-│   └── Footer.jsx      # 頁腳
-├── pages/              # 前台頁面
-│   ├── Home.jsx        # 首頁
-│   ├── Products.jsx    # 商品列表
-│   ├── ProductDetail.jsx # 商品詳情
-│   ├── Cart.jsx        # 購物車
-│   └── Checkout.jsx    # 結帳頁面
-├── admin/              # 後台管理
-│   ├── Login.jsx       # 管理員登入
-│   ├── Dashboard.jsx   # 管理儀表板
-│   └── pages/          # 後台子頁面
-├── hooks/              # 自定義 Hooks
-├── utils/              # 工具函數
-└── index.css          # 全域樣式
-```
-
-## 🎯 主要功能
-
-### 購物功能
-- 商品瀏覽與搜尋
-- 購物車管理
-- 願望清單
-- 結帳流程
-- 訂單確認
-
-### 管理功能
-- 商品 CRUD 操作
-- 訂單狀態管理
-- 客戶資料管理
-- 銷售數據分析
-
-## 🎨 自定義樣式
-
-專案使用 Tailwind CSS 並擴展了自定義的杏色主題：
-
-```css
-colors: {
-  apricot: {
-    50: '#fef7f3',
-    100: '#fceee6',
-    200: '#f8d5c4',
-    300: '#f4b49f',
-    400: '#ed8971',
-    500: '#e6654a',
-    600: '#d4543a',
-    700: '#b04532',
-    800: '#8f3a30',
-    900: '#74332c',
-  }
-}
-```
-
-## 📱 響應式設計
-
-- **桌面端**: 完整功能與最佳體驗
-- **平板**: 優化的觸控體驗
-- **手機**: 精簡但完整的功能
-
-## 🔧 開發工具
-
-- **ESLint**: 代碼品質檢查
-- **Prettier**: 代碼格式化
-- **Vite**: 快速的開發與建置
-- **Hot Reload**: 即時代碼更新
-
-## 📄 授權
-
-本專案採用 MIT 授權條款。
-
-## 🤝 貢獻
-
-歡迎提交 Pull Request 或回報 Issues。
-
-## 📞 聯絡方式
-
-如有任何問題或建議，歡迎聯絡我們。
-
----
-
-**Marelle** - 讓優雅成為日常 ✨
+MIT License
