@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useLogto } from '@logto/react';
 import { gsap } from 'gsap';
 import {
   HomeIcon,
@@ -99,6 +100,9 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Logto 認證 hooks
+  const { isAuthenticated, isLoading, signOut, getAccessToken, getIdTokenClaims } = useLogto();
 
   const handleGlobalSearch = (e) => {
     e.preventDefault();
@@ -111,19 +115,25 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    // Check authentication
-    const isAdminLoggedIn = localStorage.getItem('marelle-admin-token');
-    if (!isAdminLoggedIn) {
-      navigate('/login');
-    }
-
     // Animate dashboard on load using unified animation config
     gsap.fromTo(
       '.admin-content',
       GSAP_ANIMATIONS.pageLoad.from,
       GSAP_ANIMATIONS.pageLoad.to
     );
-  }, [navigate]);
+  }, []);
+
+  // 處理登出
+  const handleLogout = async () => {
+    try {
+      const postLogoutRedirectUri = window.location.hostname === 'localhost'
+        ? 'http://localhost:3001/'
+        : 'https://admin.marelle.com.tw/';
+      await signOut(postLogoutRedirectUri);
+    } catch (error) {
+      console.error('登出失敗:', error);
+    }
+  };
 
   const navigation = [
     { name: '總覽', href: '/', icon: HomeIcon },
@@ -146,10 +156,6 @@ const AdminDashboard = () => {
 
 
 
-  const handleLogout = () => {
-    localStorage.removeItem('marelle-admin-token');
-    navigate('/login');
-  };
 
   const isActive = (path) => {
     if (path === '/') {
