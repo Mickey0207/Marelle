@@ -1,0 +1,820 @@
+/* Sidebar 展開/收合動畫 */
+.sidebar-anim-collapse {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.sidebar-anim-expand {
+  max-height: 500px; /* 足夠大即可 */
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* 確保自定義下拉選單的最高優先級 */
+.custom-select-dropdown {
+  z-index: 999999 !important;
+  position: absolute !important;
+}
+  /* 商品卡中央愛心與下方滿版購物車按鈕 */
+  .product-card-favcenter, .product-card-cartbar {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .32s cubic-bezier(.4,0,.2,1), transform .32s cubic-bezier(.4,0,.2,1);
+  }
+  .product-card-minimal:hover .product-card-favcenter,
+  .product-card-minimal:focus-within .product-card-favcenter,
+  .product-card-minimal:hover .product-card-cartbar,
+  .product-card-minimal:focus-within .product-card-cartbar {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+  .product-card-favcenter {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #CC824D;
+    font-size: 2.1rem;
+    cursor: pointer;
+    box-shadow: none;
+    transition: color .2s, opacity .32s, transform .32s;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+  }
+  .product-card-favcenter.active,
+  .product-card-favcenter:hover {
+    color: #b86e36;
+    background: none;
+    border: none;
+  }
+  .product-card-cartbar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    background: #CC824D;
+    color: #fff;
+    border: none;
+    border-radius: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 1.1rem 0 1rem 0;
+    letter-spacing: 1px;
+    text-align: center;
+    box-shadow: 0 2px 16px 0 rgba(204,130,77,0.08);
+    cursor: pointer;
+    margin: 0;
+    display: block;
+    transition: background .2s, opacity .32s, transform .32s;
+  }
+  .product-card-cartbar:disabled {
+    background: #d6cfc7;
+    color: #fff;
+    cursor: not-allowed;
+  }
+  .product-card-cartbar:hover:not(:disabled) {
+    background: #b86e36;
+  }
+  /* 商品卡底部操作列（hover 顯示） */
+  .product-card-actionbar {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 2px 16px 0 rgba(204,130,77,0.08);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(16px);
+    transition: opacity .32s cubic-bezier(.4,0,.2,1), transform .32s cubic-bezier(.4,0,.2,1);
+    z-index: 2;
+  }
+  .product-card-minimal:hover .product-card-actionbar,
+  .product-card-minimal:focus-within .product-card-actionbar {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .product-card-actionbar .cart-btn {
+    flex: 1 1 0%;
+    background: #CC824D;
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.7rem 0;
+    box-shadow: 0 2px 8px 0 rgba(204,130,77,0.08);
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .product-card-actionbar .cart-btn:hover {
+    background: #b86e36;
+  }
+  .product-card-actionbar .fav-btn {
+    background: none;
+    border: 1.5px solid #CC824D;
+    color: #CC824D;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: background .2s, color .2s, border .2s;
+    margin-left: 0.5rem;
+  }
+  .product-card-actionbar .fav-btn.active,
+  .product-card-actionbar .fav-btn:hover {
+    background: #CC824D;
+    color: #fff;
+    border-color: #CC824D;
+  }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Noto Sans TC", system-ui, sans-serif;
+  }
+  
+  body {
+    background-color: #EFEAE4;
+    color: #666666;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* 主要按鈕樣式 - 使用指定色彩 */
+  .btn-primary {
+    padding: 0.75rem 1.5rem;
+    background-color: #CC824D;
+    color: #FFFFFF;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    transform: scale(1);
+  }
+  
+  .btn-primary:hover {
+    background-color: #b86c37;
+    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.1);
+    transform: scale(1.05);
+  }
+  
+  .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #666666;
+    border: 1px solid rgba(102, 102, 102, 0.2);
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(102, 102, 102, 0.3);
+  }
+  
+  .btn-ghost {
+    padding: 0.5rem 1rem;
+    color: #666666;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-ghost:hover {
+    background-color: rgba(239, 234, 228, 0.5);
+  }
+
+  /* Glass effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  /* 玻璃態下拉選單系統 */
+  .glass-dropdown {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3), 
+                0 8px 32px rgba(0, 0, 0, 0.1), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+  }
+
+  .glass-dropdown-search {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-dropdown-search input {
+    width: 100%;
+    padding: 0.625rem 0.75rem 0.625rem 2.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    outline: none;
+    transition: all 0.2s ease;
+  }
+
+  .glass-dropdown-search input:focus {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: #CC824D;
+    box-shadow: 0 0 0 2px rgba(204, 130, 77, 0.2);
+  }
+
+  .glass-dropdown-option {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: none;
+    cursor: pointer;
+    color: #374151;
+  }
+
+  .glass-dropdown-option:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(249, 237, 224, 0.2));
+    color: #703f24;
+  }
+
+  .glass-dropdown-option.selected {
+    background: linear-gradient(135deg, rgba(249, 237, 224, 0.8), rgba(242, 216, 191, 0.6));
+    color: #703f24;
+    border-right: 4px solid #CC824D;
+  }
+
+  .glass-dropdown-create {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #374151;
+  }
+
+  .glass-dropdown-create:hover {
+    background: linear-gradient(135deg, rgba(249, 237, 224, 0.3), rgba(242, 216, 191, 0.2));
+    color: #703f24;
+  }
+
+  .glass-dropdown-empty {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #6B7280;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-dropdown-more {
+    padding: 0.5rem 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6B7280;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(249, 237, 224, 0.2));
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .input-glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(204, 130, 77, 0.3);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+  }
+
+  .input-glass:focus {
+    outline: none;
+    border-color: #cc824d;
+    box-shadow: 0 0 0 3px rgba(204, 130, 77, 0.1);
+    background: rgba(255, 255, 255, 0.9);
+  }
+  
+  /* 輸入框樣式 */
+  .input-lofi {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(102, 102, 102, 0.2);
+    border-radius: 0.5rem;
+    color: #666666;
+    transition: all 0.2s ease;
+  }
+  
+  .input-lofi:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 1);
+    border-color: #CC824D;
+    box-shadow: 0 0 0 2px rgba(204, 130, 77, 0.1);
+  }
+  
+  /* 卡片樣式 */
+  .card-lofi {
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(102, 102, 102, 0.1);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+  }
+  
+  .card-lofi:hover {
+    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 導航樣式 */
+  .nav-lofi {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(102, 102, 102, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  
+  /* 商品網格 */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1.5rem;
+  }
+  
+  @media (min-width: 640px) {
+    .product-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .product-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    .product-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  /* 商品卡片 */
+  .product-card-lofi {
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(102, 102, 102, 0.1);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .product-card-lofi:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* 極簡商品卡（新版） */
+  .product-card-minimal {
+    background: transparent;
+    cursor: pointer;
+    transition: transform .35s cubic-bezier(.19,1,.22,1), box-shadow .35s;
+  }
+  .product-card-minimal:hover {
+    transform: translateY(-4px);
+  }
+  .product-card-minimal:active {
+    transform: translateY(-2px);
+  }
+  .product-card-minimal .imgbox {
+    aspect-ratio: 1 / 1; /* 改回 1:1 */
+    background:#ffffff;
+    position:relative;
+    overflow:hidden;
+    border:1px solid rgba(102,102,102,.08);
+  }
+  .product-card-minimal .imgbox img {
+    width:100%;
+    height:100%;
+    object-fit:cover; /* 滿版裁切 */
+    transition: transform .6s ease;
+    display:block;
+  }
+  .product-card-minimal:hover .imgbox img { transform: scale(1.04); }
+  .product-card-minimal .info { 
+    text-align:center;
+    padding-top:1.75rem;
+    color:#666666;
+  }
+  .product-card-minimal .title { 
+    font-size:1.05rem;
+    line-height:1.5;
+    font-weight:500;
+    letter-spacing:.5px;
+  }
+  .product-card-minimal .pricing { 
+    margin-top:1.25rem;
+  }
+  .product-card-minimal .price-tag { 
+    font-size:1rem;
+    letter-spacing:.5px;
+  }
+  .product-card-minimal .price-original { 
+    display:block;
+    margin-top:.5rem;
+  }
+  .product-card-minimal .badge-out { 
+    position:absolute;
+    top:.75rem;
+    left:.75rem;
+    background:rgba(0,0,0,.75);
+    color:#fff;
+    font-size:.65rem;
+    letter-spacing:.5px;
+    padding:.35rem .5rem;
+    border-radius:4px;
+    font-weight:500;
+  }
+  
+  .product-image {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: linear-gradient(135deg, #EFEAE4 0%, #f5f1e8 100%);
+  }
+  
+  .product-content {
+    padding: 1rem;
+    color: #666666;
+  }
+  
+  /* 價格標籤 */
+  .price-tag {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #CC824D;
+  }
+  
+  .price-original {
+    font-size: 0.875rem;
+    color: rgba(102, 102, 102, 0.6);
+    text-decoration: line-through;
+  }
+
+  /* 自訂排序下拉 */
+  .sort-dropdown {
+    position: relative;
+    font-family: inherit;
+    width: 160px;
+  }
+  .sort-dropdown-sm { width: 140px; }
+  .sort-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(204,130,77,0.5);
+    padding: 0.6rem 0.75rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    color: #666666;
+    transition: all .2s;
+    backdrop-filter: blur(6px);
+  }
+  .sort-trigger:hover { background: rgba(255,255,255,0.9); }
+  .sort-dropdown.open .sort-trigger { box-shadow: 0 0 0 2px rgba(204,130,77,0.25); }
+  .sort-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid rgba(102,102,102,0.15);
+    border-radius: 0.75rem;
+    padding: 4px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+    animation: fadeIn .15s ease;
+    backdrop-filter: blur(8px);
+    z-index: 30;
+  }
+  .sort-option {
+    width: 100%;
+    text-align: left;
+    padding: 0.55rem 0.65rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    color: #666666;
+    transition: all .18s;
+  }
+  .sort-option:hover { background: rgba(204,130,77,0.08); color:#CC824D; }
+  .sort-option.active { background: #CC824D; color:#FFFFFF; }
+}
+
+@layer utilities {
+  .text-shadow-soft {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+  }
+  
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+}
+
+/* === 全局色彩 class === */
+.bg-lofi {
+  background-color: #EFEAE4 !important;
+}
+.text-lofi {
+  color: #666666 !important;
+}
+.bg-primary-btn {
+  background-color: #CC824D !important;
+  color: #FFFFFF !important;
+}
+.bg-primary-btn:hover {
+  background-color: #b86c37 !important;
+}
+.text-primary-btn {
+  color: #CC824D !important;
+}
+.text-btn-white {
+  color: #FFFFFF !important;
+}
+.category-btn-lofi {
+  background-color: rgba(255,255,255,0.5) !important;
+  color: #666666 !important;
+  border: 1px solid rgba(102,102,102,0.2) !important;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+.category-btn-lofi.selected {
+  background-color: #CC824D !important;
+  color: #FFFFFF !important;
+  border-color: #CC824D !important;
+}
+.category-btn-lofi:hover:not(.selected) {
+  background-color: rgba(255,255,255,0.7) !important;
+}
+.status-badge-lofi {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: #CC824D;
+  color: #FFFFFF;
+}
+.status-badge-lofi.out {
+  background-color: #d1d5db;
+  color: rgba(102,102,102,0.5);
+}
+/* === END === */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+/* 自定義捲軸 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #EFEAE4;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #CC824D;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #b86c37;
+}
+
+/* 選取文字樣式 */
+::selection {
+  background-color: rgba(204, 130, 77, 0.2);
+  color: #666666;
+}
+
+/* 原生 select 元素的玻璃態樣式 */
+.glass-select {
+  padding: 12px 40px 12px 16px;
+  border: 1px solid rgba(204, 130, 77, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  color: #374151;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: 
+    linear-gradient(45deg, transparent 50%, #CC824D 50%),
+    linear-gradient(135deg, #CC824D 50%, transparent 50%);
+  background-position: 
+    calc(100% - 20px) calc(1em + 2px),
+    calc(100% - 15px) calc(1em + 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.glass-select:focus {
+  border-color: #CC824D;
+  box-shadow: 0 0 0 3px rgba(204, 130, 77, 0.1);
+}
+
+.glass-select:hover {
+  border-color: rgba(204, 130, 77, 0.5);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.glass-select option {
+  background: rgba(255, 255, 255, 0.95);
+  color: #374151;
+  padding: 8px;
+}
+
+/* StandardTable 樣式 */
+.standard-table {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 
+              0 4px 16px rgba(0, 0, 0, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.standard-table-header {
+  background: #f9fafb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+  transition: all 0.2s ease;
+}
+
+.standard-table-header.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.standard-table-header.sortable:hover {
+  background: #f3f4f6;
+  color: #CC824D;
+}
+
+.standard-table-row {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  transition: all 0.2s ease;
+}
+
+.standard-table-row:hover {
+  background: rgba(249, 250, 251, 0.8);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.standard-table-cell {
+  padding: 1rem 1.5rem;
+  color: #374151;
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.standard-table-sort-icon {
+  margin-left: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  color: #9CA3AF;
+  transition: color 0.2s ease;
+}
+
+.standard-table-sort-icon.active {
+  color: #CC824D;
+}
+
+.standard-table-export-btn {
+  background: rgba(204, 130, 77, 0.1);
+  color: #CC824D;
+  border: 1px solid rgba(204, 130, 77, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.standard-table-export-btn:hover {
+  background: rgba(204, 130, 77, 0.2);
+  border-color: rgba(204, 130, 77, 0.5);
+  transform: translateY(-1px);
+}
+
+.standard-table-empty {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #6B7280;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.standard-table-empty-icon {
+  margin: 0 auto 1rem auto;
+  color: #D1D5DB;
+  width: 3rem;
+  height: 3rem;
+}
