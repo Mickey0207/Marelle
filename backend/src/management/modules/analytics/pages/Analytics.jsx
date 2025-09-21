@@ -23,7 +23,7 @@ const AdminAnalytics = () => {
 
   return (
     <div className="analytics-content">
-      {/* 分析?�容 */}
+      {/* 分析內容 */}
       <div className="analytics-content">
         <Routes>
           <Route path="/" element={<AnalyticsOverview />} />

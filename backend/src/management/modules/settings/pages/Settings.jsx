@@ -21,7 +21,7 @@ const AdminSettings = () => {
 
   return (
     <div className="settings-content">
-      {/* 設�??�面路由 */}
+      {/* 設定頁面路由 */}
       <Routes>
         <Route index element={<SystemSettingsOverview />} />
         <Route path="general" element={<GeneralSettings />} />

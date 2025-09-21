@@ -19,7 +19,7 @@ const mockInventoryData = [
     id: 1,
     sku: 'TSHIRT-001-WH-M',
     name: '經典T恤/白色/M',
-    category: '?�飾',
+    category: '服飾',
     warehouse: '主倉庫',
     currentStock: 25,
     safeStock: 10,
@@ -33,8 +33,8 @@ const mockInventoryData = [
   {
     id: 2,
     sku: 'TSHIRT-001-BL-L', 
-    name: '經典T??黑色/L',
-    category: '?�飾',
+    name: '經典T恤/黑色/L',
+    category: '服飾',
     warehouse: '主倉庫',
     currentStock: 3,
     safeStock: 5,
@@ -197,7 +197,7 @@ const Inventory = () => {
       <div className="container mx-auto px-6 py-8">
       <div className="flex items-center mb-8">
         <ArchiveBoxIcon className="w-8 h-8 text-amber-500 mr-3" />
-        <h1 className="text-3xl font-bold text-gray-800 font-chinese">剛才庫存管�?</h1>
+        <h1 className="text-3xl font-bold text-gray-800 font-chinese">庫存管理</h1>
       </div>
 
       {/* 篩選即時*/}
@@ -226,11 +226,11 @@ const Inventory = () => {
                 { value: '全部', label: '全部分類' },
                 { value: '服飾', label: '服飾' },
                 { value: '配件', label: '配件' },
-                { value: '贈�?', label: '贈�?' }
+                { value: '贈品', label: '贈品' }
               ]}
               value={selectedCategory}
               onChange={setSelectedCategory}
-              placeholder="剛才剛才剛才"
+              placeholder="選擇分類"
               className="w-32"
             />
           </div>

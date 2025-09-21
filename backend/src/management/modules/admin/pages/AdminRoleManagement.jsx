@@ -7,7 +7,7 @@ import {
   TrashIcon,
   ShieldCheckIcon,
   AdjustmentsHorizontalIcon
-} from '@heroicons/react/24/outline';
+} from '@heroicons/react/24/ou        emptyMessage="沒有找到符合條件的角色"line';
 import { adminDataManager } from '../../../shared/data/adminDataManager.js';
 import { ADMIN_PERMISSIONS, MODULE_NAMES, OPERATION_NAMES } from '../../../shared/data/adminConfig.js';
 // import CustomSelect from '../components/CustomSelect.jsx';
@@ -66,18 +66,18 @@ const AdminRoleManagement = () => {
     e.preventDefault();
     
     if (!formData.roleName.trim() || !formData.rolePrefix.trim()) {
-      alert('請填寫�?分析填�分析);
+      alert('請填寫完整的角色資訊');
       return;
     }
 
-    // 檢查角色?�綴?�否分析
+    // 檢查角色前綴是否存在
     const existingRole = roles.find(role => 
       role.rolePrefix.toLowerCase() === formData.rolePrefix.toLowerCase() && 
       role.id !== editingRole?.id
     );
     
     if (existingRole) {
-      alert('角色?�綴已�?分析請使?�其他�分析);
+      alert('角色前綴已存在，請使用其他前綴');
       return;
     }
 
@@ -90,25 +90,25 @@ const AdminRoleManagement = () => {
       
       loadRoles();
       handleCloseModal();
-      alert(editingRole ? '角色?�新分析' : '角色?�建分析');
+      alert(editingRole ? '角色更新成功' : '角色建立成功');
     } catch (error) {
-      alert('分析失�分析 + error.message);
+      alert('操作失敗：' + error.message);
     }
   };
 
   const handleDelete = (role) => {
     if (role.isSystemRole) {
-      alert('系統角色不能?�除');
+      alert('系統角色不能刪除');
       return;
     }
 
-    if (window.confirm(`確�?要刪分析分析{role.roleName}分析？`)) {
+    if (window.confirm(`確定要刪除角色「${role.roleName}」嗎？`)) {
       const success = adminDataManager.deleteRole(role.id);
       if (success) {
         loadRoles();
-        alert('角色?�除分析');
+        alert('角色刪除成功');
       } else {
-        alert('?�除失�?，可分析管�??�正?�使?�此角色');
+        alert('刪除失敗，可能有管理員正在使用此角色');
       }
     }
   };
@@ -163,8 +163,8 @@ const AdminRoleManagement = () => {
         <div className="flex items-center">
           <UserGroupIcon className="w-8 h-8 mr-3 text-[#cc824d]" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 font-chinese">角色管�?</h1>
-            <p className="text-gray-600 font-chinese">管�?系統角色分析?�設�?/p>
+            <h1 className="text-2xl font-bold text-gray-900 font-chinese">角色管理</h1>
+            <p className="text-gray-600 font-chinese">管理系統角色與權限設定</p>
           </div>
         </div>
         <button
@@ -172,7 +172,7 @@ const AdminRoleManagement = () => {
           className="flex items-center px-6 py-3 bg-[#cc824d] text-white rounded-xl hover:bg-[#b3723f] transition-colors font-chinese"
         >
           <PlusIcon className="w-5 h-5 mr-2" />
-          分析角色
+          新增角色
         </button>
       </div>
 
@@ -271,43 +271,43 @@ const AdminRoleManagement = () => {
             )
           }
         ]}
-        emptyMessage="沒�??�到符�?條件分析??
+        emptyMessage="沒有找到符合條件的角色"
         exportFileName="admin_roles"
       />
 
-      {/* 分析/編輯角色模�分析*/}
+      {/* 新增/編輯角色模態視窗 */}
       <GlassModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={editingRole ? '編輯角色' : '分析角色'}
+        title={editingRole ? '編輯角色' : '新增角色'}
         size="max-w-4xl"
       >
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* ?�本資�? */}
+          {/* 基本資訊 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
-                角色?�稱 *
+                角色名稱 *
               </label>
               <input
                 type="text"
                 value={formData.roleName}
                 onChange={(e) => setFormData(prev => ({ ...prev, roleName: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#cc824d] focus:border-transparent font-chinese bg-white/70 backdrop-blur-sm"
-                placeholder="例�?分析管�???
+                placeholder="例如：系統管理員"
                 required
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
-                工�??�綴 *
+                角色前綴 *
               </label>
               <input
                 type="text"
                 value={formData.rolePrefix}
                 onChange={(e) => setFormData(prev => ({ ...prev, rolePrefix: e.target.value.toUpperCase() }))}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#cc824d] focus:border-transparent font-chinese bg-white/70 backdrop-blur-sm"
-                placeholder="例�?P"
+                placeholder="例如：ADMIN"
                 maxLength="3"
                 pattern="[A-Z]{1,3}"
                 required

@@ -100,8 +100,8 @@ const MemberManagement = () => {
   // 篩選資料
   const filteredData = useMemo(() => {
     let filtered = mockMemberData.filter(member => {
-      const matchLevel = selectedLevel === '?�部' || member.level === selectedLevel;
-      const matchStatus = selectedStatus === '?�部' || member.status === selectedStatus;
+      const matchLevel = selectedLevel === '全部' || member.level === selectedLevel;
+      const matchStatus = selectedStatus === '全部' || member.status === selectedStatus;
       
       return matchLevel && matchStatus;
     });
