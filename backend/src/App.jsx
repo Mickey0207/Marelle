@@ -4,11 +4,11 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 // 導入後台組件
-import AdminDashboard from './admin/Dashboard'
-import AdminLogin from "./admin/modules/auth/pages/AdminLogin";
+import AdminDashboard from './management/Dashboard'
+import AdminLogin from "./management/modules/auth/pages/AdminLogin";
 
 // 導入 AuthProvider
-import { AuthProvider } from './admin/shared/components/AuthComponents'
+import { AuthProvider } from './management/components/auth/AuthComponents'
 
 // 註冊 GSAP 插件
 gsap.registerPlugin(ScrollTrigger)
