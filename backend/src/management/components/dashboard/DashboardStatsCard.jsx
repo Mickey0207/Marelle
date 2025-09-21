@@ -23,7 +23,7 @@ import {
   ChartBarIcon,
   BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../../../shared/styles/adminStyles";
+import { ADMIN_STYLES } from "../../../shared/styles/adminStyles";
 
 /**
  * 分析分析�?

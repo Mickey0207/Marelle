@@ -2,34 +2,33 @@
 
 // Dashboard 模組 tabs
 const dashboardTabs = [
-  { label: '概覽', path: '/admin/dashboard/overview' },
-  { label: '銷售分析', path: '/admin/dashboard/sales-analytics' },
-  { label: '營運管理', path: '/admin/dashboard/operations' },
-  { label: '財務報告', path: '/admin/dashboard/finance' },
-  { label: '物流管理', path: '/admin/dashboard/logistics' },
-  { label: '任務管理', path: '/admin/dashboard/tasks' },
-  { label: '審批管理', path: '/admin/dashboard/approvals' },
-  { label: '即時監控', path: '/admin/dashboard/realtime' }
+  { label: '概覽', path: '/dashboard/overview' },
+  { label: '銷售分析', path: '/dashboard/sales-analytics' },
+  { label: '營運管理', path: '/dashboard/operations' },
+  { label: '財務報告', path: '/dashboard/finance' },
+  { label: '物流管理', path: '/dashboard/logistics' },
+  { label: '任務管理', path: '/dashboard/tasks' },
+  { label: '審批管理', path: '/dashboard/approvals' },
+  { label: '即時監控', path: '/dashboard/realtime' }
 ];
 
 // Products 模組 tabs
 const productsTabs = [
-  { label: '產品列表', path: '/admin/products' },
-  { label: '新增產品', path: '/admin/products/add' },
-  { label: '庫存管理', path: '/admin/products/inventory' }
+  { label: '產品列表', path: '/products' },
+  { label: '新增產品', path: '/products/add' }
 ];
 
 // Orders 模組 tabs
 const ordersTabs = [
-  { label: '訂單列表', path: '/admin/orders' },
-  { label: '訂單管理', path: '/admin/orders/management' },
-  { label: '新增訂單', path: '/admin/orders/new' }
+  { label: '訂單列表', path: '/orders' },
+  { label: '訂單管理', path: '/orders/management' },
+  { label: '新增訂單', path: '/orders/new' }
 ];
 
 // Members 模組 tabs
 const membersTabs = [
-  { label: '會員管理', path: '/admin/members' },
-  { label: '客戶管理', path: '/admin/members/customers' }
+  { label: '會員管理', path: '/members' },
+  { label: '客戶管理', path: '/members/customers' }
 ];
 
 // Gifts 模組 tabs - 已移除，因為gifts目錄為空
@@ -42,93 +41,93 @@ const membersTabs = [
 
 // Suppliers 模組 tabs
 const suppliersTabs = [
-  { label: '供應商列表', path: '/admin/suppliers' },
-  { label: '新增供應商', path: '/admin/suppliers/new' }
+  { label: '供應商列表', path: '/suppliers' },
+  { label: '新增供應商', path: '/suppliers/new' }
 ];
 
 // Procurement 模組 tabs
 const procurementTabs = [
-  { label: '採購概覽', path: '/admin/procurement' },
-  { label: '採購訂單', path: '/admin/procurement/purchase-orders' },
-  { label: '新增採購訂單', path: '/admin/procurement/purchase-orders/new' },
-  { label: '採購建議', path: '/admin/procurement/suggestions' },
-  { label: '檢驗收貨', path: '/admin/procurement/inspection' },
-  { label: '採購分析', path: '/admin/procurement/analytics' }
+  { label: '採購概覽', path: '/procurement' },
+  { label: '採購訂單', path: '/procurement/purchase-orders' },
+  { label: '新增採購訂單', path: '/procurement/purchase-orders/new' },
+  { label: '採購建議', path: '/procurement/suggestions' },
+  { label: '檢驗收貨', path: '/procurement/inspection' },
+  { label: '採購分析', path: '/procurement/analytics' }
 ];
 
 // Logistics 模組 tabs
 const logisticsTabs = [
-  { label: '物流概覽', path: '/admin/logistics' },
-  { label: '出貨管理', path: '/admin/logistics/shipments' },
-  { label: '運費設定', path: '/admin/logistics/rates' },
-  { label: '物流追蹤', path: '/admin/logistics/tracking' },
-  { label: '退貨管理', path: '/admin/logistics/returns' },
-  { label: '物流分析', path: '/admin/logistics/analytics' },
-  { label: '物流供應商', path: '/admin/logistics/providers' }
+  { label: '物流概覽', path: '/logistics' },
+  { label: '出貨管理', path: '/logistics/shipments' },
+  { label: '運費設定', path: '/logistics/rates' },
+  { label: '物流追蹤', path: '/logistics/tracking' },
+  { label: '退貨管理', path: '/logistics/returns' },
+  { label: '物流分析', path: '/logistics/analytics' },
+  { label: '物流供應商', path: '/logistics/providers' }
 ];
 
 // Coupons 模組 tabs
 const couponsTabs = [
-  { label: '優惠券管理', path: '/admin/coupons' }
+  { label: '優惠券管理', path: '/coupons' }
 ];
 
 // Notifications 模組 tabs
 const notificationsTabs = [
-  { label: '通知管理', path: '/admin/notifications' },
-  { label: '模板管理', path: '/admin/notifications/templates' },
-  { label: '變數管理', path: '/admin/notifications/variables' },
-  { label: '觸發器管理', path: '/admin/notifications/triggers' },
-  { label: '通道設定', path: '/admin/notifications/channels' },
-  { label: '通知歷史', path: '/admin/notifications/history' },
-  { label: '通知分析', path: '/admin/notifications/analytics' }
+  { label: '通知管理', path: '/notifications' },
+  { label: '模板管理', path: '/notifications/templates' },
+  { label: '變數管理', path: '/notifications/variables' },
+  { label: '觸發器管理', path: '/notifications/triggers' },
+  { label: '通道設定', path: '/notifications/channels' },
+  { label: '通知歷史', path: '/notifications/history' },
+  { label: '通知分析', path: '/notifications/analytics' }
 ];
 
 // Accounting 模組 tabs
 const accountingTabs = [
-  { label: '會計概覽', path: '/admin/accounting' },
-  { label: '會計管理', path: '/admin/accounting/management' },
-  { label: '會計科目', path: '/admin/accounting/chart-of-accounts' },
-  { label: '日記帳分錄', path: '/admin/accounting/journal-entries' },
-  { label: '財務報告', path: '/admin/accounting/financial-reports' },
-  { label: '銀行對帳', path: '/admin/accounting/bank-reconciliation' }
+  { label: '會計概覽', path: '/accounting' },
+  { label: '會計管理', path: '/accounting/management' },
+  { label: '會計科目', path: '/accounting/chart-of-accounts' },
+  { label: '日記帳分錄', path: '/accounting/journal-entries' },
+  { label: '財務報告', path: '/accounting/financial-reports' },
+  { label: '銀行對帳', path: '/accounting/bank-reconciliation' }
 ];
 
 // Analytics 模組 tabs
 const analyticsTabs = [
-  { label: '分析概覽', path: '/admin/analytics' },
-  { label: '主分析', path: '/admin/analytics/main' },
-  { label: '銷售分析', path: '/admin/analytics/sales' },
-  { label: '客戶分析', path: '/admin/analytics/customers' },
-  { label: '產品分析', path: '/admin/analytics/products' },
-  { label: '營運分析', path: '/admin/analytics/operations' },
-  { label: 'AI 洞察', path: '/admin/analytics/ai-insights' }
+  { label: '分析概覽', path: '/analytics' },
+  { label: '主分析', path: '/analytics/main' },
+  { label: '銷售分析', path: '/analytics/sales' },
+  { label: '客戶分析', path: '/analytics/customers' },
+  { label: '產品分析', path: '/analytics/products' },
+  { label: '營運分析', path: '/analytics/operations' },
+  { label: 'AI 洞察', path: '/analytics/ai-insights' }
 ];
 
 // Settings 模組 tabs
 const settingsTabs = [
-  { label: '系統設定概覽', path: '/admin/settings' },
-  { label: '主設定', path: '/admin/settings/main' },
-  { label: '一般設定', path: '/admin/settings/general' },
-  { label: '安全設定', path: '/admin/settings/security' },
-  { label: '通知設定', path: '/admin/settings/notifications' },
-  { label: '付款設定', path: '/admin/settings/payment' },
-  { label: '運送設定', path: '/admin/settings/shipping' }
+  { label: '系統設定概覽', path: '/settings' },
+  { label: '主設定', path: '/settings/main' },
+  { label: '一般設定', path: '/settings/general' },
+  { label: '安全設定', path: '/settings/security' },
+  { label: '通知設定', path: '/settings/notifications' },
+  { label: '付款設定', path: '/settings/payment' },
+  { label: '運送設定', path: '/settings/shipping' }
 ];
 
 // Documents 模組 tabs
 const documentsTabs = [
-  { label: '文件概覽', path: '/admin/documents' },
-  { label: '銷售文件', path: '/admin/documents/sales' },
-  { label: '採購文件', path: '/admin/documents/purchase' },
-  { label: '庫存文件', path: '/admin/documents/inventory' },
-  { label: '審批工作流程', path: '/admin/documents/approval-workflow' }
+  { label: '文件概覽', path: '/documents' },
+  { label: '銷售文件', path: '/documents/sales' },
+  { label: '採購文件', path: '/documents/purchase' },
+  { label: '庫存文件', path: '/documents/inventory' },
+  { label: '審批工作流程', path: '/documents/approval-workflow' }
 ];
 
 // Admin 模組 tabs
 const adminTabs = [
-  { label: '管理員管理', path: '/admin/admin' },
-  { label: '角色管理', path: '/admin/admin/roles' },
-  { label: '用戶管理', path: '/admin/admin/users' }
+  { label: '管理員管理', path: '/admin' },
+  { label: '角色管理', path: '/admin/roles' },
+  { label: '用戶管理', path: '/admin/users' }
 ];
 
 // Marketing 模組 tabs - 已移除，因為marketing目錄為空
@@ -158,7 +157,12 @@ const adminTabs = [
 
 // Inventory 模組 tabs
 const inventoryTabs = [
-  { label: '庫存管理', path: '/admin/inventory' }
+  { label: '庫存管理', path: '/inventory' }
+  // 暫時註解掉，因為還沒有對應的頁面
+  // { label: '庫存列表', path: '/inventory/list' },
+  // { label: '庫存調整', path: '/inventory/adjustments' },
+  // { label: '低庫存警告', path: '/inventory/alerts' },
+  // { label: '庫存報告', path: '/inventory/reports' }
 ];
 
 // Tab 配置映射函數
@@ -167,97 +171,77 @@ export const getTabsForPath = (currentPath) => {
   const cleanPath = currentPath.split('?')[0].split('#')[0];
   
   // Dashboard 模組
-  if (cleanPath.startsWith('/admin/dashboard')) {
+  if (cleanPath.startsWith('/dashboard')) {
     return dashboardTabs;
   }
   
   // Products 模組
-  if (cleanPath.startsWith('/admin/products')) {
+  if (cleanPath.startsWith('/products')) {
     return productsTabs;
   }
   
   // Orders 模組
-  if (cleanPath.startsWith('/admin/orders')) {
+  if (cleanPath.startsWith('/orders')) {
     return ordersTabs;
   }
   
   // Members 模組
-  if (cleanPath.startsWith('/admin/members')) {
+  if (cleanPath.startsWith('/members')) {
     return membersTabs;
   }
   
-  // Gifts 模組 - 已移除，因為gifts目錄為空
-  // if (cleanPath.startsWith('/admin/gifts')) {
-  //   return giftsTabs;
-  // }
-  
   // Suppliers 模組
-  if (cleanPath.startsWith('/admin/suppliers')) {
+  if (cleanPath.startsWith('/suppliers')) {
     return suppliersTabs;
   }
   
   // Procurement 模組
-  if (cleanPath.startsWith('/admin/procurement')) {
+  if (cleanPath.startsWith('/procurement')) {
     return procurementTabs;
   }
   
   // Logistics 模組
-  if (cleanPath.startsWith('/admin/logistics')) {
+  if (cleanPath.startsWith('/logistics')) {
     return logisticsTabs;
   }
   
   // Coupons 模組
-  if (cleanPath.startsWith('/admin/coupons')) {
+  if (cleanPath.startsWith('/coupons')) {
     return couponsTabs;
   }
   
   // Notifications 模組
-  if (cleanPath.startsWith('/admin/notifications')) {
+  if (cleanPath.startsWith('/notifications')) {
     return notificationsTabs;
   }
   
   // Accounting 模組
-  if (cleanPath.startsWith('/admin/accounting')) {
+  if (cleanPath.startsWith('/accounting')) {
     return accountingTabs;
   }
   
   // Analytics 模組
-  if (cleanPath.startsWith('/admin/analytics')) {
+  if (cleanPath.startsWith('/analytics')) {
     return analyticsTabs;
   }
   
   // Settings 模組
-  if (cleanPath.startsWith('/admin/settings')) {
+  if (cleanPath.startsWith('/settings')) {
     return settingsTabs;
   }
   
   // Documents 模組
-  if (cleanPath.startsWith('/admin/documents')) {
+  if (cleanPath.startsWith('/documents')) {
     return documentsTabs;
   }
   
   // Admin 模組
-  if (cleanPath.startsWith('/admin/admin')) {
+  if (cleanPath.startsWith('/admin')) {
     return adminTabs;
   }
   
-  // Marketing 模組 - 已移除，因為marketing目錄為空
-  // if (cleanPath.startsWith('/admin/marketing')) {
-  //   return marketingTabs;
-  // }
-  
-  // Festivals 模組 - 已移除，因為festivals目錄為空
-  // if (cleanPath.startsWith('/admin/festivals')) {
-  //   return festivalsTabs;
-  // }
-  
-  // User Tracking 模組 - 已移除，因為user-tracking目錄為空
-  // if (cleanPath.startsWith('/admin/user-tracking')) {
-  //   return userTrackingTabs;
-  // }
-  
   // Inventory 模組
-  if (cleanPath.startsWith('/admin/inventory')) {
+  if (cleanPath.startsWith('/inventory')) {
     return inventoryTabs;
   }
   

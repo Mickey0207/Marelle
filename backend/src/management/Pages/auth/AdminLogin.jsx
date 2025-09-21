@@ -43,7 +43,7 @@ const AdminLogin = () => {
     <div className="min-h-screen flex flex-col bg-[#fdf8f2]">
       <main className="flex-1 flex flex-col items-center justify-center py-8 pt-16">
         <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto bg-transparent flex flex-col items-center">
-          <h2 className="text-2xl font-serif font-bold text-[#2d1e0f] mb-8 mt-2 tracking-wider">Marelle 管理員登入</h2>
+          <h1 className="text-2xl font-serif font-bold text-[#2d1e0f] mb-8 mt-2 tracking-wider">Marelle 管理員登入</h1>
           <div className="w-full flex flex-col gap-6">
             <div>
               <input

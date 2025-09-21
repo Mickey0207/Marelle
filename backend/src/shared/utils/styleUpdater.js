@@ -26,7 +26,7 @@ export const STYLE_PATTERNS = {
 
 // 需要添加的 import 語句
 export const REQUIRED_IMPORTS = `
-import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../../shared/adminStyles";
+import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../styles/adminStyles";
 `;
 
 // 標準頁面結構模板
@@ -121,7 +121,7 @@ export const generateStyleImport = (existingImports) => {
     imports.push('getStatusColor');
   }
   
-  return `import { ${imports.join(', ')} } from "../../shared/adminStyles";`;
+  return `import { ${imports.join(', ')} } from "../styles/adminStyles";`;
 };
 
 export default {

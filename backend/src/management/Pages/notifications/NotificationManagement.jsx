@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StandardTable from "../../components/ui/StandardTable";
-import {SearchableSelect} from "../../../shared/components/SearchableSelect";
+import SearchableSelect from "../../components/ui/SearchableSelect";
 import {
   BellIcon,
   EnvelopeIcon,

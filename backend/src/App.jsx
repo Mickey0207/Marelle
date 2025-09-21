@@ -3,12 +3,8 @@ import { useEffect } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-// 導入後台組件
-import AdminDashboard from './management/Dashboard'
-import AdminLogin from "./management/modules/auth/pages/AdminLogin";
-
-// 導入 AuthProvider
-import { AuthProvider } from './management/components/auth/AuthComponents'
+// 導入新的路由系統
+import AppRouter from './core/router/AppRouter'
 
 // 註冊 GSAP 插件
 gsap.registerPlugin(ScrollTrigger)
@@ -33,17 +29,9 @@ function App() {
   }, [])
 
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50 to-apricot-50">
-          <Routes>
-            {/* 後台路由 - 移除 /admin 前綴 */}
-            <Route path="/login" element={<AdminLogin />} />
-            <Route path="/*" element={<AdminDashboard />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50 to-apricot-50">
+      <AppRouter />
+    </div>
   )
 }
 

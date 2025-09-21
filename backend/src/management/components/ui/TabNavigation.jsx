@@ -72,7 +72,7 @@ const TabNavigation = ({
   }
 
   return (
-    <div className={`flex items-center space-x-6 h-full flex-1 ${getLayoutClass()} ${className}`}>
+    <div className={`flex items-center space-x-6 h-16 flex-1 ${getLayoutClass()} ${className}`}>
       {tabs.map((tab) => {
         const isActive = isTabActive(tab);
         
@@ -85,7 +85,7 @@ const TabNavigation = ({
             <NavLink
               to={getTabPath(tab)}
               onClick={() => handleTabClick(tab)}
-              className={`font-medium font-serif text-sm tracking-wide transition-colors relative px-1 ${
+              className={`font-medium font-serif text-sm tracking-wide transition-colors relative px-3 py-4 h-full flex items-center ${
                 isActive 
                   ? 'text-[#cc824d]' 
                   : 'text-gray-700 hover:text-[#cc824d]'
@@ -114,9 +114,9 @@ const TabNavigation = ({
                 )}
               </span>
               
-              {/* 底部指示線 - 完全參考前台設計 */}
+              {/* 底部指示線 */}
               <span 
-                className={`absolute left-0 -bottom-2 h-0.5 bg-[#cc824d] transition-all duration-300 ${
+                className={`absolute left-0 bottom-0 h-0.5 bg-[#cc824d] transition-all duration-300 ${
                   isActive 
                     ? 'w-full' 
                     : 'w-0 group-hover:w-full'

@@ -12,9 +12,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { adminDataManager } from '../../../shared/data/adminDataManager.js';
 import { validatePassword } from '../../../shared/data/adminConfig.js';
-import SearchableSelect from '../../../components/ui/SearchableSelect';
-import GlassModal from '../../../components/ui/GlassModal.jsx';
-import StandardTable from '../../../components/ui/StandardTable.jsx';
+import SearchableSelect from '../../components/ui/SearchableSelect';
+import GlassModal from '../../components/ui/GlassModal.jsx';
+import StandardTable from '../../components/ui/StandardTable.jsx';
 
 const AdminUserManagement = () => {
   const [users, setUsers] = useState([]);

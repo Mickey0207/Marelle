@@ -34,27 +34,27 @@ import {
 import { ADMIN_STYLES, ADMIN_COLORS, GSAP_ANIMATIONS } from './styles';
 
 // Import admin pages
-import AdminOverview from './modules/dashboard/pages/Overview';
-import SalesAnalytics from './modules/dashboard/pages/SalesAnalytics';
-import OperationsManagement from './modules/dashboard/pages/OperationsManagement';
-import FinanceReports from './modules/dashboard/pages/FinanceReports';
-import LogisticsManagement from './modules/dashboard/pages/LogisticsManagement';
-import AdminProducts from './modules/products/Products';
-import AddProductAdvanced from './modules/products/AddProductAdvanced';
-import EditProduct from './modules/products/EditProduct';
-import AdminOrders from './modules/orders/pages/Orders';
-import AdminCustomers from './modules/members/Customers';
-import AdminAnalytics from './modules/analytics/pages/Analytics';
-import AdminSettings from './modules/settings/pages/Settings';
-import Inventory from './modules/products/Inventory';
-import MemberManagement from './modules/members/MemberManagement';
-import NotificationManagementContainer from './modules/notifications/pages/NotificationManagementContainer';
-import AdminManagement from './modules/admin/pages/AdminManagement';
-import GiftManagementContainer from './modules/members/pages/GiftManagementContainer';
-import SupplierManagementContainer from './modules/suppliers/pages/SupplierManagementContainer';
-import ProcurementManagementContainer from './modules/procurement/pages/ProcurementManagementContainer';
-import CouponManagementContainer from './modules/coupons/CouponManagementContainer';
-import LogisticsManagementContainer from './modules/logistics/pages/LogisticsManagementContainer';
+import AdminOverview from './Pages/dashboard/Overview';
+import SalesAnalytics from './Pages/dashboard/SalesAnalytics';
+import OperationsManagement from './Pages/dashboard/OperationsManagement';
+import FinanceReports from './Pages/dashboard/FinanceReports';
+import LogisticsManagement from './Pages/dashboard/LogisticsManagement';
+import AdminProducts from './Pages/products/Products';
+import AddProductAdvanced from './Pages/products/AddProductAdvanced';
+import EditProduct from './Pages/products/EditProduct';
+import AdminOrders from './Pages/orders/OrderList';
+import AdminCustomers from './Pages/members/Customers';
+import AdminAnalytics from './Pages/analytics/AnalyticsOverview';
+import AdminSettings from './Pages/settings/GeneralSettings';
+import Inventory from './Pages/inventory/Inventory';
+import MemberManagement from './Pages/members/MemberManagement';
+import NotificationManagementContainer from './Pages/notifications/NotificationManagement';
+import AdminManagement from './Pages/admin/AdminManagement';
+// // import GiftManagementContainer from './Pages/gifts/GiftManagement'; // 已移除，此檔案不在Pages/gifts中 // 已移除，gifts目錄為空
+import SupplierManagementContainer from './Pages/suppliers/SupplierList';
+import ProcurementManagementContainer from './Pages/procurement/ProcurementOverview';
+import CouponManagementContainer from './Pages/coupons/CouponManagementContainer';
+import LogisticsManagementContainer from './Pages/logistics/LogisticsOverview';
 
 // Import user tracking management components
 import UserTrackingOverview from './components/users/UserTrackingOverview';
@@ -77,7 +77,7 @@ import TabNavigation from './components/ui/TabNavigation';
 import { getTabsForPath } from '../core/config/tabsConfig';
 
 // Import accounting system components
-import AccountingManagementContainer from './modules/accounting/pages/AccountingManagementContainer';
+import AccountingManagementContainer from './Pages/accounting/AccountingOverview';
 
 // Import festival management components
 import FestivalOverview from './components/marketing/FestivalOverview';
@@ -92,11 +92,11 @@ import AdvertisingManagement from './components/marketing/AdvertisingManagement'
 import AudienceManagement from './components/marketing/AudienceManagement';
 
 // Document management components
-import DocumentOverview from './modules/documents/DocumentOverview';
-import SalesDocumentManagement from './modules/documents/SalesDocumentManagement';
-import PurchaseDocumentManagement from './modules/documents/PurchaseDocumentManagement';
-import InventoryDocumentManagement from './modules/documents/InventoryDocumentManagement';
-import ApprovalWorkflowSystem from './modules/documents/ApprovalWorkflowSystem';
+import DocumentOverview from './Pages/documents/DocumentOverview';
+import SalesDocumentManagement from './Pages/documents/SalesDocumentManagement';
+import PurchaseDocumentManagement from './Pages/documents/PurchaseDocumentManagement';
+import InventoryDocumentManagement from './Pages/documents/InventoryDocumentManagement';
+import ApprovalWorkflowSystem from './Pages/documents/ApprovalWorkflowSystem';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
