@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 import {
   HomeIcon,
@@ -39,7 +39,6 @@ import SalesAnalytics from './modules/dashboard/pages/SalesAnalytics';
 import OperationsManagement from './modules/dashboard/pages/OperationsManagement';
 import FinanceReports from './modules/dashboard/pages/FinanceReports';
 import LogisticsManagement from './modules/dashboard/pages/LogisticsManagement';
-import DashboardTabs from './modules/dashboard/components/DashboardTabs';
 import AdminProducts from './modules/products/pages/Products';
 import AddProductAdvanced from './modules/products/pages/AddProductAdvanced';
 import EditProduct from './modules/products/pages/EditProduct';
@@ -69,6 +68,9 @@ import DashboardOverview from './components/dashboard/DashboardOverview';
 import TaskManagement from './components/workflow/TaskManagement';
 import ApprovalWorkflowManagement from './components/workflow/ApprovalWorkflowManagement';
 import RealTimeMonitoringDashboard from './components/dashboard/RealTimeMonitoringDashboard';
+
+// Import UI components
+import TabNavigation from './components/ui/TabNavigation';
 
 // Import accounting system components
 import AccountingManagementContainer from './modules/accounting/pages/AccountingManagementContainer';
@@ -145,6 +147,15 @@ const AdminDashboard = () => {
     { name: '管理員管理', href: '/admin-management', icon: ShieldCheckIcon },
     { name: '數據分析', href: '/analytics', icon: ChartBarIcon },
     { name: '系統設定', href: '/settings', icon: Cog6ToothIcon },
+  ];
+
+  // 定義儀表板子頁籤配置
+  const dashboardTabs = [
+    { label: '總覽', path: '/', key: 'overview' },
+    { label: '銷售分析', path: '/sales', key: 'sales' },
+    { label: '營運管理', path: '/operations', key: 'operations' },
+    { label: '財務報表', path: '/finance', key: 'finance' },
+    { label: '物流管理', path: '/logistics-dashboard', key: 'logistics' }
   ];
 
 
@@ -271,8 +282,24 @@ const AdminDashboard = () => {
                 <Bars3Icon className="w-5 h-5" />
               </button>
               
-              <div className="text-sm text-gray-500 font-serif">
-                <span className="text-gray-700">管理後台</span>
+              {/* Left: Logo/Brand */}
+              <div className="flex items-center mr-8">
+                <Link to="/" className="flex items-center space-x-3 group">
+                  <div className="w-9 h-9 bg-[#cc824d] rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                    <span className="text-white font-bold text-lg">M</span>
+                  </div>
+                  <span className="font-bold text-xl text-[#2d1e0f] font-serif">
+                    管理後台
+                  </span>
+                </Link>
+              </div>
+
+              {/* Center: Tab Navigation - 參考前台設計 */}
+              <div className="hidden lg:flex items-center space-x-6 h-full flex-1 justify-center">
+                <TabNavigation 
+                  tabs={dashboardTabs} 
+                  className=""
+                />
               </div>
             </div>
             
@@ -332,7 +359,7 @@ const AdminDashboard = () => {
         {/* Page content */}
         <main className={`admin-content flex-1 ${ADMIN_STYLES.contentContainer} overflow-auto`}>
           <Routes>
-            <Route index element={<DashboardTabs />} />
+            <Route index element={<AdminOverview />} />
             <Route path="sales" element={<SalesAnalytics />} />
             <Route path="operations" element={<OperationsManagement />} />
             <Route path="finance" element={<FinanceReports />} />
