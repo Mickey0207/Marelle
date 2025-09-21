@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ADMIN_STYLES } from '../../../styles';
-// import CustomSelect from '../../../components/CustomSelect';
+import SearchableSelect from '../../../components/ui/SearchableSelect';
 
 const PaymentSettings = () => {
   const [settings, setSettings] = useState({
@@ -133,16 +133,16 @@ const PaymentSettings = () => {
             <h3 className="text-lg font-semibold mb-4 font-chinese">貨幣設定</h3>
             <div className="space-y-4">
               <div>
-                <CustomSelect
-                  label="主要貨幣"
+                <SearchableSelect
+                  placeholder="主要貨幣"
                   value={settings.currency.primary}
                   onChange={(value) => setSettings(prev => ({
                     ...prev,
                     currency: { ...prev.currency, primary: value }
                   }))}
                   options={[
-                    { value: 'TWD', label: 'TWD (台幣)', icon: '💰' },
-                    { value: 'USD', label: 'USD (美元)', icon: '💵' },
+                    { value: 'TWD', label: 'TWD (台幣)' },
+                    { value: 'USD', label: 'USD (美元)' },
                     { value: 'CNY', label: 'CNY (人民幣)', icon: '💴' },
                     { value: 'HKD', label: 'HKD (港幣)', icon: '💶' }
                   ]}

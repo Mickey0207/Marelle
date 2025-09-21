@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
-// import CustomSelect from '../../components/ui/CustomSelect';
+import SearchableSelect from '../../../components/ui/SearchableSelect';
 import {
   PlusIcon,
   DocumentTextIcon,
@@ -350,18 +350,18 @@ const ProcurementOverview = () => {
 
           {/* 狀態篩選 */}
           <div>
-            <CustomSelect
-              label="篩選狀態"
+            <SearchableSelect
+              placeholder="篩選狀態"
               value={filters.status}
               onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
               options={[
-                { value: 'all', label: '所有狀態', icon: '📋' },
-                { value: 'draft', label: '草稿', icon: '📝' },
-                { value: 'pending', label: '待審核', icon: '⏳' },
-                { value: 'approved', label: '已核准', icon: '✅' },
-                { value: 'production', label: '生產中', icon: '⚙️' },
-                { value: 'shipped', label: '已出貨', icon: '🚚' },
-                { value: 'completed', label: '已完成', icon: '🎉' }
+                { value: 'all', label: '所有狀態' },
+                { value: 'draft', label: '草稿' },
+                { value: 'pending', label: '待審核' },
+                { value: 'approved', label: '已核准' },
+                { value: 'production', label: '生產中' },
+                { value: 'shipped', label: '已出貨' },
+                { value: 'completed', label: '已完成' }
               ]}
               size="sm"
             />
@@ -369,34 +369,32 @@ const ProcurementOverview = () => {
 
           {/* 優先級篩選 */}
           <div>
-            <CustomSelect
-              label="優先級"
+            <SearchableSelect
+              placeholder="優先級"
               value={filters.priority}
               onChange={(value) => setFilters(prev => ({ ...prev, priority: value }))}
               options={[
-                { value: 'all', label: '所有優先級', icon: '📊' },
-                { value: 'low', label: '低', icon: '🟢' },
-                { value: 'medium', label: '中', icon: '🟡' },
-                { value: 'high', label: '高', icon: '🟠' },
-                { value: 'urgent', label: '緊急', icon: '🔴' }
+                { value: 'all', label: '所有優先級' },
+                { value: 'low', label: '低' },
+                { value: 'medium', label: '中' },
+                { value: 'high', label: '高' },
+                { value: 'urgent', label: '緊急' }
               ]}
-              size="sm"
             />
           </div>
 
           {/* 日期範圍 */}
           <div>
-            <CustomSelect
-              label="日期範圍"
+            <SearchableSelect
+              placeholder="日期範圍"
               value={filters.dateRange}
               onChange={(value) => setFilters(prev => ({ ...prev, dateRange: value }))}
               options={[
-                { value: '7days', label: '最近7天', icon: '📅' },
-                { value: '30days', label: '最近30天', icon: '📅' },
-                { value: '90days', label: '最近90天', icon: '📅' },
-                { value: 'all', label: '所有時間', icon: '🗓️' }
+                { value: '7days', label: '最近7天' },
+                { value: '30days', label: '最近30天' },
+                { value: '90days', label: '最近90天' },
+                { value: 'all', label: '所有時間' }
               ]}
-              size="sm"
             />
           </div>
         </div>

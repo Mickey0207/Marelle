@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-// import CustomSelect from '../../components/ui/CustomSelect';
+import SearchableSelect from '../../../components/ui/SearchableSelect';
 import { 
   BuildingOfficeIcon,
   PhoneIcon,
@@ -385,26 +385,25 @@ const SupplierForm = () => {
             </div>
 
             <div>
-              <CustomSelect
-                label="公司類型"
+              <SearchableSelect
+                placeholder="公司類型"
                 value={formData.companyType}
                 onChange={(value) => handleInputChange('companyType', value)}
                 options={companyTypes.map(type => ({
                   value: type.value,
-                  label: type.label,
-                  icon: '🏢'
+                  label: type.label
                 }))}
                 size="sm"
               />
             </div>
 
             <div>
-              <CustomSelect
-                label="行業類別"
+              <SearchableSelect
+                placeholder="行業類別"
                 value={formData.industry}
                 onChange={(value) => handleInputChange('industry', value)}
                 options={[
-                  { value: '', label: '請選擇行業類別', icon: '🏭' },
+                  { value: '', label: '請選擇行業類別' },
                   ...industries.map(industry => ({
                     value: industry.value,
                     label: industry.label,

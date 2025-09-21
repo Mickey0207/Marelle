@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-// import CustomSelect from '../../../components/CustomSelect';
+import SearchableSelect from '../../../components/ui/SearchableSelect';
 import { ADMIN_STYLES } from '../../../styles';
 
 const GeneralSettings = () => {
@@ -64,44 +64,44 @@ const GeneralSettings = () => {
             <h3 className="text-lg font-semibold text-gray-800 mb-4 font-chinese">地區設定</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <CustomSelect
-                  label="語言"
+                <SearchableSelect
+                  placeholder="語言"
                   value={settings.language}
                   onChange={(value) => handleSettingChange('language', value)}
                   options={[
-                    { value: 'zh-TW', label: '繁體中文', icon: '🇹🇼' },
-                    { value: 'zh-CN', label: '簡體中文', icon: '🇨🇳' },
-                    { value: 'en-US', label: 'English', icon: '🇺🇸' },
-                    { value: 'ja-JP', label: '日本語', icon: '🇯🇵' }
+                    { value: 'zh-TW', label: '繁體中文' },
+                    { value: 'zh-CN', label: '簡體中文' },
+                    { value: 'en-US', label: 'English' },
+                    { value: 'ja-JP', label: '日本語' }
                   ]}
                   size="sm"
                 />
               </div>
               <div>
-                <CustomSelect
-                  label="時區"
+                <SearchableSelect
+                  placeholder="時區"
                   value={settings.timezone}
                   onChange={(value) => handleSettingChange('timezone', value)}
                   options={[
-                    { value: 'Asia/Taipei', label: '台北 (GMT+8)', icon: '🏙️' },
-                    { value: 'Asia/Shanghai', label: '上海 (GMT+8)', icon: '🌆' },
-                    { value: 'Asia/Tokyo', label: '東京 (GMT+9)', icon: '🗼' },
-                    { value: 'Asia/Hong_Kong', label: '香港 (GMT+8)', icon: '🌃' }
+                    { value: 'Asia/Taipei', label: '台北 (GMT+8)' },
+                    { value: 'Asia/Shanghai', label: '上海 (GMT+8)' },
+                    { value: 'Asia/Tokyo', label: '東京 (GMT+9)' },
+                    { value: 'Asia/Hong_Kong', label: '香港 (GMT+8)' }
                   ]}
                   size="sm"
                 />
               </div>
               <div>
-                <CustomSelect
-                  label="貨幣"
+                <SearchableSelect
+                  placeholder="貨幣"
                   value={settings.currency}
                   onChange={(value) => handleSettingChange('currency', value)}
                   options={[
-                    { value: 'TWD', label: '新台幣 (TWD)', icon: '💰' },
-                    { value: 'CNY', label: '人民幣 (CNY)', icon: '💴' },
-                    { value: 'USD', label: '美元 (USD)', icon: '💵' },
-                    { value: 'JPY', label: '日圓 (JPY)', icon: '💸' },
-                    { value: 'HKD', label: '港幣 (HKD)', icon: '💶' }
+                    { value: 'TWD', label: '新台幣 (TWD)' },
+                    { value: 'CNY', label: '人民幣 (CNY)' },
+                    { value: 'USD', label: '美元 (USD)' },
+                    { value: 'JPY', label: '日圓 (JPY)' },
+                    { value: 'HKD', label: '港幣 (HKD)' }
                   ]}
                   size="sm"
                 />

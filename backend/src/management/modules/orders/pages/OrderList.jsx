@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import {
-  MagnifyingGlassIcon,
   FunnelIcon,
   EyeIcon,
   PencilIcon,
@@ -11,13 +10,23 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from "../../../styles";
+import SearchableSelect from "../../../components/ui/SearchableSelect";
 // import { orderDataManager } from "../data/orderDataManager";
 
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  
+  // 狀態選項配置
+  const statusOptions = [
+    { value: 'all', label: '全部狀態' },
+    { value: 'pending', label: '待處理' },
+    { value: 'processing', label: '處理中' },
+    { value: 'shipped', label: '已發貨' },
+    { value: 'delivered', label: '已送達' },
+    { value: 'cancelled', label: '已取消' }
+  ];
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [ordersPerPage] = useState(10);
@@ -131,13 +140,8 @@ const OrderList = () => {
   };
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
-    
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
 
   const indexOfLastOrder = currentPage * ordersPerPage;
@@ -192,35 +196,20 @@ const OrderList = () => {
         </div>
       </div>
 
-      {/* 搜尋和篩選 */}
+      {/* 篩選 */}
       <div className={`${ADMIN_STYLES.glassCard} p-6 mb-6`}>
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex flex-1 gap-4">
-            <div className="relative flex-1 max-w-md">
-              <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜尋訂單編號、客戶姓名或電子郵件..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <FunnelIcon className="w-5 h-5 text-gray-400" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-              >
-                <option value="all">所有狀態</option>
-                <option value="pending">待處理</option>
-                <option value="processing">處理中</option>
-                <option value="shipped">已發貨</option>
-                <option value="delivered">已送達</option>
-                <option value="cancelled">已取消</option>
-              </select>
-            </div>
+          <div className="flex items-center space-x-2">
+            <FunnelIcon className="w-5 h-5 text-gray-400" />
+            <SearchableSelect
+              options={statusOptions}
+              value={filterStatus}
+              onChange={setFilterStatus}
+              placeholder="選擇狀態"
+              className="w-36"
+            />
+          </div>
           </div>
           
           <div className="flex gap-2">

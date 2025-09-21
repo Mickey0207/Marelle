@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ADMIN_STYLES } from '../../../styles';
-// import CustomSelect from '../../../components/CustomSelect';
+import SearchableSelect from '../../../components/ui/SearchableSelect';
 
 const NotificationSettings = () => {
   const [settings, setSettings] = useState({
@@ -208,15 +208,15 @@ const NotificationSettings = () => {
             <h3 className="text-lg font-semibold mb-4 font-chinese">通知時程</h3>
             <div className="space-y-4">
               <div>
-                <CustomSelect
-                  label="時區"
+                <SearchableSelect
+                  placeholder="時區"
                   value={settings.notificationSchedule.timezone}
                   onChange={(value) => handleScheduleChange('timezone', value)}
                   options={[
-                    { value: 'Asia/Taipei', label: '台北 (UTC+8)', icon: '🌏' },
-                    { value: 'Asia/Shanghai', label: '上海 (UTC+8)', icon: '🌏' },
-                    { value: 'Asia/Hong_Kong', label: '香港 (UTC+8)', icon: '🌏' },
-                    { value: 'UTC', label: 'UTC (UTC+0)', icon: '🌍' }
+                    { value: 'Asia/Taipei', label: '台北 (UTC+8)' },
+                    { value: 'Asia/Shanghai', label: '上海 (UTC+8)' },
+                    { value: 'Asia/Hong_Kong', label: '香港 (UTC+8)' },
+                    { value: 'UTC', label: 'UTC (UTC+0)' }
                   ]}
                   size="sm"
                 />

@@ -9,11 +9,10 @@ import {
   TruckIcon,
   BuildingStorefrontIcon
 } from '@heroicons/react/24/outline';
-// import CustomSelect from "../../components/ui/CustomSelect";
-// import SearchableSelect from "../../../components/SearchableSelect";
-// import StandardTable from "../../../components/StandardTable";
+import SearchableSelect from "../../../components/ui/SearchableSelect";
+import StandardTable from "../../../components/ui/StandardTable";
 
-// 模擬剛才庫存剛才
+// 模擬庫存數據
 const mockInventoryData = [
   {
     id: 1,
@@ -48,7 +47,7 @@ const mockInventoryData = [
   {
     id: 3,
     sku: 'BOTTLE-001',
-    name: '剛才水壺',
+    name: '不鏽鋼水壺',
     category: '配件',
     warehouse: '主倉庫A',
     currentStock: 50,
@@ -81,7 +80,7 @@ const Inventory = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState('全部');
   const [selectedCategory, setSelectedCategory] = useState('全部');
 
-  // 篩選剛才
+  // 篩選數據
   const filteredData = useMemo(() => {
     let filtered = mockInventoryData.filter(item => {
       const matchWarehouse = selectedWarehouse === '全部' || item.warehouse === selectedWarehouse;
@@ -117,7 +116,7 @@ const Inventory = () => {
     },
     {
       key: 'name',
-      label: '分鐘前稱',
+      label: '商品名稱',
       sortable: true,
       render: (value) => <span className="font-chinese">{value}</span>
     },
@@ -184,7 +183,7 @@ const Inventory = () => {
           <button className="p-1 text-blue-600 hover:bg-blue-100 rounded" title="編輯">
             <PencilIcon className="w-4 h-4" />
           </button>
-          <button className="p-1 text-green-600 hover:bg-green-100 rounded" title="剛才">
+          <button className="p-1 text-green-600 hover:bg-green-100 rounded" title="調貨">
             <TruckIcon className="w-4 h-4" />
           </button>
         </div>
@@ -200,7 +199,7 @@ const Inventory = () => {
         <h1 className="text-3xl font-bold text-gray-800 font-chinese">庫存管理</h1>
       </div>
 
-      {/* 篩選即時*/}
+      {/* 篩選區域 */}
       <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex flex-wrap gap-4 items-center">
           
@@ -214,7 +213,7 @@ const Inventory = () => {
               ]}
               value={selectedWarehouse}
               onChange={setSelectedWarehouse}
-              placeholder="分鐘前庫"
+              placeholder="選擇倉庫"
               className="w-36"
             />
           </div>
@@ -236,7 +235,7 @@ const Inventory = () => {
           </div>
 
           <div className="text-sm text-gray-500 font-chinese">
-            ??{filteredData.length} 即時?
+            共{filteredData.length} 項商品
           </div>
         </div>
       </div>
@@ -249,30 +248,8 @@ const Inventory = () => {
         emptyMessage="沒有找到符合條件的庫存資料"
         exportFileName="庫存清單"
       />
-
-      {/* 統計資料 */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="glass rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-gray-800">{filteredData.length}</div>
-          <div className="text-sm text-gray-500 font-chinese">總商品數</div>
-        </div>
-        <div className="glass rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-red-600">{filteredData.filter(item => item.status === 'low').length}</div>
-          <div className="text-sm text-gray-500 font-chinese">低庫存警告</div>
-        </div>
-        <div className="glass rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-purple-600">{filteredData.filter(item => item.status === 'presale').length}</div>
-          <div className="text-sm text-gray-500 font-chinese">預售商品</div>
-        </div>
-        <div className="glass rounded-xl p-4 text-center">
-          <div className="text-2xl font-bold text-green-600">
-            NT$ {filteredData.reduce((sum, item) => sum + item.totalValue, 0).toLocaleString()}
-          </div>
-          <div className="text-sm text-gray-500 font-chinese">總庫存價值</div>
-        </div>
-      </div>
     </div>
-    </div>
+  </div>
   );
 };
 

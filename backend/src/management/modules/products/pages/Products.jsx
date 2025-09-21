@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
-// import StandardTable from "../../shared/components/StandardTable";
+import StandardTable from "../../../components/ui/StandardTable";
 import {
   PlusIcon,
   PencilIcon,

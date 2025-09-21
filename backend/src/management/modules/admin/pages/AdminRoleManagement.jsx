@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// import StandardTable from "../../components/ui/StandardTable";
+import StandardTable from "../../../components/ui/StandardTable";
 import { 
   UserGroupIcon, 
   PlusIcon, 
@@ -7,11 +7,11 @@ import {
   TrashIcon,
   ShieldCheckIcon,
   AdjustmentsHorizontalIcon
-} from '@heroicons/react/24/ou        emptyMessage="沒有找到符合條件的角色"line';
+} from '@heroicons/react/24/outline';
 import { adminDataManager } from '../../../shared/data/adminDataManager.js';
 import { ADMIN_PERMISSIONS, MODULE_NAMES, OPERATION_NAMES } from '../../../shared/data/adminConfig.js';
-// import CustomSelect from '../components/CustomSelect.jsx';
-import GlassModal from '../../components/GlassModal.jsx';
+import SearchableSelect from '../../../components/ui/SearchableSelect';
+import GlassModal from '../../../components/ui/GlassModal.jsx';
 
 const AdminRoleManagement = () => {
   const [roles, setRoles] = useState([]);

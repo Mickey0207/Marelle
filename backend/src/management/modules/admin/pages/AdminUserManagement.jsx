@@ -12,9 +12,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { adminDataManager } from '../../../shared/data/adminDataManager.js';
 import { validatePassword } from '../../../shared/data/adminConfig.js';
-import CustomSelect from '../../../shared/components/CustomSelect.jsx';
-import GlassModal from '../../../shared/components/GlassModal.jsx';
-import StandardTable from '../../../shared/components/StandardTable.jsx';
+import SearchableSelect from '../../../components/ui/SearchableSelect';
+import GlassModal from '../../../components/ui/GlassModal.jsx';
+import StandardTable from '../../../components/ui/StandardTable.jsx';
 
 const AdminUserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -413,7 +413,7 @@ const AdminUserManagement = () => {
       <div className="glass rounded-2xl p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <CustomSelect
+            <SearchableSelect
               value={roleFilter}
               onChange={setRoleFilter}
               options={roleOptions}
@@ -421,7 +421,7 @@ const AdminUserManagement = () => {
             />
           </div>
           <div>
-            <CustomSelect
+            <SearchableSelect
               value={statusFilter}
               onChange={setStatusFilter}
               options={statusOptions}
@@ -488,7 +488,7 @@ const AdminUserManagement = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
               角色 *
             </label>
-            <CustomSelect
+            <SearchableSelect
               value={formData.roleId}
               onChange={(value) => setFormData(prev => ({ ...prev, roleId: value }))}
               options={roleSelectOptions}
