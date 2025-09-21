@@ -6,6 +6,8 @@ import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { mockProducts, categories, formatPrice } from "../utils/data";
 import { useCart } from "../hooks";
 import SortDropdown from "../components/ui/SortDropdown";
+import { withPageTabs } from '../hoc/withPageTabs';
+import { frontProductsTabsConfig } from '../config/tabsConfig';
 
 const hierarchicalCategories = [
   { id: 'root-living', name: '家居生活', children: [ { id: 'home', name: '家居'}, { id: 'lifestyle', name: '生活用品'} ] },
@@ -32,11 +34,10 @@ function findNodePath(targetId) {
   return path;
 }
 
-export default function Products() {
+const Products = () => {
   const location = useLocation();
   const { addToCart } = useCart();
   const [filteredProducts, setFilteredProducts] = useState(mockProducts);
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedNode, setSelectedNode] = useState(null);
   const [expanded, setExpanded] = useState({});
   const [sortBy, setSortBy] = useState('name');
@@ -268,4 +269,9 @@ export default function Products() {
       )}
     </div>
   );
-}
+};
+
+export default withPageTabs(Products, frontProductsTabsConfig, {
+  layout: 'center',
+  showDescription: false
+});

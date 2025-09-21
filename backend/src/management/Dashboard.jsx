@@ -1,5 +1,5 @@
-﻿import { useState, useEffect } from 'react';
-import { Routes, Route, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 import {
   HomeIcon,
@@ -39,21 +39,21 @@ import SalesAnalytics from './modules/dashboard/pages/SalesAnalytics';
 import OperationsManagement from './modules/dashboard/pages/OperationsManagement';
 import FinanceReports from './modules/dashboard/pages/FinanceReports';
 import LogisticsManagement from './modules/dashboard/pages/LogisticsManagement';
-import AdminProducts from './modules/products/pages/Products';
-import AddProductAdvanced from './modules/products/pages/AddProductAdvanced';
-import EditProduct from './modules/products/pages/EditProduct';
+import AdminProducts from './modules/products/Products';
+import AddProductAdvanced from './modules/products/AddProductAdvanced';
+import EditProduct from './modules/products/EditProduct';
 import AdminOrders from './modules/orders/pages/Orders';
-import AdminCustomers from './modules/members/pages/Customers';
+import AdminCustomers from './modules/members/Customers';
 import AdminAnalytics from './modules/analytics/pages/Analytics';
 import AdminSettings from './modules/settings/pages/Settings';
-import Inventory from './modules/products/pages/Inventory';
-import MemberManagement from './modules/members/pages/MemberManagement';
+import Inventory from './modules/products/Inventory';
+import MemberManagement from './modules/members/MemberManagement';
 import NotificationManagementContainer from './modules/notifications/pages/NotificationManagementContainer';
 import AdminManagement from './modules/admin/pages/AdminManagement';
 import GiftManagementContainer from './modules/members/pages/GiftManagementContainer';
 import SupplierManagementContainer from './modules/suppliers/pages/SupplierManagementContainer';
 import ProcurementManagementContainer from './modules/procurement/pages/ProcurementManagementContainer';
-import CouponManagementContainer from './modules/coupons/pages/CouponManagementContainer';
+import CouponManagementContainer from './modules/coupons/CouponManagementContainer';
 import LogisticsManagementContainer from './modules/logistics/pages/LogisticsManagementContainer';
 
 // Import user tracking management components
@@ -70,7 +70,11 @@ import ApprovalWorkflowManagement from './components/workflow/ApprovalWorkflowMa
 import RealTimeMonitoringDashboard from './components/dashboard/RealTimeMonitoringDashboard';
 
 // Import UI components
+// TabNavigation 已移至各模組獨立管理
 import TabNavigation from './components/ui/TabNavigation';
+
+// Import tab configurations
+import { getTabsForPath } from '../core/config/tabsConfig';
 
 // Import accounting system components
 import AccountingManagementContainer from './modules/accounting/pages/AccountingManagementContainer';
@@ -88,11 +92,11 @@ import AdvertisingManagement from './components/marketing/AdvertisingManagement'
 import AudienceManagement from './components/marketing/AudienceManagement';
 
 // Document management components
-import DocumentOverview from './modules/documents/pages/DocumentOverview';
-import SalesDocumentManagement from './modules/documents/pages/SalesDocumentManagement';
-import PurchaseDocumentManagement from './modules/documents/pages/PurchaseDocumentManagement';
-import InventoryDocumentManagement from './modules/documents/pages/InventoryDocumentManagement';
-import ApprovalWorkflowSystem from './modules/documents/pages/ApprovalWorkflowSystem';
+import DocumentOverview from './modules/documents/DocumentOverview';
+import SalesDocumentManagement from './modules/documents/SalesDocumentManagement';
+import PurchaseDocumentManagement from './modules/documents/PurchaseDocumentManagement';
+import InventoryDocumentManagement from './modules/documents/InventoryDocumentManagement';
+import ApprovalWorkflowSystem from './modules/documents/ApprovalWorkflowSystem';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -149,14 +153,7 @@ const AdminDashboard = () => {
     { name: '系統設定', href: '/settings', icon: Cog6ToothIcon },
   ];
 
-  // 定義儀表板子頁籤配置
-  const dashboardTabs = [
-    { label: '總覽', path: '/', key: 'overview' },
-    { label: '銷售分析', path: '/sales', key: 'sales' },
-    { label: '營運管理', path: '/operations', key: 'operations' },
-    { label: '財務報表', path: '/finance', key: 'finance' },
-    { label: '物流管理', path: '/logistics-dashboard', key: 'logistics' }
-  ];
+  // 子導航配置已移至各模組獨立管理
 
 
 
@@ -171,6 +168,14 @@ const AdminDashboard = () => {
     }
     return location.pathname.startsWith(path);
   };
+
+  // 獲取當前路徑對應的子頁籤
+  const getCurrentTabs = () => {
+    const tabs = getTabsForPath(location.pathname);
+    return tabs; // 直接返回，不添加 /admin 前綴
+  };
+
+  const currentTabs = getCurrentTabs();
 
 
 
@@ -294,12 +299,14 @@ const AdminDashboard = () => {
                 </Link>
               </div>
 
-              {/* Center: Tab Navigation - 參考前台設計 */}
+              {/* Center: 子頁籤導航 */}
               <div className="hidden lg:flex items-center space-x-6 h-full flex-1 justify-center">
-                <TabNavigation 
-                  tabs={dashboardTabs} 
-                  className=""
-                />
+                {currentTabs.length > 0 && (
+                  <TabNavigation 
+                    tabs={currentTabs} 
+                    className=""
+                  />
+                )}
               </div>
             </div>
             
@@ -358,50 +365,6 @@ const AdminDashboard = () => {
 
         {/* Page content */}
         <main className={`admin-content flex-1 ${ADMIN_STYLES.contentContainer} overflow-auto`}>
-          <Routes>
-            <Route index element={<AdminOverview />} />
-            <Route path="sales" element={<SalesAnalytics />} />
-            <Route path="operations" element={<OperationsManagement />} />
-            <Route path="finance" element={<FinanceReports />} />
-            <Route path="logistics-dashboard" element={<LogisticsManagement />} />
-            <Route path="tasks" element={<TaskManagement />} />
-            <Route path="approvals" element={<ApprovalWorkflowManagement />} />
-            <Route path="monitoring" element={<RealTimeMonitoringDashboard />} />
-            <Route path="products" element={<AdminProducts />} />
-            <Route path="products/add" element={<AddProductAdvanced />} />
-            <Route path="products/edit/:id" element={<EditProduct />} />
-            <Route path="orders/*" element={<AdminOrders />} />
-            <Route path="logistics/*" element={<LogisticsManagementContainer />} />
-            <Route path="coupons/*" element={<CouponManagementContainer />} />
-            <Route path="festivals" element={<FestivalOverview />} />
-            <Route path="festivals/management" element={<FestivalManagement />} />
-            <Route path="festivals/promotions" element={<PromotionSettings />} />
-            <Route path="festivals/analytics" element={<FestivalAnalytics />} />
-            <Route path="marketing" element={<MarketingOverview />} />
-            <Route path="marketing/campaigns" element={<CampaignManagement />} />
-            <Route path="marketing/advertising" element={<AdvertisingManagement />} />
-            <Route path="marketing/audiences" element={<AudienceManagement />} />
-            <Route path="accounting/*" element={<AccountingManagementContainer />} />
-            <Route path="user-tracking" element={<UserTrackingOverview />} />
-            <Route path="user-tracking/behavior" element={<UserBehaviorAnalytics />} />
-            <Route path="user-tracking/real-time" element={<RealTimeActivityMonitor />} />
-            <Route path="user-tracking/segments" element={<UserSegmentManagement />} />
-            <Route path="user-tracking/privacy" element={<PrivacySettings />} />
-            <Route path="members/*" element={<MemberManagement />} />
-            <Route path="gifts/*" element={<GiftManagementContainer />} />
-            <Route path="suppliers/*" element={<SupplierManagementContainer />} />
-            <Route path="procurement/*" element={<ProcurementManagementContainer />} />
-            <Route path="notifications/*" element={<NotificationManagementContainer />} />
-            <Route path="analytics/*" element={<AdminAnalytics />} />
-            <Route path="admin-management/*" element={<AdminManagement />} />
-            <Route path="settings/*" element={<AdminSettings />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="documents" element={<DocumentOverview />} />
-            <Route path="documents/sales" element={<SalesDocumentManagement />} />
-            <Route path="documents/purchase" element={<PurchaseDocumentManagement />} />
-            <Route path="documents/inventory" element={<InventoryDocumentManagement />} />
-            <Route path="documents/workflow" element={<ApprovalWorkflowSystem />} />
-          </Routes>
         </main>
       </div>
     </div>

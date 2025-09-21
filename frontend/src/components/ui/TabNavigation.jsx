@@ -2,9 +2,8 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 
 /**
- * 通用的子頁簽導航元件
- * 用於在頁面頂部顯示子功能的導航選項卡
- * 支持動態配置和獨立使用，避免組件重複渲染
+ * 前台頁籤導航元件
+ * 專為前台頁面設計的子導航組件
  */
 const TabNavigation = ({ 
   tabs = [], 
@@ -25,26 +24,10 @@ const TabNavigation = ({
   // 檢查是否為活躍頁籤
   const isTabActive = (tab) => {
     const tabPath = getTabPath(tab);
-    const currentPath = location.pathname;
-    
-    // 根路徑需要精確匹配
     if (tabPath === '/') {
-      return currentPath === '/' || currentPath === '';
+      return location.pathname === '/' || location.pathname === '';
     }
-    
-    // 精確匹配
-    if (currentPath === tabPath) {
-      return true;
-    }
-    
-    // 檢查是否為子路徑，但要避免部分匹配
-    // 例如 /products 不應該匹配 /products/inventory
-    // 只有在路徑後面跟著 '/' 時才算匹配
-    if (currentPath.startsWith(tabPath + '/')) {
-      return true;
-    }
-    
-    return false;
+    return location.pathname.startsWith(tabPath);
   };
 
   // 處理頁籤點擊事件
@@ -72,7 +55,7 @@ const TabNavigation = ({
   }
 
   return (
-    <div className={`flex items-center space-x-6 h-full flex-1 ${getLayoutClass()} ${className}`}>
+    <div className={`flex items-center space-x-8 h-full flex-1 ${getLayoutClass()} ${className}`}>
       {tabs.map((tab) => {
         const isActive = isTabActive(tab);
         
@@ -85,7 +68,7 @@ const TabNavigation = ({
             <NavLink
               to={getTabPath(tab)}
               onClick={() => handleTabClick(tab)}
-              className={`font-medium font-serif text-sm tracking-wide transition-colors relative px-1 ${
+              className={`font-medium font-serif text-base tracking-wide transition-colors relative px-2 ${
                 isActive 
                   ? 'text-[#cc824d]' 
                   : 'text-gray-700 hover:text-[#cc824d]'
@@ -97,7 +80,7 @@ const TabNavigation = ({
                 
                 {/* 如果有圖示 */}
                 {tab.icon && (
-                  <span className="ml-1">
+                  <span className="ml-2">
                     {typeof tab.icon === 'string' ? (
                       <i className={tab.icon} />
                     ) : (
@@ -114,7 +97,7 @@ const TabNavigation = ({
                 )}
               </span>
               
-              {/* 底部指示線 - 完全參考前台設計 */}
+              {/* 底部指示線 */}
               <span 
                 className={`absolute left-0 -bottom-2 h-0.5 bg-[#cc824d] transition-all duration-300 ${
                   isActive 
