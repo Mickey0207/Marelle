@@ -22,7 +22,7 @@ import {
   CheckCircleIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
-import analyticsDataManager from '../../../shared/utils/analyticsDataManager';
+import analyticsDataManager from '../../../lib/data/analytics/analyticsDataManager';
 import SearchableSelect from "../ui/SearchableSelect";
 
 const CustomerAnalytics = () => {

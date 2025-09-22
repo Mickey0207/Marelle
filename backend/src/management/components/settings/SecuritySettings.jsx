@@ -17,7 +17,7 @@ import {
   ServerIcon,
   GlobeAltIcon
 } from '@heroicons/react/24/outline';
-import systemSettingsDataManager from '../../../shared/utils/systemSettingsDataManager';
+import systemSettingsDataManager from '../../../lib/data/settings/systemSettingsDataManager';
 
 const SecuritySettings = () => {
   const [settings, setSettings] = useState({});

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ADMIN_STYLES } from '../../styles';
-import couponDataManager, { CouponType } from '../../../shared/data/couponDataManager';
+import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
+import couponDataManager, { CouponType } from '../../../lib/data/coupons/couponDataManager';
 
 const StackingRulesManager = () => {
   const [coupons, setCoupons] = useState([]);

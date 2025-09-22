@@ -31,7 +31,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 // Import management styles configuration
-import { ADMIN_STYLES, ADMIN_COLORS, GSAP_ANIMATIONS } from './styles';
+import { ADMIN_STYLES, ADMIN_COLORS, GSAP_ANIMATIONS } from '../lib/ui/adminStyles';
 
 // Import admin pages
 import AdminOverview from './Pages/dashboard/Overview';
@@ -74,7 +74,7 @@ import RealTimeMonitoringDashboard from './components/dashboard/RealTimeMonitori
 import TabNavigation from './components/ui/TabNavigation';
 
 // Import tab configurations
-import { getTabsForPath } from '../core/config/tabsConfig';
+import { getTabsForPath } from '../lib/data/ui/tabsConfig';
 
 // Import accounting system components
 import AccountingManagementContainer from './Pages/accounting/AccountingOverview';

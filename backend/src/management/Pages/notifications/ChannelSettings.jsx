@@ -9,7 +9,7 @@ import {
   Cog6ToothIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../styles";
+import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
 
 const ChannelSettings = () => {
   const [channels, setChannels] = useState([

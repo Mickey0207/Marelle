@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ADMIN_STYLES } from '../../styles';
+import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 
 const NotificationSettings = () => {

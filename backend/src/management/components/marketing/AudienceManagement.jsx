@@ -21,7 +21,7 @@ import {
   ShoppingCartIcon,
   CogIcon
 } from '@heroicons/react/24/outline';
-import marketingDataManager from '../../../shared/utils/marketingDataManager';
+import marketingDataManager from '../../../lib/data/marketing/marketingDataManager';
 
 const AudienceManagement = () => {
   const [audiences, setAudiences] = useState([]);

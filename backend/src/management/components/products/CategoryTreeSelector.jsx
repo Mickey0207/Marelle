@@ -6,179 +6,12 @@ import {
   MinusIcon
 } from '@heroicons/react/24/outline';
 
-// 模擬分類數據 - 最多五層巢狀結構
-const mockCategories = [
-  {
-    id: 'electronics',
-    name: '電子產品',
-    level: 1,
-    children: [
-      {
-        id: 'computers',
-        name: '電腦及周邊',
-        level: 2,
-        children: [
-          {
-            id: 'laptops',
-            name: '筆記型電腦',
-            level: 3,
-            children: [
-              {
-                id: 'gaming-laptops',
-                name: '電競筆電',
-                level: 4,
-                children: [
-                  { id: 'high-end-gaming', name: '高階電競', level: 5 },
-                  { id: 'mid-range-gaming', name: '中階電競', level: 5 }
-                ]
-              },
-              {
-                id: 'business-laptops',
-                name: '商務筆電',
-                level: 4,
-                children: [
-                  { id: 'ultrabooks', name: '輕薄筆電', level: 5 },
-                  { id: 'workstations', name: '工作站', level: 5 }
-                ]
-              }
-            ]
-          },
-          {
-            id: 'desktops',
-            name: '桌上型電腦',
-            level: 3,
-            children: [
-              { id: 'gaming-desktops', name: '電競桌機', level: 4 },
-              { id: 'office-desktops', name: '辦公桌機', level: 4 }
-            ]
-          },
-          {
-            id: 'accessories',
-            name: '電腦配件',
-            level: 3,
-            children: [
-              { id: 'keyboards', name: '鍵盤', level: 4 },
-              { id: 'mice', name: '滑鼠', level: 4 }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'smartphones',
-        name: '智慧型手機',
-        level: 2,
-        children: [
-          {
-            id: 'android',
-            name: 'Android 手機',
-            level: 3,
-            children: [
-              { id: 'samsung', name: 'Samsung', level: 4 },
-              { id: 'huawei', name: 'Huawei', level: 4 }
-            ]
-          },
-          {
-            id: 'iphone',
-            name: 'iPhone',
-            level: 3,
-            children: [
-              { id: 'iphone-15', name: 'iPhone 15 系列', level: 4 },
-              { id: 'iphone-14', name: 'iPhone 14 系列', level: 4 }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'clothing',
-    name: '服裝配件',
-    level: 1,
-    children: [
-      {
-        id: 'mens-clothing',
-        name: '男裝',
-        level: 2,
-        children: [
-          {
-            id: 'mens-tops',
-            name: '上衣',
-            level: 3,
-            children: [
-              {
-                id: 'mens-shirts',
-                name: '襯衫',
-                level: 4,
-                children: [
-                  { id: 'dress-shirts', name: '正式襯衫', level: 5 },
-                  { id: 'casual-shirts', name: '休閒襯衫', level: 5 }
-                ]
-              },
-              { id: 'mens-tshirts', name: 'T恤', level: 4 }
-            ]
-          },
-          {
-            id: 'mens-bottoms',
-            name: '下裝',
-            level: 3,
-            children: [
-              { id: 'mens-pants', name: '長褲', level: 4 },
-              { id: 'mens-shorts', name: '短褲', level: 4 }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'womens-clothing',
-        name: '女裝',
-        level: 2,
-        children: [
-          {
-            id: 'womens-tops',
-            name: '上衣',
-            level: 3,
-            children: [
-              { id: 'womens-blouses', name: '襯衫', level: 4 },
-              { id: 'womens-tshirts', name: 'T恤', level: 4 }
-            ]
-          },
-          {
-            id: 'womens-dresses',
-            name: '洋裝',
-            level: 3,
-            children: [
-              { id: 'casual-dresses', name: '休閒洋裝', level: 4 },
-              { id: 'formal-dresses', name: '正式洋裝', level: 4 }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'home-garden',
-    name: '居家園藝',
-    level: 1,
-    children: [
-      {
-        id: 'furniture',
-        name: '家具',
-        level: 2,
-        children: [
-          {
-            id: 'living-room',
-            name: '客廳家具',
-            level: 3,
-            children: [
-              { id: 'sofas', name: '沙發', level: 4 },
-              { id: 'coffee-tables', name: '茶几', level: 4 }
-            ]
-          }
-        ]
-      }
-    ]
-  }
-];
+// 從數據管理器導入分類數據和工具函數
+import { 
+  PRODUCT_CATEGORIES,
+  searchCategories,
+  CategoryTreeUtils
+} from '../../../lib/data/products/categoryDataManager.js';
 
 const CategoryTreeItem = ({ 
   category, 
@@ -193,15 +26,10 @@ const CategoryTreeItem = ({
   const isSelected = selectedCategories.includes(category.id);
   
   // 檢查是否有子項目被選中
-  const hasSelectedChildren = hasChildren && category.children.some(child => 
-    selectedCategories.includes(child.id) || 
-    (child.children && child.children.some(grandChild => selectedCategories.includes(grandChild.id)))
-  );
+  const hasSelectedChildren = CategoryTreeUtils.hasSelectedChildren(category, selectedCategories);
   
   // 檢查是否所有子項目都被選中
-  const allChildrenSelected = hasChildren && category.children.every(child => 
-    selectedCategories.includes(child.id)
-  );
+  const allChildrenSelected = CategoryTreeUtils.allChildrenSelected(category, selectedCategories);
 
   const getCheckboxState = () => {
     if (isSelected) return 'checked';
@@ -348,16 +176,7 @@ const CategoryTreeSelector = ({ selectedCategories = [], onChange }) => {
   };
 
   const handleExpandAll = () => {
-    const allIds = [];
-    const collectIds = (categories) => {
-      categories.forEach(cat => {
-        allIds.push(cat.id);
-        if (cat.children) {
-          collectIds(cat.children);
-        }
-      });
-    };
-    collectIds(mockCategories);
+    const allIds = CategoryTreeUtils.collectAllIds(PRODUCT_CATEGORIES);
     setExpandedItems(allIds);
   };
 
@@ -369,26 +188,8 @@ const CategoryTreeSelector = ({ selectedCategories = [], onChange }) => {
     onChange([]);
   };
 
-  // 搜尋功能
-  const filterCategories = (categories, term) => {
-    if (!term) return categories;
-    
-    return categories.filter(category => {
-      const nameMatch = category.name.toLowerCase().includes(term.toLowerCase());
-      const childrenMatch = category.children ? 
-        filterCategories(category.children, term).length > 0 : false;
-      
-      if (nameMatch || childrenMatch) {
-        return {
-          ...category,
-          children: category.children ? filterCategories(category.children, term) : []
-        };
-      }
-      return false;
-    }).filter(Boolean);
-  };
-
-  const filteredCategories = filterCategories(mockCategories, searchTerm);
+  // 搜尋功能 - 使用數據管理器的搜尋函數
+  const filteredCategories = searchCategories(PRODUCT_CATEGORIES, searchTerm);
 
   // 獲取選中分類的名稱
   const getSelectedCategoryNames = () => {
@@ -403,7 +204,7 @@ const CategoryTreeSelector = ({ selectedCategories = [], onChange }) => {
         }
       });
     };
-    findNames(mockCategories);
+    findNames(PRODUCT_CATEGORIES);
     return names;
   };
 

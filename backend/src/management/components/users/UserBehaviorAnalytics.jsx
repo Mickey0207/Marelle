@@ -10,7 +10,7 @@ import {
   DocumentChartBarIcon,
   FunnelIcon as FilterIcon
 } from '@heroicons/react/24/outline';
-import { userTrackingDataManager } from '../../../shared/data/userTrackingDataManager';
+import { userTrackingDataManager } from '../../../lib/data/members/userTrackingDataManager';
 
 const UserBehaviorAnalytics = () => {
   const [behaviorEvents, setBehaviorEvents] = useState([]);

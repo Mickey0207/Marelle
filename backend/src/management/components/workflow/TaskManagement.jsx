@@ -18,7 +18,7 @@ import {
   TagIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
-import dashboardDataManager, { TaskStatus, TaskPriority, TaskType, BusinessImpact } from '../../../shared/data/dashboardDataManager';
+import dashboardDataManager, { TaskStatus, TaskPriority, TaskType, BusinessImpact } from '../../../lib/data/core/dashboardDataManager';
 
 const TaskManagement = () => {
   const [tasks, setTasks] = useState([]);

@@ -9,7 +9,7 @@ import {
   ArrowDownTrayIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../styles";
+import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
 import SearchableSelect from "../../components/ui/SearchableSelect";
 // import { orderDataManager } from "../data/orderDataManager";
 

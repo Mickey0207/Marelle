@@ -8,8 +8,8 @@ import {
   ShieldCheckIcon,
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
-import { adminDataManager } from '../../../shared/data/adminDataManager.js';
-import { ADMIN_PERMISSIONS, MODULE_NAMES, OPERATION_NAMES } from '../../../shared/data/adminConfig.js';
+import { adminDataManager } from '../../../lib/data/settings/adminDataManager.js';
+import { ADMIN_PERMISSIONS, MODULE_NAMES, OPERATION_NAMES } from '../../../lib/data/settings/adminConfig.js';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import GlassModal from '../../components/ui/GlassModal.jsx';
 

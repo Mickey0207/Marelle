@@ -28,7 +28,7 @@ import {
   MapPin,
   Copy
 } from 'lucide-react';
-import { ADMIN_STYLES } from '../../styles';
+import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
 // import { useToast } from '@/hooks/useToast'; // 暫時註解，避免導入錯誤
 // import procurementDataManager from '../../../shared/data/procurementDataManager.js';
 

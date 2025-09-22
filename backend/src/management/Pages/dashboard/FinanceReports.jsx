@@ -10,7 +10,7 @@ import {
   ArrowTrendingDownIcon,
   CalendarDaysIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../../shared/styles/adminStyles";
+import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
 import { DashboardStatsSection, STATS_CATEGORIES } from "../../components/dashboard/DashboardStatsSection";
 
 const FinanceReports = () => {

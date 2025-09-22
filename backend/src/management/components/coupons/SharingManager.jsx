@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ADMIN_STYLES } from '../../styles';
-import couponDataManager from '../../../shared/data/couponDataManager';
+import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
+import couponDataManager from '../../../lib/data/coupons/couponDataManager';
 
 const SharingManager = () => {
   const [coupons, setCoupons] = useState([]);

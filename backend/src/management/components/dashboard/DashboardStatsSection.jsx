@@ -10,7 +10,7 @@ import {
   ClipboardDocumentListIcon,
   BuildingStorefrontIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../../shared/styles/adminStyles";
+import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
 
 export const STATS_CATEGORIES = {
   SALES: 'sales',

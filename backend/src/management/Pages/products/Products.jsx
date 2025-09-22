@@ -10,8 +10,8 @@ import {
   ChevronUpIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import { mockProducts, formatPrice } from "../../../shared/utils/data";
-import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../../styles";
+import { mockProducts, formatPrice } from "../../../lib/data/core/data";
+import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../../../lib/ui/adminStyles";
 // withPageTabs HOC 已移除，子頁籤導航統一在頂部管理
 
 const AdminProducts = () => {

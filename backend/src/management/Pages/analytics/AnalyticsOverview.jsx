@@ -17,7 +17,7 @@ import {
   FireIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline';
-import analyticsDataManager from '../../../shared/utils/analyticsDataManager';
+import analyticsDataManager from '../../../lib/data/analytics/analyticsDataManager';
 
 const AnalyticsOverview = () => {
   const [kpiData, setKpiData] = useState({});

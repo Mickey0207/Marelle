@@ -12,7 +12,7 @@ import {
   ComputerDesktopIcon,
   DeviceTabletIcon
 } from '@heroicons/react/24/outline';
-import { userTrackingDataManager } from '../../../shared/data/userTrackingDataManager';
+import { userTrackingDataManager } from '../../../lib/data/members/userTrackingDataManager';
 
 const UserTrackingOverview = () => {
   const [realTimeData, setRealTimeData] = useState(null);

@@ -10,7 +10,7 @@ import {
   TrashIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../styles";
+import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
 // import { giftDataManager } from "../../../shared/data/giftDataManager";
 
 const GiftStatus = {

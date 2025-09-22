@@ -12,7 +12,7 @@ import {
   ShoppingCartIcon,
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
-import { userTrackingDataManager } from '../../../shared/data/userTrackingDataManager';
+import { userTrackingDataManager } from '../../../lib/data/members/userTrackingDataManager';
 
 const UserSegmentManagement = () => {
   const [segments, setSegments] = useState([]);

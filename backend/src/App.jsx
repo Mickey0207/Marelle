@@ -4,7 +4,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 // 導入新的路由系統
-import AppRouter from './core/router/AppRouter'
+import AppRouter from './management/components/core/AppRouter'
 
 // 註冊 GSAP 插件
 gsap.registerPlugin(ScrollTrigger)

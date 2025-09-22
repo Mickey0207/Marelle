@@ -17,7 +17,7 @@ import {
   ExclamationTriangleIcon,
   ClipboardDocumentIcon
 } from '@heroicons/react/24/outline';
-import festivalDataManager from '../../../shared/utils/festivalDataManager';
+import festivalDataManager from '../../../lib/data/marketing/festivalDataManager';
 
 const PromotionSettings = () => {
   const [festivals, setFestivals] = useState([]);

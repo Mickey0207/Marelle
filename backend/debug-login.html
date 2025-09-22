@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marelle 登入除錯工具</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .section h3 { margin-top: 0; color: #333; }
+        .button { background: #007cba; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .button:hover { background: #005a87; }
+        .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 5px 0; }
+        .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 5px 0; }
+        .info { background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px; margin: 5px 0; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; width: 200px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Marelle 管理員登入除錯工具</h1>
+        
+        <div class="section">
+            <h3>1. 檢查 localStorage 資料</h3>
+            <button class="button" onclick="checkLocalStorage()">檢查 localStorage</button>
+            <button class="button" onclick="clearLocalStorage()">清除所有資料</button>
+            <button class="button" onclick="initializeData()">重新初始化資料</button>
+            <div id="localStorage-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>2. 測試登入功能</h3>
+            <div>
+                <input type="email" id="test-email" placeholder="電子郵件" value="admin@marelle.com">
+                <input type="password" id="test-password" placeholder="密碼" value="Admin123!">
+                <button class="button" onclick="testLogin()">測試登入</button>
+            </div>
+            <div id="login-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>3. 檢查密碼雜湊</h3>
+            <div>
+                <input type="text" id="test-hash-password" placeholder="測試密碼" value="Admin123!">
+                <button class="button" onclick="testPasswordHash()">測試雜湊</button>
+            </div>
+            <div id="hash-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>4. 系統狀態</h3>
+            <button class="button" onclick="checkSystemStatus()">檢查系統狀態</button>
+            <div id="system-result"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // 引入必要的模組
+        import { adminDataManager } from '/src/lib/data/settings/adminDataManager.js';
+        
+        // 讓這些函數在全域範圍內可用
+        window.adminDataManager = adminDataManager;
+        
+        window.checkLocalStorage = function() {
+            const result = document.getElementById('localStorage-result');
+            const data = {
+                admin_users: JSON.parse(localStorage.getItem('admin_users') || '[]'),
+                admin_roles: JSON.parse(localStorage.getItem('admin_roles') || '[]'),
+                admin_sessions: JSON.parse(localStorage.getItem('admin_sessions') || '[]'),
+                admin_login_logs: JSON.parse(localStorage.getItem('admin_login_logs') || '[]'),
+                'marelle-admin-token': localStorage.getItem('marelle-admin-token')
+            };
+            
+            result.innerHTML = `
+                <div class="info">
+                    <strong>localStorage 資料：</strong>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        };
+        
+        window.clearLocalStorage = function() {
+            ['admin_users', 'admin_roles', 'admin_sessions', 'admin_login_logs', 'marelle-admin-token'].forEach(key => {
+                localStorage.removeItem(key);
+            });
+            document.getElementById('localStorage-result').innerHTML = '<div class="success">localStorage 已清除</div>';
+        };
+        
+        window.initializeData = function() {
+            adminDataManager.initializeData();
+            document.getElementById('localStorage-result').innerHTML = '<div class="success">資料已重新初始化</div>';
+            checkLocalStorage();
+        };
+        
+        window.testLogin = function() {
+            const email = document.getElementById('test-email').value;
+            const password = document.getElementById('test-password').value;
+            const result = document.getElementById('login-result');
+            
+            try {
+                const loginResult = adminDataManager.authenticate(email, password);
+                
+                if (loginResult.success) {
+                    result.innerHTML = `
+                        <div class="success">
+                            <strong>登入成功！</strong><br>
+                            會話令牌: ${loginResult.sessionToken}<br>
+                            用戶資料: <pre>${JSON.stringify(loginResult.user, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="error">
+                            <strong>登入失敗：</strong>${loginResult.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <strong>登入錯誤：</strong>${error.message}
+                    </div>
+                `;
+            }
+        };
+        
+        window.testPasswordHash = function() {
+            const password = document.getElementById('test-hash-password').value;
+            const result = document.getElementById('hash-result');
+            
+            try {
+                const hash = adminDataManager.hashPassword(password);
+                const defaultHash = adminDataManager.hashPassword('Admin123!');
+                const isValid = adminDataManager.verifyPassword(password, defaultHash);
+                
+                result.innerHTML = `
+                    <div class="info">
+                        <strong>密碼雜湊測試：</strong><br>
+                        輸入密碼: ${password}<br>
+                        雜湊結果: ${hash}<br>
+                        預設密碼雜湊: ${defaultHash}<br>
+                        與預設密碼匹配: ${isValid ? '是' : '否'}
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <strong>雜湊錯誤：</strong>${error.message}
+                    </div>
+                `;
+            }
+        };
+        
+        window.checkSystemStatus = function() {
+            const result = document.getElementById('system-result');
+            
+            try {
+                const users = adminDataManager.getAllUsers();
+                const roles = adminDataManager.getAllRoles();
+                const sessions = JSON.parse(localStorage.getItem('admin_sessions') || '[]');
+                
+                result.innerHTML = `
+                    <div class="info">
+                        <strong>系統狀態：</strong><br>
+                        管理員數量: ${users.length}<br>
+                        角色數量: ${roles.length}<br>
+                        活躍會話: ${sessions.length}<br>
+                        <br>
+                        <strong>管理員列表：</strong>
+                        <pre>${JSON.stringify(users, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <strong>系統狀態錯誤：</strong>${error.message}
+                    </div>
+                `;
+            }
+        };
+        
+        // 頁面載入時自動檢查
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLocalStorage();
+            checkSystemStatus();
+        });
+    </script>
+</body>
+</html>

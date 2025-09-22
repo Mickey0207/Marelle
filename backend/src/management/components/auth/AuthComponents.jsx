@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
-import { adminDataManager } from '../../../shared/data/adminDataManager.js';
-import { hasPermission } from '../../../shared/data/adminConfig.js';
+import { Navigate } from 'react-router-dom';
+import { adminDataManager } from '../../../lib/data/settings/adminDataManager.js';
+import { hasPermission } from '../../../lib/data/settings/adminConfig.js';
 
 // 創建認證上下文
 const AuthContext = createContext();
@@ -165,6 +166,18 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+// 受保護的路由組件
+export const ProtectedRoute = ({ children }) => {
+  const { currentUser } = useAuth();
+  
+  // 如果用戶未登入，重定向到登入頁面
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
 };
 
 // 權限檢查組件

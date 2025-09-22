@@ -23,7 +23,7 @@ import {
   LightBulbIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
-import dashboardDataManager from '../../../shared/data/dashboardDataManager';
+import dashboardDataManager from '../../../lib/data/core/dashboardDataManager';
 
 const RealTimeMonitoringDashboard = () => {
   const [metrics, setMetrics] = useState(null);

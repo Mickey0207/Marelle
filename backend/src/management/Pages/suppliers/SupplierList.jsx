@@ -12,7 +12,7 @@ import {
   EnvelopeIcon,
   MapPinIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../styles";
+import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
 // import supplierDataManager from "../../../shared/data/supplierDataManager";
 
 const SupplierStatus = {

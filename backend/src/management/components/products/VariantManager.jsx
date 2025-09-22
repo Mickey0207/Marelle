@@ -7,7 +7,7 @@ import {
   CubeIcon,
   PhotoIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from '../../styles';
+import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
 
 const VariantManager = ({ hasVariants, variants, onChange }) => {
   const [variantOptions, setVariantOptions] = useState([

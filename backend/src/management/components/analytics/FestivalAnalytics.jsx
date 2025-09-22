@@ -13,7 +13,7 @@ import {
   FunnelIcon,
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
-import festivalDataManager from '../../../shared/utils/festivalDataManager';
+import festivalDataManager from '../../../lib/data/marketing/festivalDataManager';
 
 const FestivalAnalytics = () => {
   const [festivals, setFestivals] = useState([]);

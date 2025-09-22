@@ -18,7 +18,7 @@ import {
   XMarkIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
-import marketingDataManager from '../../../shared/utils/marketingDataManager';
+import marketingDataManager from '../../../lib/data/marketing/marketingDataManager';
 
 const CampaignManagement = () => {
   const [campaigns, setCampaigns] = useState([]);
