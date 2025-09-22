@@ -168,7 +168,12 @@ const ProductAnalytics = () => {
         </h3>
       </div>
       
-      <div className="overflow-x-auto">
+      <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+        <style jsx>{`
+          div::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
         <table className="w-full">
           <thead className="bg-white/10">
             <tr>

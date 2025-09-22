@@ -290,7 +290,12 @@ const FestivalManagement = () => {
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-900">節慶列表 ({filteredFestivals.length})</h2>
           </div>
-          <div className="overflow-x-auto">
+          <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50/50">
                 <tr>
@@ -390,7 +395,12 @@ const FestivalManagement = () => {
 
       {/* 創建/編輯節慶 Modal */}
       {(showCreateModal || showEditModal) && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full z-50" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">
@@ -508,7 +518,12 @@ const FestivalManagement = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">目標商品類別</label>
-                  <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
+                  <div className="grid grid-cols-2 gap-2 max-h-32 border border-gray-300 rounded-md p-2" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+                    <style jsx>{`
+                      div::-webkit-scrollbar {
+                        display: none;
+                      }
+                    `}</style>
                     {productCategories.map((category) => (
                       <label key={category} className="flex items-center">
                         <input
@@ -619,7 +634,12 @@ const FestivalManagement = () => {
 
       {/* 刪除確認 Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full z-50" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="flex items-center mb-4">
               <ExclamationTriangleIcon className="h-6 w-6 text-red-600 mr-3" />

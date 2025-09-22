@@ -255,7 +255,12 @@ const ChannelSettings = () => {
       {/* 設定模態框 */}
       {showSettingsModal && selectedChannel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[80vh]" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
             <div className="flex items-center space-x-3 mb-6">
               <selectedChannel.icon className="w-6 h-6 text-[#cc824d]" />
               <h3 className="text-lg font-bold text-gray-900 font-chinese">

@@ -244,7 +244,12 @@ const CouponManagementContainer = () => {
 
       {/* 優惠券列表 */}
       <div className={ADMIN_STYLES.contentCard}>
-        <div className="overflow-x-auto">
+        <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>

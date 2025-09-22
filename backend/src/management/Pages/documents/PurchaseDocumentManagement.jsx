@@ -405,7 +405,12 @@ const PurchaseDocumentManagement = () => {
       {/* 文件列表 */}
       <div className="purchase-section">
         <div className={ADMIN_STYLES.glassCard}>
-          <div className="overflow-x-auto">
+          <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">

@@ -401,7 +401,12 @@ const MemberGiftBenefits = () => {
       {/* 編輯模態框 */}
       {showEditModal && selectedTier && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh]" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
             <h3 className="text-lg font-bold text-gray-900 mb-4 font-chinese">
               編輯 {selectedTier.name}
             </h3>

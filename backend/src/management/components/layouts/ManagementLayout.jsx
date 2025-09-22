@@ -209,7 +209,7 @@ const ManagementLayout = () => {
         </header>
 
         {/* 內容區域 */}
-        <main className="flex-1 overflow-auto bg-[#fdf8f2]">
+        <main className="flex-1 overflow-hidden bg-[#fdf8f2]" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
           <div className="h-full">
             <Outlet />
           </div>

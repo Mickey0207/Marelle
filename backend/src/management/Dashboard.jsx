@@ -364,7 +364,12 @@ const AdminDashboard = () => {
         </header>
 
         {/* Page content */}
-        <main className={`admin-content flex-1 ${ADMIN_STYLES.contentContainer} overflow-auto`}>
+        <main className={`admin-content flex-1 ${ADMIN_STYLES.contentContainer}`} style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+          <style jsx>{`
+            .admin-content::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
         </main>
       </div>
     </div>

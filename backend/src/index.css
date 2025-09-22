@@ -655,22 +655,35 @@
   }
 }
 
-/* 自定義捲軸 */
+/* 隱藏所有滾動條 */
 ::-webkit-scrollbar {
-  width: 8px;
+  display: none;
 }
 
-::-webkit-scrollbar-track {
-  background-color: #EFEAE4;
+/* 對於 Firefox */
+html {
+  scrollbar-width: none;
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: #CC824D;
-  border-radius: 9999px;
+/* 確保頁面可以滾動但不顯示滾動條 */
+body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  overflow-x: hidden;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: #b86c37;
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* 隱藏所有元素的滾動條 */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
 }
 
 /* 選取文字樣式 */

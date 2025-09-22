@@ -232,7 +232,12 @@ const OrderList = () => {
 
       {/* 訂單表格 */}
       <div className={`${ADMIN_STYLES.glassCard} overflow-hidden`}>
-        <div className="overflow-x-auto">
+        <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           <table className="w-full">
             <thead className="bg-gray-50/80 border-b border-gray-200/60">
               <tr>

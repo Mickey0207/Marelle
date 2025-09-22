@@ -151,7 +151,12 @@ const FinanceReports = () => {
       <div className="finance-section mt-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">最近交易記錄</h2>
         <div className={ADMIN_STYLES.glassCard}>
-          <div className="overflow-x-auto">
+          <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">

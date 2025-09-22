@@ -216,7 +216,12 @@ const LogisticsManagement = () => {
         <div className="logistics-section xl:col-span-2">
           <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">配送單管理</h2>
           <div className={ADMIN_STYLES.glassCard}>
-            <div className="overflow-x-auto">
+            <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+              <style jsx>{`
+                div::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">

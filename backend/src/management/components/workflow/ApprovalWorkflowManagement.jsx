@@ -680,7 +680,12 @@ const FilterDropdown = ({ label, options, selected, onChange }) => {
             zIndex: 99999
           }}
         >
-          <div className="max-h-60 overflow-auto">
+          <div className="max-h-60" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
             {options.map((option) => (
               <label key={option} className="glass-dropdown-option cursor-pointer">
                 <div className="flex items-center w-full">
@@ -719,7 +724,7 @@ const ApprovalDetailModal = ({ instance, workflow, isOpen, onClose, onApprove, o
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto"
+        className="bg-white rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh]" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}
       >
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold text-gray-900">簽核詳情</h3>

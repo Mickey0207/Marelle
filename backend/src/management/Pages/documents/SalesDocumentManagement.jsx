@@ -150,7 +150,12 @@ const SalesDocumentManagement = () => {
 
         <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 font-chinese">銷售文件列表</h3>
-          <div className="overflow-x-auto">
+          <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+            <style jsx>{`
+              div::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-gray-200">
