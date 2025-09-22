@@ -290,7 +290,7 @@ const ProductDetail = () => {
                         {formatPrice(relatedProduct.price)}
                       </span>
                       <button
-                        onClick={() => navigate(`/products/${relatedProduct.id}`)}
+                        onClick={() => navigate(`/product/${relatedProduct.id}`)}
                         className="btn-ghost text-sm font-chinese"
                       >
                         查看

@@ -10,10 +10,16 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { useCart } from "../../hooks";
+import { formatNavigationForNavbar, generateRoutePath } from "../../utils/navigationConfig";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [megaMenuState, setMegaMenuState] = useState({
+    activeItem: null,
+    hoveredColumn: null,
+    hoveredItemPath: []
+  });
   const location = useLocation();
   const { cartItemsCount } = useCart();
 
@@ -26,45 +32,30 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const primaryNav = [
-    {
-      name: '油漆',
-      href: '/products?cat=paint',
-      mega: true,
-      groups: [
-        {
-          title: '類型',
-          items: [
-            { name: '單色', href: '#' },
-            { name: '套組', href: '#' },
-            { name: '保護漆', href: '#' },
-            { name: '試色罐', href: '#' },
-            { name: '工具組', href: '#' }
-          ]
-        },
-        {
-          title: '色系',
-          items: [
-            { name: '灰白色系', href: '#' },
-            { name: '大地色系', href: '#' },
-            { name: '綠色系', href: '#' },
-            { name: '藍色系', href: '#' },
-            { name: '奶茶色系', href: '#' }
-          ]
-        }
-      ]
-    },
-    { name: '家具茶', href: '/products?cat=furniture' },
-    { name: '地毯', href: '/products?cat=rug' },
-    { name: '窗簾', href: '/products?cat=curtain' },
-    { name: '居家商品', href: '/products' },
-    { name: '改造指南', href: '/guide' },
-    { name: '生活風格', href: '/style' }
-  ];
+  // 使用新的導航配置
+  const primaryNav = formatNavigationForNavbar();
 
-  // secondaryNav 已移除頂部列，不再使用
+  // 改進的路由激活狀態檢查，支援層次化路由
+  const isActive = (path) => {
+    if (location.pathname === path) {
+      return true;
+    }
+    // 對於商品類別，檢查是否為子路由
+    if (path.startsWith('/products/') && location.pathname.startsWith(path)) {
+      return true;
+    }
+    return false;
+  };
 
-  const isActive = (path) => location.pathname === path;
+  // 簡化的路徑檢查邏輯 - 只需要檢查當前 URL 是否匹配項目的 href
+  const isItemSelected = (itemHref) => {
+    return location.pathname === itemHref;
+  };
+
+  // 檢查是否為父級路徑 - 當前路徑是否以該項目路徑開始
+  const isParentSelected = (itemHref) => {
+    return location.pathname.startsWith(itemHref + '/');
+  };
 
     return (
       <nav className={`nav-lofi fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'shadow-sm border-b' : ''}`} style={{background:'#fdf8f2'}}>
@@ -81,7 +72,10 @@ const Navbar = () => {
         {/* Center: Primary Nav */}
         <div className="hidden lg:flex items-center space-x-6 h-full flex-1 justify-center">
             {primaryNav.map(item => (
-              <div key={item.name} className="relative h-full flex items-center group">
+              <div key={item.name} className="relative h-full flex items-center group"
+                onMouseEnter={() => setMegaMenuState({ activeItem: item.name, hoveredColumn: 0, hoveredItemPath: [] })}
+                onMouseLeave={() => setMegaMenuState({ activeItem: null, hoveredColumn: null, hoveredItemPath: [] })}
+              >
                 <Link
                   to={item.href}
                   className={`font-medium font-chinese text-sm tracking-wide transition-colors relative px-1 text-lofi ${isActive(item.href) ? 'text-primary-btn' : 'hover:text-primary-btn'}`}
@@ -89,21 +83,76 @@ const Navbar = () => {
                   <span className="flex items-center">{item.name}{item.mega && <ChevronDownIcon className="w-4 h-4 ml-1" />}</span>
                   <span className={`absolute left-0 -bottom-2 h-0.5 bg-primary-btn transition-all duration-300 ${isActive(item.href) ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
                 </Link>
-                {item.mega && (
-                  <div className="absolute top-full left-0 pt-4 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
-                    <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-lg p-6 grid grid-cols-2 gap-8 w-[520px]">
-                      {item.groups.map((g) => (
-                        <div key={g.title}>
-                          <h4 className="text-xs font-semibold mb-3 tracking-wider text-primary-btn">{g.title}</h4>
-                          <ul className="space-y-2">
-                            {g.items.map(it => (
-                              <li key={it.name}>
-                                <Link to={it.href} className="block text-sm text-lofi hover:text-primary-btn transition-colors">{it.name}</Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
+                {item.mega && megaMenuState.activeItem === item.name && (
+                  <div className="absolute top-full left-0 pt-4 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-300">
+                    <div className={`bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-lg p-4 flex gap-4 ${
+                      item.columns && item.columns.length > 3 ? 'w-[720px]' : 
+                      item.columns && item.columns.length > 2 ? 'w-[540px]' : 'w-[360px]'
+                    }`}>
+                      {item.columns && item.columns.map((column, columnIndex) => {
+                        const isColumnVisible = columnIndex === 0 || 
+                          (columnIndex <= megaMenuState.hoveredColumn + 1 && megaMenuState.hoveredItemPath.length >= columnIndex);
+                        
+                        return (
+                          <div 
+                            key={column.title} 
+                            className={`flex-1 min-w-0 transition-opacity duration-200 ${
+                              isColumnVisible ? 'opacity-100' : 'opacity-30'
+                            }`}
+                          >
+                            <h4 className="text-xs font-semibold mb-3 tracking-wider text-primary-btn border-b border-gray-100 pb-2">
+                              {column.title}
+                            </h4>
+                            <div className="space-y-1">
+                              {column.items.slice(0, 8).map(it => {
+                                const isSelected = isItemSelected(it.href);
+                                const isParentItem = isParentSelected(it.href);
+                                
+                                return (
+                                  <div key={it.name} className="relative">
+                                    <Link 
+                                      to={it.href} 
+                                      className={`block text-sm transition-all duration-200 leading-relaxed py-1 px-2 rounded ${
+                                        isSelected 
+                                          ? 'bg-primary-btn text-btn-white shadow-sm font-medium' 
+                                          : isParentItem
+                                            ? 'bg-primary-btn/10 text-primary-btn font-medium'
+                                            : it.hasChildren 
+                                              ? 'text-lofi font-medium hover:bg-primary-btn/5 hover:text-primary-btn' 
+                                              : 'text-gray-600 hover:bg-primary-btn/5 hover:text-primary-btn'
+                                      }`}
+                                      onMouseEnter={() => {
+                                        if (it.hasChildren && columnIndex < 4) {
+                                          setMegaMenuState(prev => ({
+                                            ...prev,
+                                            hoveredColumn: columnIndex,
+                                            hoveredItemPath: [...prev.hoveredItemPath.slice(0, columnIndex), it.name]
+                                          }));
+                                        }
+                                      }}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <span className="truncate">{it.name}</span>
+                                        {it.hasChildren && <span className="ml-1 text-xs flex-shrink-0 opacity-60">›</span>}
+                                      </div>
+                                      {it.parent && !isSelected && !isParentItem && (
+                                        <div className="text-xs opacity-60 truncate">
+                                          {it.parent}
+                                        </div>
+                                      )}
+                                    </Link>
+                                  </div>
+                                );
+                              })}
+                              {column.items.length > 8 && (
+                                <div className="text-xs text-gray-400 px-2 py-1">
+                                  +{column.items.length - 8} 更多...
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

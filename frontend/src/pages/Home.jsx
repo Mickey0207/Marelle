@@ -83,7 +83,7 @@ const Home = () => {
             {featuredProducts.map((product, index) => (
               <Link
                 key={product.id}
-                to={`/products/${product.id}`}
+                to={`/product/${product.id}`}
                 className="product-card group"
               >
                 <div className="bg-white/80 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">

@@ -7,10 +7,12 @@ const Footer = () => {
     {
       title: '商品分類',
       links: [
-        { name: '服飾配件', href: '/products?category=accessories' },
-        { name: '居家生活', href: '/products?category=home' },
-        { name: '香氛用品', href: '/products?category=fragrance' },
-        { name: '茶品飲品', href: '/products?category=tea' },
+        { name: '家居用品', href: '/products/living/home' },
+        { name: '生活用品', href: '/products/living/lifestyle' },
+        { name: '香氛用品', href: '/products/scent-tea/fragrance' },
+        { name: '茶品飲品', href: '/products/scent-tea/tea' },
+        { name: '配件飾品', href: '/products/fashion/accessories' },
+        { name: '服飾', href: '/products/fashion/clothing' },
       ]
     },
     {

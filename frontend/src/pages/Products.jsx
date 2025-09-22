@@ -1,32 +1,51 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { HeartIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { mockProducts, categories, formatPrice } from "../utils/data";
+import { navigationConfig, generateRoutePath } from "../utils/navigationConfig";
 import { useCart } from "../hooks";
 import SortDropdown from "../components/ui/SortDropdown";
-import { withPageTabs } from '../hoc/withPageTabs';
-import { frontProductsTabsConfig } from '../config/tabsConfig';
 
-const hierarchicalCategories = [
-  { id: 'root-living', name: '家居生活', children: [ { id: 'home', name: '家居'}, { id: 'lifestyle', name: '生活用品'} ] },
-  { id: 'root-scent', name: '香氛茶飲', children: [ { id: 'fragrance', name: '香氛'}, { id: 'tea', name: '茶品'} ] },
-  { id: 'root-fashion', name: '穿搭配件', children: [ { id: 'accessories', name: '配件'}, { id: 'clothing', name: '服飾'} ] }
-];
+// 將 navigationConfig 轉換為適合的格式
+const hierarchicalCategories = navigationConfig;
 
-const hierarchyToBaseCategory = {
-  home: 'home', lifestyle: 'lifestyle', fragrance: 'fragrance', tea: 'tea', accessories: 'accessories', clothing: 'clothing'
+// 根據路徑片段查找對應的導航節點
+const findNodeByPath = (pathSegments) => {
+  if (!pathSegments || pathSegments.length === 0) return null;
+  
+  let currentLevel = hierarchicalCategories;
+  let foundNode = null;
+  
+  for (const segment of pathSegments) {
+    foundNode = currentLevel.find(item => item.slug === segment);
+    if (!foundNode) break;
+    if (foundNode.children) {
+      currentLevel = foundNode.children;
+    }
+  }
+  
+  return foundNode;
 };
 
-function findNodePath(targetId) {
-  if (!targetId) return [];
+// 解析當前路徑獲取路徑片段
+const parsePathSegments = (pathname) => {
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments[0] === 'products') {
+    return segments.slice(1); // 移除 'products' 前綴
+  }
+  return [];
+};
+
+function findNodePath(targetSlug) {
+  if (!targetSlug) return [];
   const path = [];
   function dfs(nodes, trail) {
     for (const n of nodes) {
       const next = [...trail, n];
-      if (n.id === targetId) { path.push(...next); return true; }
-      if (n.children && dfs(n.children, next)) return true; 
+      if (n.slug === targetSlug) { path.push(...next); return true; }
+      if (n.children && dfs(n.children, next)) return true;
     }
     return false;
   }
@@ -34,35 +53,58 @@ function findNodePath(targetId) {
   return path;
 }
 
-const Products = () => {
+export default function Products() {
   const location = useLocation();
   const { addToCart } = useCart();
   const [filteredProducts, setFilteredProducts] = useState(mockProducts);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [currentPathSegments, setCurrentPathSegments] = useState([]);
   const [expanded, setExpanded] = useState({});
   const [sortBy, setSortBy] = useState('name');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState(new Set());
+  const [activeParents, setActiveParents] = useState(new Set());
 
-  // 同步 URL 參數 ( ?cat=home )
+  // 同步當前路徑
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const cat = params.get('cat');
-    if (cat && hierarchyToBaseCategory[cat]) {
-      setSelectedCategory(cat);
-      setSelectedNode(cat);
+    const pathSegments = parsePathSegments(location.pathname);
+    setCurrentPathSegments(pathSegments);
+    
+    // 根據路徑找到對應的節點
+    const node = findNodeByPath(pathSegments);
+    if (node) {
+      setSelectedNode(node.slug);
+    } else {
+      setSelectedNode(null);
     }
-  }, [location.search]);
+  }, [location.pathname]);
 
   // 處理展開/收合
-  const toggleExpand = (nodeId) => {
-    setExpanded(prev => ({ ...prev, [nodeId]: !prev[nodeId] }));
+  const toggleExpand = (nodeSlug) => {
+    setExpanded(prev => ({ ...prev, [nodeSlug]: !prev[nodeSlug] }));
   };
 
-  // 處理節點選擇
-  const handleSelectNode = (node) => {
-    setSelectedNode(node.id);
+  // 生成節點的完整路徑
+  const getNodePath = (targetSlug) => {
+    const path = [];
+    
+    const findPath = (items, target, currentPath = []) => {
+      for (const item of items) {
+        const newPath = [...currentPath, item.slug];
+        if (item.slug === target) {
+          path.push(...newPath);
+          return true;
+        }
+        if (item.children && findPath(item.children, target, newPath)) {
+          return true;
+        }
+      }
+      return false;
+    };
+    
+    findPath(hierarchicalCategories, targetSlug);
+    return path;
   };
 
   // 處理收藏切換
@@ -90,10 +132,14 @@ const Products = () => {
       );
     }
 
-    // 根據選中的節點篩選
-    if (selectedNode && hierarchyToBaseCategory[selectedNode]) {
-      const baseCategory = hierarchyToBaseCategory[selectedNode];
-      filtered = filtered.filter(product => product.category === baseCategory);
+    // 根據當前路徑篩選產品
+    if (currentPathSegments.length > 0) {
+      filtered = filtered.filter(product => {
+        // 檢查產品的 categoryPath 是否包含當前路徑的任一片段
+        return product.categoryPath && currentPathSegments.some(segment => 
+          product.categoryPath.includes(segment)
+        );
+      });
     }
 
     // 排序
@@ -110,13 +156,63 @@ const Products = () => {
     });
 
     setFilteredProducts(filtered);
-  }, [searchTerm, selectedNode, sortBy]);
+  }, [searchTerm, currentPathSegments, sortBy]);
 
   const handleAddToCart = p => addToCart(p);
 
-  const path = findNodePath(selectedNode || '');
-  const currentTitle = path.slice(-1)[0]?.name || '全部商品';
-  const breadcrumb = path.length ? path.map(n=>n.name).join(' / ') : '全部類別';
+  // 檢查一個分類是否應該顯示為活躍狀態（選中狀態）
+  const isNodeSelected = (nodeSlug) => {
+    return selectedNode === nodeSlug;
+  };
+
+  // 檢查一個分類是否是當前選中項目的父級
+  const isNodeParent = (nodeSlug) => {
+    if (!selectedNode) return false;
+    const selectedPath = getNodePath(selectedNode);
+    return selectedPath.includes(nodeSlug) && nodeSlug !== selectedNode;
+  };
+
+  // 生成節點的路由路徑
+  const getNodeRoutePath = (nodeSlug) => {
+    const pathSegments = getNodePath(nodeSlug);
+    
+    // 對於第一層分類，確保至少包含節點本身
+    if (pathSegments.length === 0 && nodeSlug) {
+      // 如果 getNodePath 返回空數組，但有 nodeSlug，說明這是第一層節點
+      const foundInRoot = hierarchicalCategories.find(item => item.slug === nodeSlug);
+      if (foundInRoot) {
+        return generateRoutePath('/products', [nodeSlug]);
+      }
+    }
+    
+    return generateRoutePath('/products', pathSegments);
+  };
+
+  // 根據當前選中節點生成標題和面包屑
+  const getDisplayInfo = () => {
+    if (selectedNode) {
+      const pathSegments = getNodePath(selectedNode);
+      const pathNodes = [];
+      
+      let currentLevel = hierarchicalCategories;
+      for (const segment of pathSegments) {
+        const node = currentLevel.find(item => item.slug === segment);
+        if (node) {
+          pathNodes.push(node);
+          if (node.children) currentLevel = node.children;
+        }
+      }
+      
+      const currentTitle = pathNodes.length > 0 ? pathNodes[pathNodes.length - 1].name : '全部商品';
+      const breadcrumb = pathNodes.length > 0 ? pathNodes.map(n => n.name).join(' / ') : '全部類別';
+      
+      return { currentTitle, breadcrumb };
+    }
+    
+    return { currentTitle: '全部商品', breadcrumb: '全部類別' };
+  };
+  
+  const { currentTitle, breadcrumb } = getDisplayInfo();
 
   return (
     <div className="min-h-screen pt-20 pb-12">
@@ -130,46 +226,143 @@ const Products = () => {
                   <SortDropdown value={sortBy} onChange={setSortBy} size="sm" />
                 </div>
                 <nav className="space-y-1">
+                  {/* 全部商品按鈕 */}
+                  <Link
+                    to="/products"
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-chinese transition-all duration-300 ${
+                      location.pathname === '/products'
+                        ? 'bg-primary-btn text-btn-white shadow-sm' 
+                        : 'text-lofi hover:bg-primary-btn/10 hover:text-primary-btn'
+                    }`}
+                  >
+                    <span>全部商品</span>
+                  </Link>
+                  
+                  {/* 分類導航 */}
                   {hierarchicalCategories.map(root => {
-                    const rootExpanded = expanded[root.id];
+                    const rootExpanded = expanded[root.slug];
                     return (
-                      <div key={root.id}
-                        onMouseEnter={() => setExpanded(e => ({...e, [root.id]: true}))}
-                        onMouseLeave={() => setExpanded(e => ({...e, [root.id]: false}))}
+                      <div key={root.slug}
+                        onMouseEnter={() => setExpanded(e => ({...e, [root.slug]: true}))}
+                        onMouseLeave={() => setExpanded(e => ({...e, [root.slug]: false}))}
                       >
-                        <button
-                          onClick={() => { toggleExpand(root.id); handleSelectNode(root); }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-chinese transition-colors ${selectedNode === root.id ? 'bg-primary-btn text-btn-white':'text-lofi hover:bg-white/70'}`}
+                        <Link
+                          to={getNodeRoutePath(root.slug)}
+                          onClick={() => toggleExpand(root.slug)}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-chinese transition-all duration-300 ${
+                            isNodeSelected(root.slug) 
+                              ? 'bg-primary-btn text-btn-white shadow-sm' 
+                              : isNodeParent(root.slug)
+                                ? 'bg-primary-btn/10 text-primary-btn font-medium'
+                                : 'text-lofi hover:bg-primary-btn/10 hover:text-primary-btn'
+                          }`}
                         >
                           <span>{root.name}</span>
                           {root.children && <ChevronDownIcon className={`w-4 h-4 transition-transform ${rootExpanded?'rotate-180':''}`} />}
-                        </button>
+                        </Link>
                         <div
                           className={`mt-1 ml-2 pl-2 border-l border-gray-200 space-y-1 ${rootExpanded ? 'sidebar-anim-expand' : 'sidebar-anim-collapse'}`}
                           style={{ pointerEvents: rootExpanded ? 'auto' : 'none' }}
                         >
                           {root.children && root.children.map(child => {
-                            const childExpanded = expanded[child.id];
+                            const childExpanded = expanded[child.slug];
                             const hasGrand = !!child.children;
                             return (
-                              <div key={child.id}
-                                onMouseEnter={() => setExpanded(e => ({...e, [child.id]: true, [root.id]: true}))}
-                                onMouseLeave={() => setExpanded(e => ({...e, [child.id]: false}))}
+                              <div key={child.slug}
+                                onMouseEnter={() => setExpanded(e => ({...e, [child.slug]: true, [root.slug]: true}))}
+                                onMouseLeave={() => setExpanded(e => ({...e, [child.slug]: false}))}
                               >
-                                <button
-                                  onClick={() => { if(hasGrand) toggleExpand(child.id); handleSelectNode(child); }}
-                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-chinese transition-colors ${selectedNode===child.id?'bg-primary-btn/90 text-btn-white':'text-lofi hover:bg-white/70'}`}
+                                <Link
+                                  to={getNodeRoutePath(child.slug)}
+                                  onClick={() => { if(hasGrand) toggleExpand(child.slug); }}
+                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-chinese transition-all duration-300 ${
+                                    isNodeSelected(child.slug)
+                                      ? 'bg-primary-btn/90 text-btn-white shadow-sm'
+                                      : isNodeParent(child.slug)
+                                        ? 'bg-primary-btn/10 text-primary-btn font-medium'
+                                        : 'text-lofi hover:bg-primary-btn/10 hover:text-primary-btn'
+                                  }`}
                                 >
                                   <span>{child.name}</span>
                                   {hasGrand && <ChevronDownIcon className={`w-4 h-4 transition-transform ${childExpanded?'rotate-180':''}`} />}
-                                </button>
+                                </Link>
                                 <div
                                   className={`mt-1 ml-2 pl-2 border-l border-gray-200 space-y-1 ${hasGrand && childExpanded ? 'sidebar-anim-expand' : 'sidebar-anim-collapse'}`}
                                   style={{ pointerEvents: hasGrand && childExpanded ? 'auto' : 'none' }}
                                 >
-                                  {hasGrand && child.children && child.children.map(grand => (
-                                    <button key={grand.id} onClick={() => handleSelectNode(grand)} className={`w-full text-left px-3 py-1.5 rounded text-sm font-chinese transition-colors ${selectedNode===grand.id?'bg-primary-btn/80 text-btn-white':'text-lofi hover:bg-white/70'}`}>{grand.name}</button>
-                                  ))}
+                                  {hasGrand && child.children && child.children.map(grand => {
+                                    const grandExpanded = expanded[grand.slug];
+                                    const hasGreatGrand = !!grand.children;
+                                    return (
+                                      <div key={grand.slug}
+                                        onMouseEnter={() => setExpanded(e => ({...e, [grand.slug]: true, [child.slug]: true, [root.slug]: true}))}
+                                        onMouseLeave={() => setExpanded(e => ({...e, [grand.slug]: false}))}
+                                      >
+                                        <Link 
+                                          to={getNodeRoutePath(grand.slug)}
+                                          onClick={() => { if(hasGreatGrand) toggleExpand(grand.slug); }}
+                                          className={`block w-full flex items-center justify-between px-3 py-1.5 rounded text-sm font-chinese transition-all duration-300 ${
+                                            isNodeSelected(grand.slug)
+                                              ? 'bg-primary-btn/80 text-btn-white shadow-sm'
+                                              : isNodeParent(grand.slug)
+                                                ? 'bg-primary-btn/5 text-primary-btn font-medium'
+                                                : 'text-lofi hover:bg-primary-btn/10 hover:text-primary-btn'
+                                          }`}
+                                        >
+                                          <span>{grand.name}</span>
+                                          {hasGreatGrand && <ChevronDownIcon className={`w-3 h-3 transition-transform ${grandExpanded?'rotate-180':''}`} />}
+                                        </Link>
+                                        <div
+                                          className={`mt-1 ml-2 pl-2 border-l border-gray-200 space-y-1 ${hasGreatGrand && grandExpanded ? 'sidebar-anim-expand' : 'sidebar-anim-collapse'}`}
+                                          style={{ pointerEvents: hasGreatGrand && grandExpanded ? 'auto' : 'none' }}
+                                        >
+                                          {hasGreatGrand && grand.children && grand.children.map(greatGrand => {
+                                            const greatGrandExpanded = expanded[greatGrand.slug];
+                                            const hasGreatGreatGrand = !!greatGrand.children;
+                                            return (
+                                              <div key={greatGrand.slug}
+                                                onMouseEnter={() => setExpanded(e => ({...e, [greatGrand.slug]: true, [grand.slug]: true, [child.slug]: true, [root.slug]: true}))}
+                                                onMouseLeave={() => setExpanded(e => ({...e, [greatGrand.slug]: false}))}
+                                              >
+                                                <Link 
+                                                  to={getNodeRoutePath(greatGrand.slug)}
+                                                  onClick={() => { if(hasGreatGreatGrand) toggleExpand(greatGrand.slug); }}
+                                                  className={`block w-full flex items-center justify-between px-2 py-1 rounded text-xs font-chinese transition-all duration-300 ${
+                                                    isNodeSelected(greatGrand.slug)
+                                                      ? 'bg-primary-btn/70 text-btn-white shadow-sm'
+                                                      : isNodeParent(greatGrand.slug)
+                                                        ? 'bg-primary-btn/5 text-primary-btn font-medium'
+                                                        : 'text-gray-600 hover:bg-primary-btn/5 hover:text-primary-btn'
+                                                  }`}
+                                                >
+                                                  <span>{greatGrand.name}</span>
+                                                  {hasGreatGreatGrand && <ChevronDownIcon className={`w-3 h-3 transition-transform ${greatGrandExpanded?'rotate-180':''}`} />}
+                                                </Link>
+                                                <div
+                                                  className={`mt-1 ml-2 pl-2 border-l border-gray-200 space-y-1 ${hasGreatGreatGrand && greatGrandExpanded ? 'sidebar-anim-expand' : 'sidebar-anim-collapse'}`}
+                                                  style={{ pointerEvents: hasGreatGreatGrand && greatGrandExpanded ? 'auto' : 'none' }}
+                                                >
+                                                  {hasGreatGreatGrand && greatGrand.children && greatGrand.children.map(greatGreatGrand => (
+                                                    <Link 
+                                                      key={greatGreatGrand.slug} 
+                                                      to={getNodeRoutePath(greatGreatGrand.slug)}
+                                                      className={`block w-full text-left px-2 py-0.5 rounded text-xs font-chinese transition-all duration-300 ${
+                                                        isNodeSelected(greatGreatGrand.slug)
+                                                          ? 'bg-primary-btn/60 text-btn-white shadow-sm'
+                                                          : 'text-gray-500 hover:bg-primary-btn/5 hover:text-primary-btn'
+                                                      }`}
+                                                    >
+                                                      {greatGreatGrand.name}
+                                                    </Link>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             );
@@ -201,7 +394,7 @@ const Products = () => {
                   <div className="product-card-minimal relative overflow-hidden">
                     <div className="imgbox">
                       {!p.inStock && <div className="badge-out font-chinese">缺貨</div>}
-                      <Link to={`/products/${p.id}`} className="block w-full h-full">
+                      <Link to={`/product/${p.id}`} className="block w-full h-full">
                         <img src={p.image} alt={p.name} />
                       </Link>
                       {/* hover/focus 時才顯示操作列 */}
@@ -224,7 +417,7 @@ const Products = () => {
                       >{p.inStock ? '加入購物車' : '暫時缺貨'}</button>
                     </div>
                     <div className="info font-chinese">
-                      <Link to={`/products/${p.id}`}> <h3 className="title text-lofi hover:opacity-70 transition-opacity">{p.name}</h3></Link>
+                      <Link to={`/product/${p.id}`}> <h3 className="title text-lofi hover:opacity-70 transition-opacity">{p.name}</h3></Link>
                       <div className="pricing">
                         <span className="price-tag font-bold">{formatPrice(p.price)}</span>
                         {p.originalPrice && <span className="price-original">{formatPrice(p.originalPrice)}</span>}
@@ -269,9 +462,4 @@ const Products = () => {
       )}
     </div>
   );
-};
-
-export default withPageTabs(Products, frontProductsTabsConfig, {
-  layout: 'center',
-  showDescription: false
-});
+}
