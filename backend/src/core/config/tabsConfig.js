@@ -15,6 +15,7 @@ const dashboardTabs = [
 // Products 模組 tabs
 const productsTabs = [
   { label: '產品列表', path: '/products' },
+  { label: '新增產品', path: '/products/add' },
 ];
 
 // Orders 模組 tabs
