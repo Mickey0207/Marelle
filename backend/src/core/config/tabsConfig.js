@@ -68,7 +68,9 @@ const logisticsTabs = [
 
 // Coupons 模組 tabs
 const couponsTabs = [
-  { label: '優惠券管理', path: '/coupons' }
+  { label: '優惠券管理', path: '/coupons' },
+  { label: '分享管理', path: '/coupons/sharing' },
+  { label: '叠加規則', path: '/coupons/stacking-rules' }
 ];
 
 // Notifications 模組 tabs

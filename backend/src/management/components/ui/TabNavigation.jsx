@@ -37,10 +37,25 @@ const TabNavigation = ({
       return true;
     }
     
-    // 檢查是否為子路徑，但要避免部分匹配
-    // 例如 /products 不應該匹配 /products/inventory
-    // 只有在路徑後面跟著 '/' 時才算匹配
-    if (currentPath.startsWith(tabPath + '/')) {
+    // 檢查是否為子路徑匹配，但只有在沒有更具體的匹配時才啟用
+    // 首先找出所有匹配當前路徑的頁籤
+    const matchingTabs = tabs.filter(t => {
+      const tPath = getTabPath(t);
+      return currentPath === tPath || currentPath.startsWith(tPath + '/');
+    });
+    
+    // 如果有多個匹配，選擇最長（最具體）的路徑
+    if (matchingTabs.length > 1) {
+      const longestMatch = matchingTabs.reduce((prev, current) => {
+        const prevPath = getTabPath(prev);
+        const currentPathTab = getTabPath(current);
+        return prevPath.length > currentPathTab.length ? prev : current;
+      });
+      return getTabPath(longestMatch) === tabPath;
+    }
+    
+    // 只有一個匹配或者是子路徑匹配
+    if (matchingTabs.length === 1 && currentPath.startsWith(tabPath + '/')) {
       return true;
     }
     

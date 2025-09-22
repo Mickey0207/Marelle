@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ADMIN_STYLES } from '../../../shared/styles/adminStyles';
+import { ADMIN_STYLES } from '../../styles';
 import {
   TicketIcon,
   CheckCircleIcon,

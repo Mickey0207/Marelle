@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ADMIN_STYLES } from '../../styles';
 import couponDataManager, { CouponType } from '../../../shared/data/couponDataManager';
 
 const StackingRulesManager = () => {
@@ -73,11 +74,14 @@ const StackingRulesManager = () => {
   };
 
   return (
-    <div className="bg-[#fdf8f2] min-h-screen p-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">優惠券疊加規則管理</h1>
+    <div className={ADMIN_STYLES.pageContainer}>
+      <div className={ADMIN_STYLES.contentContainer}>
+        <div className="mb-6">
+          <h1 className={ADMIN_STYLES.pageTitle}>優惠券疊加規則管理</h1>
+          <p className={ADMIN_STYLES.pageSubtitle}>設定優惠券疊加使用規則和優先級</p>
+        </div>
         
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 mb-6">
+        <div className={ADMIN_STYLES.contentCard + " mb-6"}>
           <h2 className="text-xl font-semibold mb-4">選擇優惠券</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {coupons.map(coupon => (
@@ -85,7 +89,7 @@ const StackingRulesManager = () => {
                 key={coupon.id}
                 className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                   selectedCoupon?.id === coupon.id
-                    ? 'border-blue-500 bg-blue-50'
+                    ? 'border-[#cc824d] bg-[#cc824d]/10'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
                 onClick={() => handleCouponSelect(coupon)}
