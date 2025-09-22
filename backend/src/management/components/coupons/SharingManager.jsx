@@ -107,7 +107,7 @@ const SharingManager = () => {
 
   return (
     <div className={ADMIN_STYLES.pageContainer}>
-      <div className={ADMIN_STYLES.contentContainer}>
+      <div className={ADMIN_STYLES.contentContainerStandard}>
         <div className="mb-6">
           <h1 className={ADMIN_STYLES.pageTitle}>優惠券分享管理</h1>
           <p className={ADMIN_STYLES.pageSubtitle}>管理優惠券分享功能和設定</p>

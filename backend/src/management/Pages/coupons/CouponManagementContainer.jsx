@@ -322,7 +322,7 @@ const CouponManagementContainer = () => {
 
   return (
     <div className={ADMIN_STYLES.pageContainer}>
-      <div className={ADMIN_STYLES.contentContainer}>
+      <div className={ADMIN_STYLES.contentContainerStandard}>
         {/* 頁面標題 */}
         <div className="mb-6">
           <h1 className={ADMIN_STYLES.pageTitle}>優惠券管理</h1>

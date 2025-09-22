@@ -31,6 +31,8 @@ export const ADMIN_STYLES = {
   // 頁面容器
   pageContainer: 'min-h-screen bg-[#fdf8f2]',
   contentContainer: 'p-6 space-y-6',
+  contentContainerWide: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8',
+  contentContainerStandard: 'container mx-auto px-6 py-8',
   
   // 頁面標題
   pageTitle: 'text-3xl font-bold text-gray-900 font-chinese mb-2',

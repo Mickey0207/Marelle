@@ -127,34 +127,38 @@ const AdminProducts = () => {
   ];
 
   return (
-    <div className={ADMIN_STYLES.sectionSpacing}>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className={ADMIN_STYLES.pageTitle}>商品管理</h1>
-          <p className={ADMIN_STYLES.pageSubtitle}>
-            管理商品資訊、庫存和雜貨
-          </p>
+    <div className={ADMIN_STYLES.pageContainer}>
+      <div className={ADMIN_STYLES.contentContainerStandard}>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+          <div>
+            <h1 className={ADMIN_STYLES.pageTitle}>商品管理</h1>
+            <p className={ADMIN_STYLES.pageSubtitle}>
+              管理商品資訊、庫存和雜貨
+            </p>
+          </div>
+          <div className="flex items-center space-x-3 mt-4 sm:mt-0">
+            <Link 
+              to="/products/add"
+              className="inline-flex items-center px-6 py-3 bg-[#cc824d] text-white font-medium rounded-lg hover:bg-[#b86c37] transition-all duration-200 shadow-md hover:shadow-lg font-chinese"
+            >
+              <PlusIcon className="w-5 h-5 mr-2" />
+              新增商品
+            </Link>
+          </div>
         </div>
-        <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-          <Link 
-            to="/admin/products/add"
-            className={ADMIN_STYLES.btnPrimary}
-          >
-            <PlusIcon className="w-5 h-5 mr-2" />
-            新增商品
-          </Link>
+
+        {/* Products Table */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-sm">
+          <StandardTable 
+            title="商品清單"
+            columns={columns}
+            data={products}
+            exportFileName="products"
+            emptyMessage="沒有找到符合條件的商品"
+          />
         </div>
       </div>
-
-      {/* Products Table */}
-      <StandardTable 
-        title="商品清單"
-        columns={columns}
-        data={products}
-        exportFileName="products"
-        emptyMessage="沒有找到符合條件的商品"
-      />
     </div>
   );
 };

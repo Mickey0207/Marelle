@@ -75,7 +75,7 @@ const StackingRulesManager = () => {
 
   return (
     <div className={ADMIN_STYLES.pageContainer}>
-      <div className={ADMIN_STYLES.contentContainer}>
+      <div className={ADMIN_STYLES.contentContainerStandard}>
         <div className="mb-6">
           <h1 className={ADMIN_STYLES.pageTitle}>優惠券疊加規則管理</h1>
           <p className={ADMIN_STYLES.pageSubtitle}>設定優惠券疊加使用規則和優先級</p>
