@@ -10,18 +10,32 @@
     "build:admin": "vite build --mode admin",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "preview:admin": "vite preview --mode admin"
+    "preview:admin": "vite preview --mode admin",
+    "workers:dev": "wrangler dev",
+    "workers:deploy": "wrangler deploy",
+    "db:studio": "drizzle-kit studio",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:setup": "cd CloudflareWorkers && node database/scripts/setup.js",
+    "db:seed": "cd CloudflareWorkers && node database/scripts/seed.js"
   },
   "dependencies": {
+    "@cloudflare/workers-types": "^4.20231025.0",
     "@heroicons/react": "^2.0.18",
+    "better-sqlite3": "^12.3.0",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.5",
     "framer-motion": "^10.16.14",
     "gsap": "^3.12.2",
+    "hono": "^4.0.0",
     "lucide-react": "^0.544.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^6.20.0",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "wrangler": "^3.15.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",
@@ -33,6 +47,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
     "postcss": "^8.4.31",
+    "sqlite3": "^5.1.7",
     "tailwindcss": "^3.3.6",
     "vite": "^4.5.0"
   }
