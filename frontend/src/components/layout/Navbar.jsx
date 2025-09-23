@@ -10,7 +10,7 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { useCart } from "../../hooks";
-import { formatNavigationForNavbar, generateRoutePath } from "../../utils/navigationConfig";
+import { formatNavigationForNavbar, generateRoutePath } from "../../../CloudflareWorkers/src/utils/navigationConfig";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

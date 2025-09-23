@@ -1,0 +1,38 @@
+name = "marelle-frontend-workers"
+main = "CloudflareWorkers/src/frontendWorker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "development"
+API_BASE_URL = "http://localhost:3002"
+
+# D1 資料庫配置（使用與後台相同的資料庫）
+[[d1_databases]]
+binding = "DB"
+database_name = "marelle-local"
+database_id = "local"
+# 使用相對路徑指向後台的資料庫
+database_path = "../backend/CloudflareWorkers/database/marelle-local.db"
+
+# 本地開發配置
+[env.development]
+vars = { ENVIRONMENT = "development", API_BASE_URL = "http://localhost:3002" }
+
+# 生產環境配置
+[env.production]
+vars = { 
+  ENVIRONMENT = "production",
+  API_BASE_URL = "https://your-backend-domain.com"
+}
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "marelle-production"
+database_id = "your-production-database-id"
+
+# 開發伺服器配置
+[dev]
+port = 8787
+local = true
+upstream = "http://localhost:3000"
