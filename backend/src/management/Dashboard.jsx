@@ -53,7 +53,7 @@ import AdminManagement from './Pages/admin/AdminManagement';
 import SupplierManagementContainer from './Pages/suppliers/SupplierList';
 import ProcurementManagementContainer from './Pages/procurement/ProcurementOverview';
 import CouponManagementContainer from './Pages/coupons/CouponManagementContainer';
-import LogisticsManagementContainer from './Pages/logistics/LogisticsOverview';
+// import LogisticsManagementContainer from './Pages/logistics/LogisticsOverview'; // 已移除
 
 // Import user tracking management components
 import UserTrackingOverview from './components/users/UserTrackingOverview';

@@ -56,13 +56,14 @@ const procurementTabs = [
 
 // Logistics 模組 tabs
 const logisticsTabs = [
-  { label: '物流概覽', path: '/logistics' },
-  { label: '出貨管理', path: '/logistics/shipments' },
-  { label: '運費設定', path: '/logistics/rates' },
-  { label: '物流追蹤', path: '/logistics/tracking' },
-  { label: '退貨管理', path: '/logistics/returns' },
-  { label: '物流分析', path: '/logistics/analytics' },
-  { label: '物流供應商', path: '/logistics/providers' }
+  // 目前僅保留物流追蹤頁
+  { label: '物流追蹤', path: '/logistics' },
+  // 如需擴充再逐步開啟：
+  // { label: '出貨管理', path: '/logistics/shipments' },
+  // { label: '運費設定', path: '/logistics/rates' },
+  // { label: '退貨管理', path: '/logistics/returns' },
+  // { label: '物流分析', path: '/logistics/analytics' },
+  // { label: '物流供應商', path: '/logistics/providers' }
 ];
 
 // Coupons 模組 tabs

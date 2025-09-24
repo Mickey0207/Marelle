@@ -51,13 +51,7 @@ import InspectionReceipt from '../../Pages/procurement/InspectionReceipt';
 import ProcurementAnalytics from '../../Pages/procurement/ProcurementAnalytics';
 
 // Logistics 模組
-import LogisticsOverview from '../../Pages/logistics/LogisticsOverview';
-import ShipmentManagement from '../../Pages/logistics/ShipmentManagement';
-import ShippingRateConfig from '../../Pages/logistics/ShippingRateConfig';
 import LogisticsTracking from '../../Pages/logistics/LogisticsTracking';
-import ReturnManagement from '../../Pages/logistics/ReturnManagement';
-import LogisticsAnalytics from '../../Pages/logistics/LogisticsAnalytics';
-import LogisticsProviders from '../../Pages/logistics/LogisticsProviders';
 
 // Coupons 模組
 import CouponManagement from '../../Pages/coupons/CouponManagementContainer';
@@ -188,13 +182,7 @@ const AppRouter = () => {
               <Route path="procurement/analytics" element={<ProcurementAnalytics />} />
 
               {/* Logistics 模組路由 */}
-              <Route path="logistics" element={<LogisticsOverview />} />
-              <Route path="logistics/shipments" element={<ShipmentManagement />} />
-              <Route path="logistics/rates" element={<ShippingRateConfig />} />
-              <Route path="logistics/tracking" element={<LogisticsTracking />} />
-              <Route path="logistics/returns" element={<ReturnManagement />} />
-              <Route path="logistics/analytics" element={<LogisticsAnalytics />} />
-              <Route path="logistics/providers" element={<LogisticsProviders />} />
+              <Route path="logistics" element={<LogisticsTracking />} />
 
               {/* Coupons 模組路由 */}
               <Route path="coupons" element={<CouponManagement />} />
