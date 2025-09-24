@@ -836,6 +836,11 @@ const AddProductAdvanced = () => {
                       baseSKU={productData.baseSKU}
                       skuVariants={productData.skuVariants}
                       onChange={(variants) => handleInputChange('skuVariants', variants)}
+                      basePrice={productData.price}
+                      baseComparePrice={productData.comparePrice}
+                      baseCostPrice={productData.costPrice}
+                      productName={productData.name}
+                      productCategories={productData.categories}
                     />
                   )}
                   

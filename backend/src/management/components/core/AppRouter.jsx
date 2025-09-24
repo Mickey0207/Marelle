@@ -156,7 +156,7 @@ const AppRouter = () => {
               {/* Products 模組路由 */}
               <Route path="products" element={<AdminProducts />} />
               <Route path="products/add" element={<AddProductAdvanced />} />
-              <Route path="products/edit/:id" element={<EditProduct />} />
+              <Route path="products/edit/:sku" element={<EditProduct />} />
 
               {/* Orders 模組路由 */}
               <Route path="orders" element={<OrderList />} />

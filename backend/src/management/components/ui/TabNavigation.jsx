@@ -12,18 +12,27 @@ const TabNavigation = ({
   basePath = '',
   layout = 'center', // 'center', 'left', 'right'
   showDescription = false,
-  onTabChange = null
+  onTabChange = null,
+  // 新增：受控模式（不依賴路由）
+  mode = 'route', // 'route' | 'controlled'
+  activeKey = null
 }) => {
   const location = useLocation();
 
   // 處理頁籤路徑，支持基礎路徑前綴
   const getTabPath = (tab) => {
-    const path = tab.path.startsWith('/') ? tab.path : `${basePath}${tab.path}`;
+    const path = (tab.path || '').startsWith('/') ? tab.path : `${basePath}${tab.path || ''}`;
     return path;
   };
 
   // 檢查是否為活躍頁籤
   const isTabActive = (tab) => {
+    // 受控模式下由 activeKey 控制
+    if (mode === 'controlled') {
+      const key = tab.key || tab.label;
+      return activeKey === key;
+    }
+
     const tabPath = getTabPath(tab);
     const currentPath = location.pathname;
     
@@ -90,54 +99,85 @@ const TabNavigation = ({
     <div className={`flex items-center space-x-6 h-16 flex-1 ${getLayoutClass()} ${className}`}>
       {tabs.map((tab) => {
         const isActive = isTabActive(tab);
-        
+        const key = tab.key || tab.label;
+
         return (
           <div 
-            key={tab.key || tab.label} 
+            key={key}
             className="relative h-full flex items-center group"
             title={showDescription && tab.description ? tab.description : undefined}
           >
-            <NavLink
-              to={getTabPath(tab)}
-              onClick={() => handleTabClick(tab)}
-              className={`font-medium font-serif text-sm tracking-wide transition-colors relative px-3 py-4 h-full flex items-center ${
-                isActive 
-                  ? 'text-[#cc824d]' 
-                  : 'text-gray-700 hover:text-[#cc824d]'
-              }`}
-            >
-              <span className="flex items-center">
-                {/* 頁籤標籤 */}
-                <span>{tab.label}</span>
-                
-                {/* 如果有圖示 */}
-                {tab.icon && (
-                  <span className="ml-1">
-                    {typeof tab.icon === 'string' ? (
-                      <i className={tab.icon} />
-                    ) : (
-                      tab.icon
-                    )}
-                  </span>
-                )}
-                
-                {/* 如果有計數 */}
-                {tab.count !== undefined && tab.count !== null && (
-                  <span className="ml-2 px-2 py-1 text-xs bg-[#cc824d]/20 text-[#cc824d] rounded-full min-w-[20px] text-center">
-                    {tab.count}
-                  </span>
-                )}
-              </span>
-              
-              {/* 底部指示線 */}
-              <span 
-                className={`absolute left-0 bottom-0 h-0.5 bg-[#cc824d] transition-all duration-300 ${
+            {mode === 'controlled' ? (
+              <button
+                type="button"
+                onClick={() => handleTabClick(tab)}
+                className={`font-medium font-serif text-sm tracking-wide transition-colors relative px-3 py-4 h-full flex items-center ${
                   isActive 
-                    ? 'w-full' 
-                    : 'w-0 group-hover:w-full'
+                    ? 'text-[#cc824d]' 
+                    : 'text-gray-700 hover:text-[#cc824d]'
                 }`}
-              />
-            </NavLink>
+              >
+                <span className="flex items-center">
+                  <span>{tab.label}</span>
+                  {tab.icon && (
+                    <span className="ml-1">
+                      {typeof tab.icon === 'string' ? (
+                        <i className={tab.icon} />
+                      ) : (
+                        tab.icon
+                      )}
+                    </span>
+                  )}
+                  {tab.count !== undefined && tab.count !== null && (
+                    <span className="ml-2 px-2 py-1 text-xs bg-[#cc824d]/20 text-[#cc824d] rounded-full min-w-[20px] text-center">
+                      {tab.count}
+                    </span>
+                  )}
+                </span>
+                <span 
+                  className={`absolute left-0 bottom-0 h-0.5 bg-[#cc824d] transition-all duration-300 ${
+                    isActive 
+                      ? 'w-full' 
+                      : 'w-0 group-hover:w-full'
+                  }`}
+                />
+              </button>
+            ) : (
+              <NavLink
+                to={getTabPath(tab)}
+                onClick={() => handleTabClick(tab)}
+                className={`font-medium font-serif text-sm tracking-wide transition-colors relative px-3 py-4 h-full flex items-center ${
+                  isActive 
+                    ? 'text-[#cc824d]' 
+                    : 'text-gray-700 hover:text-[#cc824d]'
+                }`}
+              >
+                <span className="flex items-center">
+                  <span>{tab.label}</span>
+                  {tab.icon && (
+                    <span className="ml-1">
+                      {typeof tab.icon === 'string' ? (
+                        <i className={tab.icon} />
+                      ) : (
+                        tab.icon
+                      )}
+                    </span>
+                  )}
+                  {tab.count !== undefined && tab.count !== null && (
+                    <span className="ml-2 px-2 py-1 text-xs bg-[#cc824d]/20 text-[#cc824d] rounded-full min-w-[20px] text-center">
+                      {tab.count}
+                    </span>
+                  )}
+                </span>
+                <span 
+                  className={`absolute left-0 bottom-0 h-0.5 bg-[#cc824d] transition-all duration-300 ${
+                    isActive 
+                      ? 'w-full' 
+                      : 'w-0 group-hover:w-full'
+                  }`}
+                />
+              </NavLink>
+            )}
           </div>
         );
       })}

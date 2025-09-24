@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import StandardTable from "../../components/ui/StandardTable";
+import ProductQuickViewModal from "../../components/products/ProductQuickViewModal";
 import {
   PlusIcon,
   PencilIcon,
@@ -10,12 +11,24 @@ import {
   ChevronUpIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import { mockProducts, formatPrice } from "../../../lib/data/core/data";
+// 改用擴充後的模擬商品資料（包含新增/編輯頁完整欄位）
+import { mockProducts, formatPrice } from "../../../lib/data/products/mockProductData";
 import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../../../lib/ui/adminStyles";
 // withPageTabs HOC 已移除，子頁籤導航統一在頂部管理
 
 const AdminProducts = () => {
   const [products, setProducts] = useState(mockProducts);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+
+  const openQuickView = (product) => {
+    setQuickViewProduct(product);
+    setQuickViewOpen(true);
+  };
+  const closeQuickView = () => {
+    setQuickViewOpen(false);
+    setQuickViewProduct(null);
+  };
 
   const getStockStatus = (inStock) => {
     return inStock
@@ -29,32 +42,46 @@ const AdminProducts = () => {
       key: 'name',
       label: '商品',
       sortable: true,
-      render: (_, product) => (
-        <div className="flex items-center">
-          <img
-            src={product?.image || '/placeholder-image.jpg'}
-            alt={product?.name || '產品圖片'}
-            className="w-12 h-12 object-cover rounded-lg mr-4"
-          />
-          <div>
-            <div className="font-medium text-gray-900 font-chinese">
-              {product?.name || '未知商品'}
-            </div>
-            <div className="text-sm text-gray-500 font-chinese">
-              ID: {product?.id || 'N/A'}
+      render: (_, product) => {
+        const cover = product?.image || product?.images?.[0]?.url || '/placeholder-image.jpg';
+        return (
+          <div className="flex items-center">
+            <img
+              src={cover}
+              alt={product?.name || '產品圖片'}
+              className="w-12 h-12 object-cover rounded-lg mr-4"
+            />
+            <div>
+              <div className="font-medium text-gray-900 font-chinese">
+                {product?.name || '未知商品'}
+              </div>
+              <div className="text-sm text-gray-500 font-chinese">
+                SKU: {product?.baseSKU || 'N/A'}
+              </div>
             </div>
           </div>
-        </div>
-      )
+        );
+      }
     },
     {
       key: 'category',
       label: '類別',
       sortable: true,
+      render: (_, product) => {
+        const categoryName = product?.category || product?.categories?.[0]?.name || '未分類';
+        return (
+          <span className="inline-flex px-2 py-1 text-xs font-medium bg-apricot-100 text-apricot-800 rounded-full font-chinese">
+            {categoryName}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'sku',
+      label: 'SKU',
+      sortable: true,
       render: (_, product) => (
-        <span className="inline-flex px-2 py-1 text-xs font-medium bg-apricot-100 text-apricot-800 rounded-full font-chinese">
-          {product?.category || '未分類'}
-        </span>
+        <span className="font-mono text-sm text-gray-800">{product?.baseSKU || '-'}</span>
       )
     },
     {
@@ -88,6 +115,53 @@ const AdminProducts = () => {
       }
     },
     {
+      key: 'slug',
+      label: 'Slug',
+      sortable: true,
+      render: (_, product) => (
+        <span className="text-xs text-gray-600">{product?.slug || '-'}</span>
+      )
+    },
+    {
+      key: 'status',
+      label: '狀態',
+      sortable: true,
+      render: (_, product) => {
+        const raw = (product?.status || 'draft');
+        const map = {
+          active: { text: '上架', color: 'bg-green-100 text-green-800' },
+          draft: { text: '草稿', color: 'bg-yellow-100 text-yellow-800' },
+          archived: { text: '封存', color: 'bg-gray-100 text-gray-800' }
+        };
+        const { text, color } = map[raw] || map.draft;
+        return <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${color}`}>{text}</span>;
+      }
+    },
+    {
+      key: 'visibility',
+      label: '可見性',
+      sortable: true,
+      render: (_, product) => {
+        const raw = (product?.visibility || 'visible');
+        const map = {
+          visible: { text: '可見', color: 'bg-blue-100 text-blue-800' },
+          hidden: { text: '隱藏', color: 'bg-gray-100 text-gray-800' }
+        };
+        const { text, color } = map[raw] || map.visible;
+        return <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${color}`}>{text}</span>;
+      }
+    },
+    {
+      key: 'variants',
+      label: '多變體',
+      sortable: true,
+      render: (_, product) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${product?.hasVariants ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
+          {product?.hasVariants ? '是' : '否'}
+        </span>
+      )
+    },
+    {
       key: 'rating',
       label: '評分',
       sortable: true,
@@ -109,11 +183,11 @@ const AdminProducts = () => {
       sortable: false,
       render: (_, product) => (
         <div className="flex items-center space-x-2">
-          <button className="p-2 text-gray-400 hover:text-blue-500 transition-colors">
+          <button className="p-2 text-gray-400 hover:text-blue-500 transition-colors" onClick={() => openQuickView(product)}>
             <EyeIcon className="w-4 h-4" />
           </button>
           <Link
-            to={`/admin/products/edit/${product?.id}`}
+            to={`/products/edit/${product?.baseSKU}`}
             className="p-2 text-gray-400 hover:text-green-500 transition-colors"
           >
             <PencilIcon className="w-4 h-4" />
@@ -158,6 +232,13 @@ const AdminProducts = () => {
             emptyMessage="沒有找到符合條件的商品"
           />
         </div>
+
+        {/* 快速檢視彈窗 */}
+        <ProductQuickViewModal 
+          open={quickViewOpen}
+          onClose={closeQuickView}
+          product={quickViewProduct}
+        />
       </div>
     </div>
   );

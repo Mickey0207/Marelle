@@ -14,8 +14,10 @@ import {
   Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
+import QRCodeGenerator from '../../components/ui/QRCodeGenerator';
+import ImageUpload from './ImageUpload';
 
-const NestedSKUManager = ({ baseSKU, skuVariants, onChange }) => {
+const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [] }) => {
   const [skuTree, setSKUTree] = useState([]);
   const [expandedItems, setExpandedItems] = useState(new Set());
   const [selectedSKU, setSelectedSKU] = useState(null);
@@ -102,7 +104,8 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange }) => {
     barcode: '',
     hsCode: '',
     origin: '',
-    note: ''
+    note: '',
+    variantImages: []
   });
 
   // 更新層級標題
@@ -483,6 +486,13 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange }) => {
   const autoGenerateVariants = (currentTree = null) => {
     const treeToUse = currentTree || skuTree;
     const variants = [];
+    const toNum = (v) => {
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+    const bp = toNum(basePrice);
+    const bcp = toNum(baseComparePrice);
+    const bcost = toNum(baseCostPrice);
     
     const collectLeafNodes = (nodes, accumulatedSKU = baseSKU || '', path = []) => {
       nodes.forEach(node => {
@@ -496,13 +506,29 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange }) => {
         if (!node.children || node.children.length === 0) {
           // 這是葉子節點，生成變體
           if (node.skuCode && node.skuCode.trim()) {
+            const cfg = node.config || createDefaultConfig();
+            const deltaPrice = toNum(cfg.price);
+            const deltaCompare = toNum(cfg.comparePrice);
+            const deltaCost = toNum(cfg.costPrice);
+
             variants.push({
               id: `sku-${node.id}`,
               sku: currentSKU,
               name: node.name || '未命名選項',
               path: currentPath,
               pathDisplay: currentPath.map(p => `${p.level}: ${p.option}`).join(' → '),
-              config: node.config || createDefaultConfig()
+              config: cfg,
+              // 展平部分欄位（便於驗證/提交）
+              price: cfg.price,
+              comparePrice: cfg.comparePrice,
+              costPrice: cfg.costPrice,
+              quantity: cfg.quantity,
+              trackQuantity: cfg.trackQuantity,
+              isActive: cfg.isActive,
+              // 計算最終價格（基礎價 + 差額；允許負數；無差額時等於基礎價）
+              finalPrice: bp + deltaPrice,
+              finalComparePrice: bcp + deltaCompare,
+              finalCostPrice: bcost + deltaCost
             });
           }
         } else {
@@ -524,7 +550,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange }) => {
         onChange(currentVariants);
       }
     }
-  }, [skuTree, baseSKU, isInitialized]);
+  }, [skuTree, baseSKU, isInitialized, basePrice, baseComparePrice, baseCostPrice]);
 
   return (
     <div className="space-y-6">
@@ -604,6 +630,11 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange }) => {
                 onUpdate={(field, value) => updateNode(selectedSKU.id, field, value)}
                 baseSKU={baseSKU}
                 getLevelTitle={getLevelTitle}
+                basePrice={basePrice}
+                baseComparePrice={baseComparePrice}
+                baseCostPrice={baseCostPrice}
+                productName={productName}
+                productCategories={productCategories}
               />
             </div>
           </div>
@@ -900,7 +931,7 @@ const SKUTreeNode = ({
 };
 
 // SKU 詳細設定面板組件
-const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle }) => {
+const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [] }) => {
   const stockStatus = sku.config.trackQuantity 
     ? (parseInt(sku.config.quantity) || 0) <= (parseInt(sku.config.lowStockThreshold) || 0)
       ? 'low'
@@ -908,6 +939,14 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle }) => {
     : 'unlimited';
 
   const pathInfo = sku.pathInfo || [];
+  // 計算最終價格（基礎價 + 差額）
+  const toNum = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const finalSale = toNum(basePrice) + toNum(sku.config.price);
+  const finalCompare = toNum(baseComparePrice) + toNum(sku.config.comparePrice);
+  const finalCost = toNum(baseCostPrice) + toNum(sku.config.costPrice);
 
   return (
     <div className="space-y-6">
@@ -975,6 +1014,20 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle }) => {
               className={`${ADMIN_STYLES.input} text-sm`}
               placeholder="條碼"
             />
+            {/* QR Code 預覽與下載（含指定內容） */}
+            <div className="mt-3">
+              <QRCodeGenerator
+                product={{ name: productName, categories: productCategories }}
+                sku={{
+                  sku: sku.fullSKU,
+                  salePrice: finalSale,
+                  comparePrice: finalCompare,
+                  costPrice: finalCost,
+                  variantPath: pathInfo.map((p, idx) => ({ level: p.level, option: p.option })),
+                  images: Array.isArray(sku.config.variantImages) ? sku.config.variantImages : []
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -982,6 +1035,7 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle }) => {
       {/* 價格設定 */}
       <div>
         <h6 className="text-sm font-medium text-gray-900 mb-3">價格設定</h6>
+        <p className="text-xs text-gray-500 mb-2">提示：此處輸入的是"差額"，會與定價設定中的基礎價格相加（可為負數）。</p>
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">售價 *</label>
@@ -991,9 +1045,9 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle }) => {
               onChange={(e) => onUpdate('config.price', e.target.value)}
               className={`${ADMIN_STYLES.input} text-sm`}
               placeholder="0"
-              min="0"
               step="0.01"
             />
+            <div className="mt-1 text-xs text-gray-600">最終售價：NT${Number(finalSale).toLocaleString()}</div>
           </div>
           
           <div>
@@ -1004,9 +1058,9 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle }) => {
               onChange={(e) => onUpdate('config.comparePrice', e.target.value)}
               className={`${ADMIN_STYLES.input} text-sm`}
               placeholder="0"
-              min="0"
               step="0.01"
             />
+            <div className="mt-1 text-xs text-gray-600">最終原價：NT${Number(finalCompare).toLocaleString()}</div>
           </div>
 
           <div>
@@ -1017,11 +1071,23 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle }) => {
               onChange={(e) => onUpdate('config.costPrice', e.target.value)}
               className={`${ADMIN_STYLES.input} text-sm`}
               placeholder="0"
-              min="0"
               step="0.01"
             />
+            <div className="mt-1 text-xs text-gray-600">最終成本：NT${Number(finalCost).toLocaleString()}</div>
           </div>
         </div>
+      </div>
+
+      {/* 庫存管理 */}
+      {/* 變體圖片 */}
+      <div>
+        <h6 className="text-sm font-medium text-gray-900 mb-3">變體圖片</h6>
+        <p className="text-xs text-gray-500 mb-2">此處設定「此變體」專屬圖片。若未設定，將回退使用商品圖片或無圖。</p>
+        <ImageUpload
+          images={Array.isArray(sku.config.variantImages) ? sku.config.variantImages : []}
+          onChange={(imgs) => onUpdate('config.variantImages', imgs)}
+          maxImages={3}
+        />
       </div>
 
       {/* 庫存管理 */}

@@ -8,69 +8,43 @@ import {
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
 
+// 單一模式：將「商品連結 + SKU 資訊 + 圖片」合併成一個 QR payload
+// product: { name, slug, categories?, images? }
+// sku: { sku/fullSKU, salePrice, comparePrice, costPrice, variantPath? }
 const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
   const [generating, setGenerating] = useState(false);
-  const [qrType, setQRType] = useState('product_url');
   const [generatedQR, setGeneratedQR] = useState(null);
-
-  // QR Code 類型選項
-  const qrTypes = [
-    {
-      id: 'product_url',
-      name: '商品頁面連結',
-      description: '生成商品詳情頁面的QR Code',
-      icon: LinkIcon
-    },
-    {
-      id: 'sku_info',
-      name: 'SKU資訊',
-      description: '包含SKU代碼和基本資訊的QR Code',
-      icon: DocumentTextIcon
-    },
-    {
-      id: 'product_image',
-      name: '商品圖片',
-      description: '直接連結到商品主圖的QR Code',
-      icon: PhotoIcon
-    }
-  ];
+  
 
   // 生成 QR Code 數據
-  const generateQRData = (type) => {
+  const generateQRData = () => {
     const baseUrl = window.location.origin;
-    
-    switch (type) {
-      case 'product_url':
-        return {
-          type: 'product_url',
-          url: `${baseUrl}/products/${product.urlSlug?.['zh-TW'] || product.id}`,
-          title: product.name?.['zh-TW'] || product.name,
-          description: '掃描查看商品詳情'
-        };
-        
-      case 'sku_info':
-        return {
-          type: 'sku_info',
-          sku: sku?.sku || `${product.skuPrefix}BASE`,
-          productName: product.name?.['zh-TW'] || product.name,
-          price: sku?.originalPrice || product.baseOriginalPrice,
-          variantInfo: sku?.variantPath?.map(v => 
-            `${v.levelName['zh-TW']}: ${v.optionName['zh-TW']}`
-          ).join(' / ') || '基本款',
-          description: 'SKU商品資訊'
-        };
-        
-      case 'product_image':
-        return {
-          type: 'product_image',
-          imageUrl: product.mainImageUrl || (product.images && product.images[0]) || '',
-          productName: product.name?.['zh-TW'] || product.name,
-          description: '商品圖片'
-        };
-        
-      default:
-        return null;
-    }
+    const productName = product?.name?.['zh-TW'] || product?.name || '';
+    const variantPath = Array.isArray(sku?.variantPath) ? sku.variantPath : [];
+    const variantInfo = variantPath.map((v, i) => {
+      const level = v?.levelName?.['zh-TW'] || v?.level || `層級${i + 1}`;
+      const option = v?.optionName?.['zh-TW'] || v?.option || '選項';
+      return `${level}: ${option}`;
+    }).join(' / ') || '基本款';
+    const categories = Array.isArray(product?.categories) ? product.categories.map(c => (c?.name?.['zh-TW'] || c?.name || c?.title || c?.slug || c?.id)).filter(Boolean) : [];
+    const url = `${baseUrl}/products/${product?.slug || product?.urlSlug?.['zh-TW'] || product?.id || ''}`;
+    // 圖片：優先使用變體圖片，其次用產品主圖
+    const variantImage = Array.isArray(sku?.images) && sku.images.length > 0 ? sku.images[0]?.url || sku.images[0] : null;
+    const productImage = Array.isArray(product?.images) && product.images.length > 0 ? product.images[0]?.url || product.images[0] : null;
+    const imageUrl = variantImage || productImage || '';
+    return {
+      type: 'product_bundle',
+      url,
+      productName,
+      sku: sku?.sku || sku?.fullSKU || `${product?.skuPrefix || ''}BASE`,
+      salePrice: sku?.salePrice ?? sku?.price ?? product?.price ?? null,
+      comparePrice: sku?.comparePrice ?? product?.comparePrice ?? null,
+      costPrice: sku?.costPrice ?? product?.costPrice ?? null,
+      variantInfo,
+      categories,
+      imageUrl,
+      description: '商品連結 + SKU 資訊 + 圖片'
+    };
   };
 
   // 模擬 QR Code 生成 (實際專案中會調用 QR Code 庫)
@@ -112,7 +86,7 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
     setGenerating(true);
     
     try {
-      const qrData = generateQRData(qrType);
+      const qrData = generateQRData();
       if (!qrData) {
         throw new Error('無效的QR Code類型');
       }
@@ -124,7 +98,7 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
       
       const qrResult = {
         id: Date.now(),
-        type: qrType,
+        type: qrData.type,
         data: qrData,
         imageUrl: qrImageUrl,
         productId: product.id,
@@ -172,53 +146,7 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
     <div className="qr-generator glass rounded-lg p-6">
       <div className="flex items-center mb-4">
         <QrCodeIcon className="w-6 h-6 text-[#cc824d] mr-2" />
-        <h3 className="text-lg font-semibold text-gray-900 font-chinese">QR Code 生成器</h3>
-      </div>
-
-      {/* QR Code 類型選擇 */}
-      <div className="space-y-3 mb-6">
-        <label className="block text-sm font-medium text-gray-700 font-chinese">選擇QR Code類型</label>
-        <div className="grid grid-cols-1 gap-3">
-          {qrTypes.map(type => {
-            const Icon = type.icon;
-            return (
-              <label key={type.id} className="relative">
-                <input
-                  type="radio"
-                  name="qr-type"
-                  value={type.id}
-                  checked={qrType === type.id}
-                  onChange={(e) => setQRType(e.target.value)}
-                  className="sr-only"
-                />
-                <div className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  qrType === type.id 
-                    ? 'border-[#cc824d] bg-[#cc824d]/10' 
-                    : 'border-gray-300 hover:border-[#cc824d]/50'
-                }`}>
-                  <div className="flex items-start">
-                    <Icon className={`w-5 h-5 mr-3 mt-0.5 ${
-                      qrType === type.id ? 'text-[#cc824d]' : 'text-gray-400'
-                    }`} />
-                    <div>
-                      <div className={`font-medium font-chinese ${
-                        qrType === type.id ? 'text-[#cc824d]' : 'text-gray-900'
-                      }`}>
-                        {type.name}
-                      </div>
-                      <div className="text-sm text-gray-600 font-chinese">
-                        {type.description}
-                      </div>
-                    </div>
-                    {qrType === type.id && (
-                      <CheckCircleIcon className="w-5 h-5 text-[#cc824d] ml-auto" />
-                    )}
-                  </div>
-                </div>
-              </label>
-            );
-          })}
-        </div>
+        <h3 className="text-lg font-semibold text-gray-900 font-chinese">QR Code 生成器（整合版）</h3>
       </div>
 
       {/* 生成按鈕 */}
@@ -273,7 +201,7 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
                 className="w-48 h-48 mx-auto border rounded-lg shadow-md"
               />
               <p className="text-sm text-gray-600 mt-2 font-chinese">
-                {qrTypes.find(t => t.id === generatedQR.type)?.name}
+                商品連結 + SKU 資訊 + 圖片
               </p>
             </div>
 
@@ -290,6 +218,13 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
                   <p className="text-sm text-gray-900 break-all">{generatedQR.data.url}</p>
                 </div>
               )}
+              {generatedQR.data.imageUrl && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 font-chinese">圖片</label>
+                  <img src={generatedQR.data.imageUrl} alt="Variant/Product" className="w-24 h-24 object-cover rounded border" />
+                </div>
+              )}
+
               
               {generatedQR.data.sku && (
                 <div>
@@ -302,6 +237,30 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 font-chinese">變體資訊</label>
                   <p className="text-sm text-gray-900">{generatedQR.data.variantInfo}</p>
+                </div>
+              )}
+
+              {typeof generatedQR.data.salePrice !== 'undefined' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 font-chinese">售價</label>
+                    <p className="text-sm text-gray-900">{generatedQR.data.salePrice != null ? `NT$${Number(generatedQR.data.salePrice).toLocaleString()}` : '-'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 font-chinese">原價</label>
+                    <p className="text-sm text-gray-900">{generatedQR.data.comparePrice != null ? `NT$${Number(generatedQR.data.comparePrice).toLocaleString()}` : '-'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 font-chinese">成本價</label>
+                    <p className="text-sm text-gray-900">{generatedQR.data.costPrice != null ? `NT$${Number(generatedQR.data.costPrice).toLocaleString()}` : '-'}</p>
+                  </div>
+                </div>
+              )}
+
+              {Array.isArray(generatedQR.data.categories) && generatedQR.data.categories.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 font-chinese">分類</label>
+                  <p className="text-sm text-gray-900">{generatedQR.data.categories.join(' / ')}</p>
                 </div>
               )}
               
