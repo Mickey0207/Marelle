@@ -1,822 +1,804 @@
-// 物流管理系統數據層
-// 基於 Marelle 電商平台的物流功能實現
+// 模擬資料與資料存取：綠界物流查詢與狀態通知
+// 依據官方文件：
+// - 查詢物流訂單：https://developers.ecpay.com.tw/?p=10171
+// - 物流狀態通知：https://developers.ecpay.com.tw/?p=10127
 
-// 物流配送類型定義
-export const LogisticsType = {
-  CONVENIENCE_STORE: 'convenience_store',     // 超商取貨
-  HOME_DELIVERY: 'home_delivery',             // 宅配到府
-  POST_OFFICE: 'post_office',                 // 郵局配送
-  EXPRESS: 'express',                         // 快遞
-  PICKUP: 'pickup'                            // 自取
+// 查詢物流訂單欄位模型（回應）
+// 注意：實際 ECPay 會回傳字串與特定格式；此處以模擬資料為主。
+
+const mockTrackingOrders = [
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '1234567',
+    LogisticsID: '1234567',
+    LogisticsType: 'Home',
+    LogisticsSubType: 'TCAT',
+    GoodsAmount: 1280,
+    GoodsName: '示例商品A',
+    Status: '300',
+    LogisticsStatus: '300',
+    TradeNo: '220000000001',
+    MerchantTradeNo: 'M202509240001',
+    UpdateStatusDate: '2025/09/24 10:23:45',
+    TradeDate: '2025/09/23 09:12:34',
+    HandlingCharge: 120,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: '王小明',
+    ReceiverPhone: '0912345678',
+    ReceiverCellPhone: '0912345678',
+    ReceiverEmail: 'user@example.com',
+    ReceiverAddress: '台北市信義區市府路45號',
+    SenderName: '商店出貨部',
+    SenderPhone: '0223456789',
+    SenderCellPhone: '0911222333',
+    CVSStoreID: '',
+    CVSStoreName: '',
+    CVSAddress: '',
+    CVSOutSide: '',
+    CVSPaymentNo: '',
+    CVSValidationNo: '',
+    BookingNote: 'HOME托運單-ABC123456',
+    ShipmentNo: '',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '2025/09/24',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654321',
+    LogisticsID: '7654321',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMART',
+    GoodsAmount: 560,
+    GoodsName: '示例商品B',
+    Status: '2063',
+    LogisticsStatus: '2063',
+    TradeNo: '220000000002',
+    MerchantTradeNo: 'M202509240002',
+    UpdateStatusDate: '2025/09/23 16:05:12',
+    TradeDate: '2025/09/22 14:22:01',
+    HandlingCharge: 60,
+    CollectionAmount: 560,
+    CollectionChargeFee: 10,
+    ReceiverName: '陳小華',
+    ReceiverPhone: '0223456789',
+    ReceiverCellPhone: '0987654321',
+    ReceiverEmail: 'test@example.com',
+    ReceiverAddress: '',
+    SenderName: '商店門市',
+    SenderPhone: '022221111',
+    SenderCellPhone: '0912000111',
+    CVSStoreID: '1234',
+    CVSStoreName: '台北市政府門市',
+    CVSAddress: '台北市信義區信義路五段7號B1',
+    CVSOutSide: 'OPENPOINT店外代碼',
+    CVSPaymentNo: 'A123456789',
+    CVSValidationNo: 'B987654321',
+    BookingNote: '貨到付款',
+    ShipmentNo: 'C2C-UNIMART-00001',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '2025/09/25',
+    CollectionAllocateAmount: 550,
+  },
+  // CVS B2C - 7-11 到店後成功取件
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654322',
+    LogisticsID: '7654322',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMART',
+    GoodsAmount: 899,
+    GoodsName: '7-11 B2C 商品',
+    Status: '2067', // 成功取件
+    LogisticsStatus: '2067',
+    TradeNo: '220000000003',
+    MerchantTradeNo: 'M202509240003',
+    UpdateStatusDate: '2025/09/24 18:12:00',
+    TradeDate: '2025/09/22 08:01:22',
+    HandlingCharge: 65,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: '林小姐',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0918111222',
+    ReceiverEmail: '',
+    ReceiverAddress: '',
+    SenderName: '電商出貨',
+    SenderPhone: '022200000',
+    SenderCellPhone: '',
+    CVSStoreID: '8888',
+    CVSStoreName: '市府二門市',
+    CVSAddress: '台北市信義區市府路1號',
+    CVSOutSide: '',
+    CVSPaymentNo: '', // B2C 用 ShipmentNo
+    CVSValidationNo: '',
+    BookingNote: '',
+    ShipmentNo: 'B2C-UNIMART-99001',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  // CVS C2C - 7-11 七天未取件
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654323',
+    LogisticsID: '7654323',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMARTC2C',
+    GoodsAmount: 399,
+    GoodsName: '7-11 C2C 商品',
+    Status: '2074', // 七天未取件
+    LogisticsStatus: '2074',
+    TradeNo: '220000000004',
+    MerchantTradeNo: 'M202509240004',
+    UpdateStatusDate: '2025/09/24 20:15:00',
+    TradeDate: '2025/09/20 12:00:00',
+    HandlingCharge: 60,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: '郭小明',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0915000111',
+    ReceiverEmail: 'c2c@example.com',
+    ReceiverAddress: '',
+    SenderName: '賣家甲',
+    SenderPhone: '',
+    SenderCellPhone: '0912123123',
+    CVSStoreID: '7001',
+    CVSStoreName: '松仁門市',
+    CVSAddress: '台北市信義區松仁路3號',
+    CVSOutSide: '',
+    CVSPaymentNo: '711-ABC123456',
+    CVSValidationNo: '55',
+    BookingNote: 'C2C',
+    ShipmentNo: '',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  // CVS C2C - 7-11 二次進店（取件門市）
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654324',
+    LogisticsID: '7654324',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMARTC2C',
+    GoodsAmount: 499,
+    GoodsName: '7-11 C2C 二次進店',
+    Status: '2098',
+    LogisticsStatus: '2098',
+    TradeNo: '220000000005',
+    MerchantTradeNo: 'M202509240005',
+    UpdateStatusDate: '2025/09/24 21:05:00',
+    TradeDate: '2025/09/21 09:00:00',
+    HandlingCharge: 60,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: '江小姐',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0916000222',
+    ReceiverEmail: '',
+    ReceiverAddress: '',
+    SenderName: '賣家乙',
+    SenderPhone: '',
+    SenderCellPhone: '0966123123',
+    CVSStoreID: '7002',
+    CVSStoreName: '松壽門市',
+    CVSAddress: '台北市信義區松壽路9號',
+    CVSOutSide: '店外代碼示意',
+    CVSPaymentNo: '711-DEF222333',
+    CVSValidationNo: '99',
+    BookingNote: 'C2C',
+    ShipmentNo: '',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  // CVS C2C - 7-11 二次進店（寄件門市）
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654325',
+    LogisticsID: '7654325',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMARTC2C',
+    GoodsAmount: 299,
+    GoodsName: '7-11 C2C 二次進店(寄件門市)',
+    Status: '2099',
+    LogisticsStatus: '2099',
+    TradeNo: '220000000006',
+    MerchantTradeNo: 'M202509240006',
+    UpdateStatusDate: '2025/09/24 21:10:00',
+    TradeDate: '2025/09/21 10:00:00',
+    HandlingCharge: 60,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: '趙先生',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0916111333',
+    ReceiverEmail: '',
+    ReceiverAddress: '',
+    SenderName: '賣家丙',
+    SenderPhone: '',
+    SenderCellPhone: '0922123555',
+    CVSStoreID: '7003',
+    CVSStoreName: '松德門市',
+    CVSAddress: '台北市信義區松德路88號',
+    CVSOutSide: '',
+    CVSPaymentNo: '711-GHI333444',
+    CVSValidationNo: '01',
+    BookingNote: 'C2C',
+    ShipmentNo: '',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  // CVS B2C - 全家 B2C（ShipmentNo）
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654326',
+    LogisticsID: '7654326',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'FAMI',
+    GoodsAmount: 1200,
+    GoodsName: '全家 B2C',
+    Status: '3018', // 到店
+    LogisticsStatus: '3018',
+    TradeNo: '220000000007',
+    MerchantTradeNo: 'M202509240007',
+    UpdateStatusDate: '2025/09/24 11:00:00',
+    TradeDate: '2025/09/22 10:10:10',
+    HandlingCharge: 65,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: '全家收件人',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0977000123',
+    ReceiverEmail: '',
+    ReceiverAddress: '',
+    SenderName: '電商出貨',
+    SenderPhone: '022222222',
+    SenderCellPhone: '',
+    CVSStoreID: 'F001',
+    CVSStoreName: '全家信義店',
+    CVSAddress: '台北市信義區忠孝東路五段8號',
+    CVSOutSide: '',
+    CVSPaymentNo: '',
+    CVSValidationNo: '',
+    BookingNote: '',
+    ShipmentNo: 'B2C-FAMI-10001',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  // CVS C2C - 全家 C2C（CVSPaymentNo）
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654327',
+    LogisticsID: '7654327',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'FAMIC2C',
+    GoodsAmount: 780,
+    GoodsName: '全家 C2C',
+    Status: '3022', // 取件成功（等價流程）
+    LogisticsStatus: '3022',
+    TradeNo: '220000000008',
+    MerchantTradeNo: 'M202509240008',
+    UpdateStatusDate: '2025/09/24 15:45:00',
+    TradeDate: '2025/09/22 11:22:33',
+    HandlingCharge: 60,
+    CollectionAmount: 780,
+    CollectionChargeFee: 15,
+    ReceiverName: '全家收件人2',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0966333555',
+    ReceiverEmail: 'fami@example.com',
+    ReceiverAddress: '',
+    SenderName: '賣家丁',
+    SenderPhone: '',
+    SenderCellPhone: '0912000444',
+    CVSStoreID: 'F002',
+    CVSStoreName: '全家松仁店',
+    CVSAddress: '台北市信義區松仁路9號',
+    CVSOutSide: '',
+    CVSPaymentNo: 'FAMI-444555666',
+    CVSValidationNo: '',
+    BookingNote: 'COD',
+    ShipmentNo: '',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '2025/09/26',
+    CollectionAllocateAmount: 765,
+  },
+  // CVS B2C - 萊爾富
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654328',
+    LogisticsID: '7654328',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'HILIFE',
+    GoodsAmount: 999,
+    GoodsName: '萊爾富 B2C',
+    Status: '3018',
+    LogisticsStatus: '3018',
+    TradeNo: '220000000009',
+    MerchantTradeNo: 'M202509240009',
+    UpdateStatusDate: '2025/09/24 09:30:00',
+    TradeDate: '2025/09/21 18:30:00',
+    HandlingCharge: 65,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: '萊爾富收件人',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0955111222',
+    ReceiverEmail: '',
+    ReceiverAddress: '',
+    SenderName: '電商出貨',
+    SenderPhone: '',
+    SenderCellPhone: '',
+    CVSStoreID: 'HL01',
+    CVSStoreName: '萊爾富信義店',
+    CVSAddress: '台北市信義區松仁路100號',
+    CVSOutSide: '',
+    CVSPaymentNo: '',
+    CVSValidationNo: '',
+    BookingNote: '',
+    ShipmentNo: 'B2C-HILIFE-10001',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  // CVS C2C - 萊爾富
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654329',
+    LogisticsID: '7654329',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'HILIFEC2C',
+    GoodsAmount: 420,
+    GoodsName: '萊爾富 C2C',
+    Status: '3020', // 未取
+    LogisticsStatus: '3020',
+    TradeNo: '220000000010',
+    MerchantTradeNo: 'M202509240010',
+    UpdateStatusDate: '2025/09/24 13:15:00',
+    TradeDate: '2025/09/21 12:05:00',
+    HandlingCharge: 60,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: 'HL C2C 收件',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0955000555',
+    ReceiverEmail: '',
+    ReceiverAddress: '',
+    SenderName: '賣家戊',
+    SenderPhone: '',
+    SenderCellPhone: '0912555666',
+    CVSStoreID: 'HL02',
+    CVSStoreName: '萊爾富松德店',
+    CVSAddress: '台北市信義區松德路10號',
+    CVSOutSide: '',
+    CVSPaymentNo: 'HL-1122334455',
+    CVSValidationNo: '',
+    BookingNote: '',
+    ShipmentNo: '',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  // CVS B2C - OK 超商
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654330',
+    LogisticsID: '7654330',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'OKMART',
+    GoodsAmount: 288,
+    GoodsName: 'OK B2C',
+    Status: '3018',
+    LogisticsStatus: '3018',
+    TradeNo: '220000000011',
+    MerchantTradeNo: 'M202509240011',
+    UpdateStatusDate: '2025/09/24 07:20:00',
+    TradeDate: '2025/09/21 07:20:00',
+    HandlingCharge: 65,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: 'OK收件',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0933777888',
+    ReceiverEmail: '',
+    ReceiverAddress: '',
+    SenderName: '電商出貨',
+    SenderPhone: '',
+    SenderCellPhone: '',
+    CVSStoreID: 'OK01',
+    CVSStoreName: 'OK信義店',
+    CVSAddress: '台北市信義區松仁路88號',
+    CVSOutSide: '',
+    CVSPaymentNo: '',
+    CVSValidationNo: '',
+    BookingNote: '',
+    ShipmentNo: 'B2C-OKMART-88888',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  // CVS C2C - OK 超商
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '7654331',
+    LogisticsID: '7654331',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'OKMARTC2C',
+    GoodsAmount: 350,
+    GoodsName: 'OK C2C',
+    Status: '3022',
+    LogisticsStatus: '3022',
+    TradeNo: '220000000012',
+    MerchantTradeNo: 'M202509240012',
+    UpdateStatusDate: '2025/09/24 08:00:00',
+    TradeDate: '2025/09/21 08:00:00',
+    HandlingCharge: 60,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: 'OKC2C 收件',
+    ReceiverPhone: '',
+    ReceiverCellPhone: '0933555666',
+    ReceiverEmail: '',
+    ReceiverAddress: '',
+    SenderName: '賣家己',
+    SenderPhone: '',
+    SenderCellPhone: '0912333444',
+    CVSStoreID: 'OK02',
+    CVSStoreName: 'OK松德店',
+    CVSAddress: '台北市信義區松德路99號',
+    CVSOutSide: '',
+    CVSPaymentNo: 'OK-5566778899',
+    CVSValidationNo: '',
+    BookingNote: '',
+    ShipmentNo: '',
+    GoodsWeight: '',
+    ActualWeight: '',
+    ShipChargeDate: '',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  },
+  // HOME - 中華郵政（重量欄位）
+  {
+    MerchantID: '2000132',
+    RtnCode: 1,
+    RtnMsg: '成功',
+    AllPayLogisticsID: '1234568',
+    LogisticsID: '1234568',
+    LogisticsType: 'Home',
+    LogisticsSubType: 'POST',
+    GoodsAmount: 1500,
+    GoodsName: '宅配-郵局',
+    Status: '3024', // 已送至物流中心
+    LogisticsStatus: '3024',
+    TradeNo: '220000000013',
+    MerchantTradeNo: 'M202509240013',
+    UpdateStatusDate: '2025/09/24 12:34:56',
+    TradeDate: '2025/09/22 12:00:00',
+    HandlingCharge: 150,
+    CollectionAmount: 0,
+    CollectionChargeFee: 0,
+    ReceiverName: '張先生',
+    ReceiverPhone: '0222111999',
+    ReceiverCellPhone: '',
+    ReceiverEmail: 'post@example.com',
+    ReceiverAddress: '新北市板橋區文化路一段1號',
+    SenderName: '商店出貨部',
+    SenderPhone: '0223456789',
+    SenderCellPhone: '',
+    CVSStoreID: '',
+    CVSStoreName: '',
+    CVSAddress: '',
+    CVSOutSide: '',
+    CVSPaymentNo: '',
+    CVSValidationNo: '',
+    BookingNote: '郵局托運單-POST0001',
+    ShipmentNo: '',
+    GoodsWeight: 9.876,
+    ActualWeight: 10.123,
+    ShipChargeDate: '2025/09/25',
+    CollectionAllocateDate: '',
+    CollectionAllocateAmount: 0,
+  }
+];
+
+// 匯入完整狀態碼對照（由 scripts/generateLogisticsStatus.js 產出）
+// 使用靜態匯入以避免生產建置時的 top-level await 問題
+import generatedStatusJson from './logistics_status.json';
+const generatedStatus = (generatedStatusJson && generatedStatusJson.flat)
+  ? generatedStatusJson
+  : { flat: {}, detailed: {} };
+
+// 內建少量 fallback 狀態碼，若 JSON 尚未生成可先顯示
+const FALLBACK_STATUS = {
+  '300': '已取件/已收件',
+  '2063': '門市已到店',
+  '2098': '新增貨態',
+  '3123': '新增貨態',
 };
 
-// 物流狀態
-export const LogisticsStatus = {
-  CREATED: 'created',                         // 物流單已建立
-  PICKED_UP: 'picked_up',                     // 商品已取貨
-  IN_TRANSIT: 'in_transit',                   // 運送中
-  OUT_FOR_DELIVERY: 'out_for_delivery',       // 派送中
-  DELIVERED: 'delivered',                     // 已送達
-  READY_FOR_PICKUP: 'ready_for_pickup',       // 可取貨（超商）
-  PICKED_UP_BY_CUSTOMER: 'picked_up_by_customer', // 客戶已取貨
-  FAILED_DELIVERY: 'failed_delivery',         // 派送失敗
-  RETURNED: 'returned',                       // 已退回
-  CANCELLED: 'cancelled'                      // 已取消
+export const ECPAY_STATUS_MAP = {
+  ...FALLBACK_STATUS,
+  ...(generatedStatus.flat || {}),
 };
 
-// 運費計算方式
-export const CalculationMethod = {
-  WEIGHT: 'weight',                           // 重量計費
-  VOLUME: 'volume',                           // 體積計費
-  AMOUNT: 'amount',                           // 金額計費
-  QUANTITY: 'quantity',                       // 數量計費
-  FIXED: 'fixed'                              // 固定費用
-};
-
-// 退貨方式
-export const ReturnMethod = {
-  CONVENIENCE_STORE: 'convenience_store',     // 超商退貨
-  HOME_PICKUP: 'home_pickup',                 // 宅配到府收件
-  POST_OFFICE: 'post_office'                  // 郵局寄回
-};
-
-// 退貨費用政策
-export const ReturnFeePolicy = {
-  CUSTOMER_PAYS: 'customer_pays',             // 買家負擔
-  MERCHANT_PAYS: 'merchant_pays',             // 賣家負擔
-  CONDITIONAL: 'conditional'                  // 條件式負擔
-};
-
-class LogisticsDataManager {
-  constructor() {
-    this.shipments = [];
-    this.shippingRates = [];
-    this.returns = [];
-    this.trackingHistory = [];
-    this.analytics = {};
-    
-    this.initializeData();
-  }
-
-  // 初始化範例數據
-  initializeData() {
-    const savedShipments = localStorage.getItem('marelle-shipments');
-    const savedRates = localStorage.getItem('marelle-shipping-rates');
-    const savedReturns = localStorage.getItem('marelle-returns');
-    
-    if (savedShipments) {
-      this.shipments = JSON.parse(savedShipments);
-    } else {
-      this.generateSampleShipments();
-    }
-    
-    if (savedRates) {
-      this.shippingRates = JSON.parse(savedRates);
-    } else {
-      this.generateSampleShippingRates();
-    }
-    
-    if (savedReturns) {
-      this.returns = JSON.parse(savedReturns);
-    } else {
-      this.generateSampleReturns();
-    }
-    
-    this.generateAnalytics();
-  }
-
-  // 生成範例配送數據
-  generateSampleShipments() {
-    const sampleShipments = [
-      {
-        id: 'ship_001',
-        orderId: 'order_001',
-        orderNumber: 'M2024091601',
-        logisticsType: LogisticsType.HOME_DELIVERY,
-        status: LogisticsStatus.IN_TRANSIT,
-        trackingNumber: 'TW240916001',
-        senderInfo: {
-          name: 'Marelle Beauty',
-          phone: '02-2345-6789',
-          address: '台北市信義區松高路123號'
-        },
-        receiverInfo: {
-          name: '陳小美',
-          phone: '0912-345-678',
-          email: 'chen@example.com',
-          address: '台北市大安區復興南路456號'
-        },
-        packageInfo: {
-          weight: 1.2,
-          volume: 0.015,
-          items: [
-            { name: '玫瑰精華面膜', quantity: 2 },
-            { name: '薰衣草舒緩霜', quantity: 1 }
-          ]
-        },
-        shippingFee: 120,
-        estimatedDelivery: new Date('2024-09-18').toISOString(),
-        actualDelivery: null,
-        createdAt: new Date('2024-09-16T10:30:00').toISOString(),
-        updatedAt: new Date('2024-09-16T14:20:00').toISOString()
-      },
-      {
-        id: 'ship_002',
-        orderId: 'order_002',
-        orderNumber: 'M2024091602',
-        logisticsType: LogisticsType.CONVENIENCE_STORE,
-        status: LogisticsStatus.READY_FOR_PICKUP,
-        trackingNumber: 'CV240916002',
-        senderInfo: {
-          name: 'Marelle Beauty',
-          phone: '02-2345-6789',
-          address: '台北市信義區松高路123號'
-        },
-        receiverInfo: {
-          name: '王小雅',
-          phone: '0987-654-321',
-          email: 'wang@example.com',
-          storeInfo: {
-            id: '7-11_001',
-            name: '統一超商復興門市',
-            address: '台北市大安區復興南路789號',
-            phone: '02-2708-1234'
-          }
-        },
-        packageInfo: {
-          weight: 0.8,
-          volume: 0.01,
-          items: [
-            { name: '維他命C精華液', quantity: 1 },
-            { name: '蜂蜜修護乳霜', quantity: 1 }
-          ]
-        },
-        shippingFee: 60,
-        estimatedDelivery: new Date('2024-09-17').toISOString(),
-        actualDelivery: null,
-        createdAt: new Date('2024-09-16T09:15:00').toISOString(),
-        updatedAt: new Date('2024-09-16T16:45:00').toISOString()
-      },
-      {
-        id: 'ship_003',
-        orderId: 'order_003',
-        orderNumber: 'M2024091603',
-        logisticsType: LogisticsType.EXPRESS,
-        status: LogisticsStatus.DELIVERED,
-        trackingNumber: 'EX240915001',
-        senderInfo: {
-          name: 'Marelle Beauty',
-          phone: '02-2345-6789',
-          address: '台北市信義區松高路123號'
-        },
-        receiverInfo: {
-          name: '李小花',
-          phone: '0956-789-012',
-          email: 'lee@example.com',
-          address: '新北市板橋區文化路321號'
-        },
-        packageInfo: {
-          weight: 2.1,
-          volume: 0.025,
-          items: [
-            { name: '綠茶潔面慕斯', quantity: 3 },
-            { name: '玫瑰精華面膜', quantity: 2 }
-          ]
-        },
-        shippingFee: 150,
-        estimatedDelivery: new Date('2024-09-16').toISOString(),
-        actualDelivery: new Date('2024-09-16T11:30:00').toISOString(),
-        createdAt: new Date('2024-09-15T14:20:00').toISOString(),
-        updatedAt: new Date('2024-09-16T11:30:00').toISOString()
-      }
-    ];
-
-    this.shipments = sampleShipments;
-    this.saveToStorage();
-  }
-
-  // 生成範例運費設定
-  generateSampleShippingRates() {
-    const sampleRates = [
-      {
-        id: 'rate_001',
-        name: '一般宅配',
-        logisticsTypes: [LogisticsType.HOME_DELIVERY],
-        calculationMethod: CalculationMethod.WEIGHT,
-        baseRate: 80,
-        tiers: [
-          { min: 0, max: 1, rate: 80 },
-          { min: 1, max: 3, rate: 120 },
-          { min: 3, max: 5, rate: 160 },
-          { min: 5, max: 999, rate: 200 }
-        ],
-        freeShippingThreshold: 1000,
-        isActive: true,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'rate_002',
-        name: '超商取貨',
-        logisticsTypes: [LogisticsType.CONVENIENCE_STORE],
-        calculationMethod: CalculationMethod.FIXED,
-        baseRate: 60,
-        tiers: [
-          { min: 0, max: 999, rate: 60 }
-        ],
-        freeShippingThreshold: 800,
-        isActive: true,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'rate_003',
-        name: '快遞配送',
-        logisticsTypes: [LogisticsType.EXPRESS],
-        calculationMethod: CalculationMethod.WEIGHT,
-        baseRate: 150,
-        tiers: [
-          { min: 0, max: 1, rate: 150 },
-          { min: 1, max: 3, rate: 180 },
-          { min: 3, max: 5, rate: 220 },
-          { min: 5, max: 999, rate: 280 }
-        ],
-        freeShippingThreshold: 1500,
-        isActive: true,
-        createdAt: new Date().toISOString()
-      }
-    ];
-
-    this.shippingRates = sampleRates;
-    this.saveToStorage();
-  }
-
-  // 生成範例退貨數據
-  generateSampleReturns() {
-    const sampleReturns = [
-      {
-        id: 'return_001',
-        orderId: 'order_001',
-        shipmentId: 'ship_001',
-        returnMethod: ReturnMethod.HOME_PICKUP,
-        reason: '商品瑕疵',
-        status: 'processing',
-        returnTrackingNumber: 'RT240916001',
-        shippingFee: 120,
-        feeResponsibility: ReturnFeePolicy.MERCHANT_PAYS,
-        items: [
-          { name: '玫瑰精華面膜', quantity: 1, reason: '包裝破損' }
-        ],
-        customerInfo: {
-          name: '陳小美',
-          phone: '0912-345-678',
-          address: '台北市大安區復興南路456號'
-        },
-        expectedReturnDate: new Date('2024-09-18').toISOString(),
-        actualReturnDate: null,
-        refundAmount: 850,
-        createdAt: new Date('2024-09-16T15:30:00').toISOString(),
-        updatedAt: new Date('2024-09-16T15:30:00').toISOString()
-      },
-      {
-        id: 'return_002',
-        orderId: 'order_004',
-        shipmentId: 'ship_004',
-        returnMethod: ReturnMethod.CONVENIENCE_STORE,
-        reason: '不符合期待',
-        status: 'completed',
-        returnTrackingNumber: 'RT240915001',
-        shippingFee: 60,
-        feeResponsibility: ReturnFeePolicy.CUSTOMER_PAYS,
-        items: [
-          { name: '維他命C精華液', quantity: 1, reason: '不適合膚質' }
-        ],
-        customerInfo: {
-          name: '張小華',
-          phone: '0923-456-789'
-        },
-        expectedReturnDate: new Date('2024-09-16').toISOString(),
-        actualReturnDate: new Date('2024-09-16T09:20:00').toISOString(),
-        refundAmount: 1140, // 1200 - 60 運費
-        createdAt: new Date('2024-09-15T11:15:00').toISOString(),
-        updatedAt: new Date('2024-09-16T10:30:00').toISOString()
-      }
-    ];
-
-    this.returns = sampleReturns;
-    this.saveToStorage();
-  }
-
-  // 生成分析數據
-  generateAnalytics() {
-    this.analytics = {
-      deliveryPerformance: {
-        averageDeliveryTime: 1.8, // 天
-        onTimeDeliveryRate: 92.5, // %
-        failedDeliveryRate: 2.1, // %
-        customerSatisfactionScore: 4.6 // 1-5分
-      },
-      costAnalysis: {
-        totalShippingCosts: 156420,
-        averageCostPerOrder: 118,
-        freeShippingImpact: 23.5, // %
-        returnShippingCosts: 8940
-      },
-      methodPreferences: {
-        convenienceStorePickup: 45, // %
-        homeDelivery: 38, // %
-        expressDelivery: 12, // %
-        postOfficeDelivery: 5 // %
-      },
-      regionalAnalysis: [
-        {
-          region: '台北市',
-          orderVolume: 856,
-          averageDeliveryTime: 1.2,
-          shippingCostPerOrder: 95
-        },
-        {
-          region: '新北市',
-          orderVolume: 623,
-          averageDeliveryTime: 1.5,
-          shippingCostPerOrder: 108
-        },
-        {
-          region: '桃園市',
-          orderVolume: 412,
-          averageDeliveryTime: 1.8,
-          shippingCostPerOrder: 125
-        },
-        {
-          region: '台中市',
-          orderVolume: 387,
-          averageDeliveryTime: 2.1,
-          shippingCostPerOrder: 135
-        }
-      ]
-    };
-  }
-
-  // 保存到本地存儲
-  saveToStorage() {
-    localStorage.setItem('marelle-shipments', JSON.stringify(this.shipments));
-    localStorage.setItem('marelle-shipping-rates', JSON.stringify(this.shippingRates));
-    localStorage.setItem('marelle-returns', JSON.stringify(this.returns));
-  }
-
-  // =============================================================================
-  // 配送管理 CRUD 操作
-  // =============================================================================
-
-  // 獲取所有配送單
-  getAllShipments() {
-    return this.shipments;
-  }
-
-  // 根據ID獲取配送單
-  getShipmentById(id) {
-    return this.shipments.find(shipment => shipment.id === id);
-  }
-
-  // 根據訂單ID獲取配送單
-  getShipmentByOrderId(orderId) {
-    return this.shipments.find(shipment => shipment.orderId === orderId);
-  }
-
-  // 創建新配送單
-  createShipment(shipmentData) {
-    try {
-      const newShipment = {
-        id: `ship_${Date.now()}`,
-        ...shipmentData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      this.shipments.unshift(newShipment);
-      this.saveToStorage();
-      return newShipment;
-    } catch (error) {
-      console.error('Error creating shipment:', error);
-      return null;
-    }
-  }
-
-  // 更新配送單
-  updateShipment(id, updateData) {
-    try {
-      const index = this.shipments.findIndex(shipment => shipment.id === id);
-      if (index === -1) return false;
-
-      this.shipments[index] = {
-        ...this.shipments[index],
-        ...updateData,
-        updatedAt: new Date().toISOString()
-      };
-
-      this.saveToStorage();
-      return this.shipments[index];
-    } catch (error) {
-      console.error('Error updating shipment:', error);
-      return false;
-    }
-  }
-
-  // 更新配送狀態
-  updateShipmentStatus(id, newStatus, location = '', description = '') {
-    try {
-      const shipment = this.getShipmentById(id);
-      if (!shipment) return false;
-
-      // 更新配送單狀態
-      const updated = this.updateShipment(id, { status: newStatus });
-      
-      // 記錄狀態歷史
-      this.addTrackingHistory(id, newStatus, location, description);
-      
-      return updated;
-    } catch (error) {
-      console.error('Error updating shipment status:', error);
-      return false;
-    }
-  }
-
-  // 刪除配送單
-  deleteShipment(id) {
-    try {
-      const index = this.shipments.findIndex(shipment => shipment.id === id);
-      if (index === -1) return false;
-
-      this.shipments.splice(index, 1);
-      this.saveToStorage();
-      return true;
-    } catch (error) {
-      console.error('Error deleting shipment:', error);
-      return false;
-    }
-  }
-
-  // =============================================================================
-  // 運費設定管理
-  // =============================================================================
-
-  // 獲取所有運費設定
-  getAllShippingRates() {
-    return this.shippingRates;
-  }
-
-  // 根據ID獲取運費設定
-  getShippingRateById(id) {
-    return this.shippingRates.find(rate => rate.id === id);
-  }
-
-  // 創建運費設定
-  createShippingRate(rateData) {
-    try {
-      const newRate = {
-        id: `rate_${Date.now()}`,
-        ...rateData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      this.shippingRates.unshift(newRate);
-      this.saveToStorage();
-      return newRate;
-    } catch (error) {
-      console.error('Error creating shipping rate:', error);
-      return null;
-    }
-  }
-
-  // 更新運費設定
-  updateShippingRate(id, updateData) {
-    try {
-      const index = this.shippingRates.findIndex(rate => rate.id === id);
-      if (index === -1) return false;
-
-      this.shippingRates[index] = {
-        ...this.shippingRates[index],
-        ...updateData,
-        updatedAt: new Date().toISOString()
-      };
-
-      this.saveToStorage();
-      return this.shippingRates[index];
-    } catch (error) {
-      console.error('Error updating shipping rate:', error);
-      return false;
-    }
-  }
-
-  // 計算運費
-  calculateShippingFee(logisticsType, weight, orderAmount = 0) {
-    const applicableRates = this.shippingRates.filter(rate => 
-      rate.isActive && rate.logisticsTypes.includes(logisticsType)
-    );
-
-    if (applicableRates.length === 0) {
-      return { fee: 0, reason: '無適用運費設定' };
-    }
-
-    const rate = applicableRates[0]; // 取第一個適用的設定
-
-    // 檢查免運門檻
-    if (rate.freeShippingThreshold && orderAmount >= rate.freeShippingThreshold) {
-      return { fee: 0, reason: '滿額免運' };
-    }
-
-    // 根據計算方式計算運費
-    if (rate.calculationMethod === CalculationMethod.FIXED) {
-      return { fee: rate.baseRate, reason: '固定費用' };
-    }
-
-    if (rate.calculationMethod === CalculationMethod.WEIGHT) {
-      const tier = rate.tiers.find(t => weight >= t.min && weight < t.max);
-      if (tier) {
-        return { fee: tier.rate, reason: `重量 ${weight}kg` };
-      }
-    }
-
-    return { fee: rate.baseRate, reason: '基本費率' };
-  }
-
-  // =============================================================================
-  // 退貨管理
-  // =============================================================================
-
-  // 獲取所有退貨記錄
-  getAllReturns() {
-    return this.returns;
-  }
-
-  // 根據ID獲取退貨記錄
-  getReturnById(id) {
-    return this.returns.find(returnItem => returnItem.id === id);
-  }
-
-  // 創建退貨記錄
-  createReturn(returnData) {
-    try {
-      const newReturn = {
-        id: `return_${Date.now()}`,
-        ...returnData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      this.returns.unshift(newReturn);
-      this.saveToStorage();
-      return newReturn;
-    } catch (error) {
-      console.error('Error creating return:', error);
-      return null;
-    }
-  }
-
-  // 更新退貨記錄
-  updateReturn(id, updateData) {
-    try {
-      const index = this.returns.findIndex(returnItem => returnItem.id === id);
-      if (index === -1) return false;
-
-      this.returns[index] = {
-        ...this.returns[index],
-        ...updateData,
-        updatedAt: new Date().toISOString()
-      };
-
-      this.saveToStorage();
-      return this.returns[index];
-    } catch (error) {
-      console.error('Error updating return:', error);
-      return false;
-    }
-  }
-
-  // =============================================================================
-  // 物流追蹤
-  // =============================================================================
-
-  // 添加追蹤歷史記錄
-  addTrackingHistory(shipmentId, status, location = '', description = '') {
-    if (!this.trackingHistory) {
-      this.trackingHistory = [];
-    }
-
-    const historyEntry = {
-      id: `track_${Date.now()}`,
-      shipmentId,
-      status,
-      location,
-      description,
-      timestamp: new Date().toISOString()
-    };
-
-    this.trackingHistory.unshift(historyEntry);
-    return historyEntry;
-  }
-
-  // 獲取配送追蹤歷史
-  getTrackingHistory(shipmentId) {
-    if (!this.trackingHistory) return [];
-    return this.trackingHistory.filter(entry => entry.shipmentId === shipmentId);
-  }
-
-  // =============================================================================
-  // 統計分析
-  // =============================================================================
-
-  // 獲取物流分析數據
-  getLogisticsAnalytics() {
-    return this.analytics;
-  }
-
-  // 獲取配送狀態統計
-  getShipmentStatusStats() {
-    const stats = {};
-    Object.values(LogisticsStatus).forEach(status => {
-      stats[status] = this.shipments.filter(s => s.status === status).length;
-    });
-    return stats;
-  }
-
-  // 獲取運費收入統計
-  getShippingRevenueStats() {
-    const totalRevenue = this.shipments.reduce((sum, shipment) => sum + shipment.shippingFee, 0);
-    const avgRevenuePerOrder = this.shipments.length > 0 ? totalRevenue / this.shipments.length : 0;
-    
-    return {
-      totalRevenue,
-      avgRevenuePerOrder,
-      totalOrders: this.shipments.length
-    };
-  }
-
-  // 獲取物流方式統計
-  getLogisticsTypeStats() {
-    const stats = {};
-    Object.values(LogisticsType).forEach(type => {
-      stats[type] = this.shipments.filter(s => s.logisticsType === type).length;
-    });
-    return stats;
-  }
-
-  // =============================================================================
-  // 篩選和搜尋
-  // =============================================================================
-
-  // 搜尋配送單
-  searchShipments(keyword) {
-    if (!keyword) return this.shipments;
-    
-    const searchTerm = keyword.toLowerCase();
-    return this.shipments.filter(shipment => 
-      shipment.orderNumber.toLowerCase().includes(searchTerm) ||
-      shipment.trackingNumber.toLowerCase().includes(searchTerm) ||
-      shipment.receiverInfo.name.toLowerCase().includes(searchTerm) ||
-      shipment.receiverInfo.phone.includes(searchTerm)
-    );
-  }
-
-  // 根據狀態篩選配送單
-  filterShipmentsByStatus(status) {
-    if (!status || status === 'all') return this.shipments;
-    return this.shipments.filter(shipment => shipment.status === status);
-  }
-
-  // 根據物流類型篩選配送單
-  filterShipmentsByType(logisticsType) {
-    if (!logisticsType || logisticsType === 'all') return this.shipments;
-    return this.shipments.filter(shipment => shipment.logisticsType === logisticsType);
-  }
-
-  // 根據日期範圍篩選配送單
-  filterShipmentsByDateRange(startDate, endDate) {
-    return this.shipments.filter(shipment => {
-      const shipmentDate = new Date(shipment.createdAt);
-      return shipmentDate >= new Date(startDate) && shipmentDate <= new Date(endDate);
-    });
-  }
-
-  // 獲取物流分析數據
-  getAnalytics() {
-    const totalShipments = this.shipments.length;
-    const totalReturns = this.returns.length;
-    
-    // 計算總運費成本
-    const totalShippingCost = this.shipments.reduce((sum, shipment) => sum + (shipment.shippingFee || 0), 0);
-    
-    // 計算配送成功率
-    const deliveredShipments = this.shipments.filter(s => s.status === LogisticsStatus.DELIVERED || s.status === LogisticsStatus.PICKED_UP_BY_CUSTOMER).length;
-    const deliverySuccessRate = totalShipments > 0 ? deliveredShipments / totalShipments : 0;
-    
-    // 計算平均配送時間（天）
-    const deliveredWithTimes = this.shipments.filter(s => s.actualDelivery && s.createdAt);
-    const avgDeliveryTime = deliveredWithTimes.length > 0 ? 
-      deliveredWithTimes.reduce((sum, s) => {
-        const deliveryTime = new Date(s.actualDelivery) - new Date(s.createdAt);
-        return sum + (deliveryTime / (1000 * 60 * 60 * 24)); // 轉換為天
-      }, 0) / deliveredWithTimes.length : 2.5;
-    
-    // 計算退貨率
-    const returnRate = totalShipments > 0 ? totalReturns / totalShipments : 0;
-    
-    // 成本分析
-    const costBreakdown = [
-      { category: '基本運費', amount: totalShippingCost * 0.6, percentage: 0.6 },
-      { category: '包裝費用', amount: totalShippingCost * 0.15, percentage: 0.15 },
-      { category: '保險費用', amount: totalShippingCost * 0.1, percentage: 0.1 },
-      { category: '手續費', amount: totalShippingCost * 0.1, percentage: 0.1 },
-      { category: '其他費用', amount: totalShippingCost * 0.05, percentage: 0.05 }
-    ];
-    
-    // 配送方式統計
-    const typeStats = {};
-    this.shipments.forEach(shipment => {
-      const type = shipment.logisticsType;
-      if (!typeStats[type]) {
-        typeStats[type] = { count: 0, name: this.getLogisticsTypeDisplayName(type) };
-      }
-      typeStats[type].count++;
-    });
-    
-    const deliveryMethodStats = Object.values(typeStats).map(stat => ({
-      ...stat,
-      percentage: totalShipments > 0 ? stat.count / totalShipments : 0
-    }));
-    
-    // 效率指標
-    const efficiencyMetrics = {
-      onTimeDeliveryRate: '94.2%',
-      customerSatisfaction: '4.7★',
-      avgProcessingTime: 8,
-      costPerDelivery: `$${Math.round(totalShippingCost / Math.max(totalShipments, 1))}`
-    };
-    
-    // 趨勢數據
-    const trends = {
-      cost: [
-        { date: '09/10', value: 12000 },
-        { date: '09/11', value: 15000 },
-        { date: '09/12', value: 11000 },
-        { date: '09/13', value: 18000 },
-        { date: '09/14', value: 16000 },
-        { date: '09/15', value: 14000 },
-        { date: '09/16', value: totalShippingCost }
-      ],
-      volume: [
-        { date: '09/10', value: 45 },
-        { date: '09/11', value: 52 },
-        { date: '09/12', value: 38 },
-        { date: '09/13', value: 68 },
-        { date: '09/14', value: 55 },
-        { date: '09/15', value: 42 },
-        { date: '09/16', value: totalShipments }
-      ],
-      efficiency: [
-        { date: '09/10', value: 92 },
-        { date: '09/11', value: 95 },
-        { date: '09/12', value: 88 },
-        { date: '09/13', value: 97 },
-        { date: '09/14', value: 93 },
-        { date: '09/15', value: 91 },
-        { date: '09/16', value: Math.round(deliverySuccessRate * 100) }
-      ]
-    };
-    
-    // 詳細統計
-    const detailedStats = deliveryMethodStats.map(method => ({
-      method: method.name,
-      orderCount: method.count,
-      totalCost: totalShippingCost * method.percentage,
-      avgCost: method.count > 0 ? (totalShippingCost * method.percentage) / method.count : 0,
-      successRate: 0.9 + Math.random() * 0.09 // 模擬成功率 90-99%
-    }));
-    
-    return {
-      totalShippingCost,
-      deliverySuccessRate,
-      averageDeliveryTime: Math.round(avgDeliveryTime * 10) / 10,
-      returnRate,
-      costBreakdown,
-      deliveryMethodStats,
-      efficiencyMetrics,
-      trends,
-      detailedStats
-    };
-  }
-
-  // 獲取物流類型顯示名稱的輔助方法
-  getLogisticsTypeDisplayName(type) {
-    const names = {
-      [LogisticsType.CONVENIENCE_STORE]: '超商取貨',
-      [LogisticsType.HOME_DELIVERY]: '宅配到府',
-      [LogisticsType.POST_OFFICE]: '郵局配送',
-      [LogisticsType.EXPRESS]: '快遞',
-      [LogisticsType.PICKUP]: '自取'
-    };
-    return names[type] || type;
-  }
+// 以 LogisticsType/SubType 嘗試更精準對照，否則退回扁平表
+export function mapStatusToText(code, type, subType) {
+  const c = String(code || '').trim();
+  if (!c) return '';
+  const t = String(type || '').toUpperCase();
+  const s = String(subType || '').toUpperCase();
+  const detailed = generatedStatus.detailed || {};
+  const typeMap = detailed[t];
+  const subMap = typeMap ? typeMap[s] : null;
+  return (subMap && subMap[c]) || ECPAY_STATUS_MAP[c] || '';
 }
 
-const logisticsDataManager = new LogisticsDataManager();
+// 物流狀態通知（推播）資料模型（模擬）
+const mockLogisticsNotifications = [
+  {
+    id: 'LN-0001',
+    AllPayLogisticsID: '1234567',
+    RtnCode: 300,
+    RtnMsg: '已收件',
+    LogisticsType: 'Home',
+    LogisticsSubType: 'TCAT',
+    UpdateStatusDate: '2025/09/24 10:23:45',
+    ReceiverName: '王小明',
+    BookingNote: '',
+    raw: {
+      MerchantID: '2000132',
+      MerchantTradeNo: 'M202509240001',
+      CheckMacValue: 'MOCKED',
+    }
+  },
+  {
+    id: 'LN-0002',
+    AllPayLogisticsID: '7654321',
+    RtnCode: 2063,
+    RtnMsg: '門市已到店',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMART',
+    UpdateStatusDate: '2025/09/23 16:05:12',
+    ReceiverName: '陳小華',
+    BookingNote: '貨到付款',
+    raw: {
+      MerchantID: '2000132',
+      MerchantTradeNo: 'M202509240002',
+      CheckMacValue: 'MOCKED',
+    }
+  },
+  // 7-11 取件成功
+  {
+    id: 'LN-0003',
+    AllPayLogisticsID: '7654322',
+    RtnCode: 2067,
+    RtnMsg: '消費者成功取件',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMART',
+    UpdateStatusDate: '2025/09/24 18:12:10',
+    ReceiverName: '林小姐',
+    BookingNote: '',
+    raw: {
+      MerchantID: '2000132',
+      MerchantTradeNo: 'M202509240003',
+      CheckMacValue: 'MOCKED'
+    }
+  },
+  // 7-11 七天未取
+  {
+    id: 'LN-0004',
+    AllPayLogisticsID: '7654323',
+    RtnCode: 2074,
+    RtnMsg: '七天未取件',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMARTC2C',
+    UpdateStatusDate: '2025/09/24 20:15:10',
+    ReceiverName: '郭小明',
+    BookingNote: 'C2C',
+    raw: {
+      MerchantID: '2000132',
+      MerchantTradeNo: 'M202509240004',
+      CheckMacValue: 'MOCKED'
+    }
+  },
+  // 二次進店（取件門市）
+  {
+    id: 'LN-0005',
+    AllPayLogisticsID: '7654324',
+    RtnCode: 2098,
+    RtnMsg: '包裹重新配達取件門市',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMARTC2C',
+    UpdateStatusDate: '2025/09/24 21:05:10',
+    ReceiverName: '江小姐',
+    BookingNote: 'C2C',
+    raw: {
+      MerchantID: '2000132',
+      MerchantTradeNo: 'M202509240005',
+      CheckMacValue: 'MOCKED'
+    }
+  },
+  // 二次進店（寄件門市）
+  {
+    id: 'LN-0006',
+    AllPayLogisticsID: '7654325',
+    RtnCode: 2099,
+    RtnMsg: '包裹重新配達寄件門市',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'UNIMARTC2C',
+    UpdateStatusDate: '2025/09/24 21:10:10',
+    ReceiverName: '趙先生',
+    BookingNote: 'C2C',
+    raw: {
+      MerchantID: '2000132',
+      MerchantTradeNo: 'M202509240006',
+      CheckMacValue: 'MOCKED'
+    }
+  },
+  // 全家 C2C 取件成功（等價狀態）
+  {
+    id: 'LN-0007',
+    AllPayLogisticsID: '7654327',
+    RtnCode: 3022,
+    RtnMsg: '消費者成功取件',
+    LogisticsType: 'CVS',
+    LogisticsSubType: 'FAMIC2C',
+    UpdateStatusDate: '2025/09/24 15:45:10',
+    ReceiverName: '全家收件人2',
+    BookingNote: 'COD',
+    raw: {
+      MerchantID: '2000132',
+      MerchantTradeNo: 'M202509240008',
+      CheckMacValue: 'MOCKED'
+    }
+  }
+];
+
+const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+const logisticsDataManager = {
+  // 查詢物流訂單（模擬）
+  async queryLogisticsOrders(params = {}) {
+    await delay(300);
+    // 支援以 MerchantTradeNo 或 AllPayLogisticsID 篩選
+    const { MerchantTradeNo, AllPayLogisticsID } = params;
+    let data = mockTrackingOrders;
+    if (MerchantTradeNo) {
+      data = data.filter((o) => o.MerchantTradeNo.includes(MerchantTradeNo));
+    }
+    if (AllPayLogisticsID) {
+      data = data.filter((o) => o.AllPayLogisticsID.includes(AllPayLogisticsID));
+    }
+    return { success: true, data };
+  },
+
+  // 取得單筆物流訂單
+  async getLogisticsOrder(idOrTradeNo) {
+    await delay(200);
+    const data = mockTrackingOrders.find(
+      (o) => o.AllPayLogisticsID === idOrTradeNo || o.MerchantTradeNo === idOrTradeNo
+    );
+    return { success: !!data, data };
+  },
+
+  // 狀態通知列表
+  async getNotifications() {
+    await delay(200);
+    return { success: true, data: mockLogisticsNotifications };
+  },
+
+  // 讀取單筆通知
+  async getNotification(id) {
+    await delay(150);
+    const data = mockLogisticsNotifications.find((n) => n.id === id);
+    return { success: !!data, data };
+  },
+
+  // 標記通知為已處理
+  async acknowledgeNotification(id) {
+    await delay(120);
+    return { success: true };
+  },
+
+  // ===== 模擬：循環更新 =====
+  // 假裝呼叫綠界從 latestIndex 開始更新到最後一筆，然後回傳下次起點（若已到最後，回到 0）
+  async refreshFromIndex(latestIndex = 0) {
+    await delay(300);
+    const total = mockTrackingOrders.length;
+    if (total === 0) return { success: true, nextIndex: 0, updated: [] };
+    const updated = [];
+    for (let i = latestIndex; i < total; i++) {
+      // 模擬：把每筆 Status 在 fallback/flat map 中找不到時保留，找得到時保持不變；也可以隨機切換一個合理狀態
+      const row = mockTrackingOrders[i];
+      // 範例：若為 Home/TCAT 且狀態 300，改為 3123 表示新增貨態
+      if (row.LogisticsType === 'Home' && row.LogisticsSubType === 'TCAT' && String(row.Status) === '300') {
+        row.Status = '3123';
+        row.LogisticsStatus = row.Status;
+        row.UpdateStatusDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+      }
+      updated.push({ ...row });
+    }
+    return { success: true, nextIndex: 0, updated };
+  },
+
+  // 單筆更新，並回傳下一筆索引（i+1；若最後一筆則回 0）
+  async updateOneAndNext(index = 0) {
+    await delay(200);
+    const total = mockTrackingOrders.length;
+    if (total === 0) return { success: true, nextIndex: 0, updated: null };
+    const i = Math.max(0, Math.min(index, total - 1));
+    const row = mockTrackingOrders[i];
+    // 簡單模擬：切換一個不同狀態碼
+    row.Status = String(row.Status) === '300' ? '3123' : '300';
+    row.LogisticsStatus = row.Status;
+    row.UpdateStatusDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const nextIndex = i + 1 < total ? i + 1 : 0;
+    return { success: true, nextIndex, updated: { ...row } };
+  },
+
+  // 逆物流通知（模擬）
+  async getReverseNotifications() {
+    await delay(200);
+    // 以一般通知複製幾筆，改個型態當作逆物流
+    const data = mockLogisticsNotifications.map((n, idx) => ({
+      ...n,
+      id: `RLN-${String(idx + 1).padStart(4, '0')}`,
+      RtnMsg: `逆物流-${n.RtnMsg}`,
+    }));
+    return { success: true, data };
+  },
+};
+
 export default logisticsDataManager;

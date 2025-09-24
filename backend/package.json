@@ -18,7 +18,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:setup": "cd CloudflareWorkers && node database/scripts/setup.js",
-    "db:seed": "cd CloudflareWorkers && node database/scripts/seed.js"
+    "db:seed": "cd CloudflareWorkers && node database/scripts/seed.js",
+    "logistics:status": "node scripts/generateLogisticsStatus.js",
+    "logistics:history": "node scripts/generateLogisticsHistory.js"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20231025.0",
@@ -35,7 +37,8 @@
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^6.20.0",
     "uuid": "^13.0.0",
-    "wrangler": "^3.15.0"
+    "wrangler": "^3.15.0",
+    "iconv-lite": "^0.6.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.37",

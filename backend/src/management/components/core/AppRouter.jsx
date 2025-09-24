@@ -52,6 +52,7 @@ import ProcurementAnalytics from '../../Pages/procurement/ProcurementAnalytics';
 
 // Logistics 模組
 import LogisticsTracking from '../../Pages/logistics/LogisticsTracking';
+// 移除 Logistics 通知頁面（不再使用）
 
 // Coupons 模組
 import CouponManagement from '../../Pages/coupons/CouponManagementContainer';
@@ -183,6 +184,7 @@ const AppRouter = () => {
 
               {/* Logistics 模組路由 */}
               <Route path="logistics" element={<LogisticsTracking />} />
+              {/* 移除 logistics/notifications 與 logistics/reverse-notifications */}
 
               {/* Coupons 模組路由 */}
               <Route path="coupons" element={<CouponManagement />} />

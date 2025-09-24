@@ -58,6 +58,8 @@ const procurementTabs = [
 const logisticsTabs = [
   // 目前僅保留物流追蹤頁
   { label: '物流追蹤', path: '/logistics' },
+  // { label: '物流通知', path: '/logistics/notifications' },
+  // { label: '逆物流通知', path: '/logistics/reverse-notifications' },
   // 如需擴充再逐步開啟：
   // { label: '出貨管理', path: '/logistics/shipments' },
   // { label: '運費設定', path: '/logistics/rates' },

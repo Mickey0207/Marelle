@@ -1,432 +1,406 @@
-﻿import React, { useState, useEffect } from 'react';
-import { gsap } from 'gsap';
-import {
-  TruckIcon,
-  MapPinIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  MagnifyingGlassIcon,
-  QrCodeIcon,
-  DocumentTextIcon,
-  PhoneIcon,
-  BuildingOfficeIcon
-} from '@heroicons/react/24/outline';
+﻿import React, { useEffect, useRef, useState, useMemo } from 'react';
+import logisticsDataManager from '../../../lib/data/logistics/logisticsDataManager';
+import { mapLogisticsStatusToText as mapStatusToText, getDetailedStatusMap, getFlatStatusMap } from '../../../lib/data/logistics/statusMapper';
+import StandardTable from '../../components/ui/StandardTable';
+import TabNavigation from '../../components/ui/TabNavigation';
+import GlassModal from '../../components/ui/GlassModal';
+import SearchableSelect from '../../components/ui/SearchableSelect';
+import { TruckIcon, EyeIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ADMIN_STYLES, COMPONENT_DEFAULTS } from '../../../lib/ui/adminStyles';
 
-const LogisticsTracking = () => {
-  const [trackingNumber, setTrackingNumber] = useState('');
-  const [trackingResult, setTrackingResult] = useState(null);
+// 將物流方式轉為中文（放在元件外避免初始化順序問題）
+function mapTypeToChinese(type, subType) {
+  const dict = {
+    Home: { TCAT: '黑貓宅配', POST: '郵局宅配' },
+    CVS: {
+      UNIMART: '7-11 B2C', UNIMARTC2C: '7-11 C2C',
+      FAMI: '全家 B2C', FAMIC2C: '全家 C2C',
+      HILIFE: '萊爾富 B2C', HILIFEC2C: '萊爾富 C2C',
+      OKMART: 'OK 超商 B2C', OKMARTC2C: 'OK 超商 C2C',
+    },
+  };
+  if (dict[type] && dict[type][subType]) return dict[type][subType];
+  if (type && subType) return `${type}/${subType}`;
+  return type || subType || '-';
+}
+
+export default function LogisticsTracking() {
   const [loading, setLoading] = useState(false);
-  const [recentTrackings, setRecentTrackings] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [detail, setDetail] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  // 新搜尋介面狀態
+  const [keyword, setKeyword] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all'); // value: `${type}:${subType}`
+  const [statusFilter, setStatusFilter] = useState('all'); // value: 狀態中文
+  const pollingIndexRef = useRef(0);
+  const timerRef = useRef(null);
 
-  useEffect(() => {
-    loadRecentTrackings();
-    
-    // 動畫效果
-    gsap.fromTo(
-      '.tracking-card',
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" }
-    );
-  }, []);
-
-  const handleTrack = async () => {
-    if (!trackingNumber.trim()) {
-      alert('請輸入追蹤號碼');
-      return;
-    }
-
+  const load = async (params = {}) => {
     setLoading(true);
     try {
-      // 模擬API調用
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockResult = {
-        trackingNumber: trackingNumber,
-        status: 'in_transit',
-        estimatedDelivery: '2024-01-25',
-        origin: '台北倉庫',
-        destination: '高雄市前金區',
-        currentLocation: '台中轉運站',
-        carrier: '黑貓宅急便',
-        carrierPhone: '0800-123-456',
-        orderNumber: 'ORD-2024-001',
-        recipient: '王小明',
-        recipientPhone: '0912345678',
-        packageCount: 2,
-        weight: '1.5kg',
-        timeline: [
-          {
-            status: 'created',
-            time: '2024-01-20 10:30:00',
-            location: '台北倉庫',
-            description: '已建立運送單，準備出貨',
-            completed: true
-          },
-          {
-            status: 'picked_up',
-            time: '2024-01-20 14:15:00',
-            location: '台北倉庫',
-            description: '商品已由快遞員取件',
-            completed: true
-          },
-          {
-            status: 'in_transit',
-            time: '2024-01-21 08:45:00',
-            location: '台中轉運站',
-            description: '商品運送中，已到達台中轉運站',
-            completed: true
-          },
-          {
-            status: 'out_for_delivery',
-            time: null,
-            location: '高雄配送中心',
-            description: '商品已到達目的地配送中心，準備派送',
-            completed: false
-          },
-          {
-            status: 'delivered',
-            time: null,
-            location: '高雄市前金區',
-            description: '商品已送達收件人',
-            completed: false
-          }
-        ]
-      };
-      
-      setTrackingResult(mockResult);
-      
-      // 添加到最近查詢記錄
-      setRecentTrackings(prev => {
-        const filtered = prev.filter(item => item.trackingNumber !== trackingNumber);
-        return [{ trackingNumber, result: mockResult, queriedAt: new Date() }, ...filtered].slice(0, 5);
-      });
-      
-    } catch (error) {
-      console.error('Error tracking package:', error);
-      alert('查詢失敗，請稍後再試');
+      const res = await logisticsDataManager.queryLogisticsOrders(params);
+      if (res.success) setRows(res.data);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadRecentTrackings = () => {
-    // 模擬載入最近查詢記錄
-    const mockRecent = [
-      {
-        trackingNumber: 'TW1234567890',
-        result: {
-          status: 'delivered',
-          carrier: '黑貓宅急便',
-          recipient: '張小華',
-          orderNumber: 'ORD-2024-002'
-        },
-        queriedAt: new Date('2024-01-22 15:30:00')
-      },
-      {
-        trackingNumber: 'TW0987654321',
-        result: {
-          status: 'in_transit',
-          carrier: '新竹貨運',
-          recipient: '李美玲',
-          orderNumber: 'ORD-2024-003'
-        },
-        queriedAt: new Date('2024-01-22 09:15:00')
-      }
-    ];
-    setRecentTrackings(mockRecent);
+  useEffect(() => {
+    // 初始載入：顯示全部模擬資料
+    load();
+    // 啟動自動輪詢
+    const tick = async () => {
+      const res = await logisticsDataManager.refreshFromIndex(pollingIndexRef.current);
+      pollingIndexRef.current = res.nextIndex || 0;
+      setRows((prev) => prev.map((r) => ({ ...r })));
+      timerRef.current = setTimeout(tick, 2000);
+    };
+    tick();
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const handleUpdateContinue = async (rowIndex) => {
+    pollingIndexRef.current = rowIndex;
+    const res = await logisticsDataManager.updateOneAndNext(rowIndex);
+    pollingIndexRef.current = res.nextIndex || 0;
+    setRows((prev) => prev.map((r) => ({ ...r })));
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'created':
-        return <DocumentTextIcon className="w-5 h-5 text-blue-500" />;
-      case 'picked_up':
-        return <TruckIcon className="w-5 h-5 text-orange-500" />;
-      case 'in_transit':
-        return <TruckIcon className="w-5 h-5 text-yellow-500" />;
-      case 'out_for_delivery':
-        return <MapPinIcon className="w-5 h-5 text-purple-500" />;
-      case 'delivered':
-        return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-      default:
-        return <ClockIcon className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'created':
-        return '已建立';
-      case 'picked_up':
-        return '已取件';
-      case 'in_transit':
-        return '運送中';
-      case 'out_for_delivery':
-        return '配送中';
-      case 'delivered':
-        return '已送達';
-      default:
-        return '未知狀態';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'created':
-        return 'bg-blue-100 text-blue-800';
-      case 'picked_up':
-        return 'bg-orange-100 text-orange-800';
-      case 'in_transit':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'out_for_delivery':
-        return 'bg-purple-100 text-purple-800';
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('zh-TW', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
+  // 用於產生過濾選項
+  const typeOptions = useMemo(() => {
+    const set = new Map();
+    rows.forEach(r => {
+      const key = `${r.LogisticsType}:${r.LogisticsSubType}`;
+      if (!set.has(key)) set.set(key, mapTypeToChinese(r.LogisticsType, r.LogisticsSubType));
     });
+    return [{ value: 'all', label: '全部物流方式' }, ...Array.from(set.entries()).map(([value, label]) => ({ value, label }))];
+  }, [rows]);
+
+  const statusOptions = useMemo(() => {
+    const all = { value: 'all', label: '全部狀態' };
+    const detailed = getDetailedStatusMap();
+    const flat = getFlatStatusMap();
+    const set = new Set();
+    if (typeFilter && typeFilter !== 'all') {
+      const [t, s] = String(typeFilter).split(':');
+      const T = String(t || '').toUpperCase();
+      const S = String(s || '').toUpperCase();
+      const subMap = detailed?.[T]?.[S] || {};
+      Object.values(subMap).forEach((txt) => txt && set.add(txt));
+    } else {
+      Object.values(flat).forEach((txt) => txt && set.add(txt));
+    }
+    const list = Array.from(set);
+    return [all, ...list.map((v) => ({ value: v, label: v }))];
+  }, [typeFilter]);
+
+  // 客端篩選資料
+  const displayRows = useMemo(() => {
+    const kw = (keyword || '').toLowerCase().trim();
+    return rows.filter(r => {
+      // 關鍵字比對所有欄位
+      const hitKW = kw ? JSON.stringify(r).toLowerCase().includes(kw) : true;
+
+      // 物流方式過濾
+      const tpKey = `${r.LogisticsType}:${r.LogisticsSubType}`;
+      const hitType = typeFilter === 'all' ? true : tpKey === typeFilter;
+
+      // 狀態過濾（以中文狀態）
+      const sText = mapStatusToText(r.LogisticsStatus || r.Status, r.LogisticsType, r.LogisticsSubType) || '';
+      const hitStatus = statusFilter === 'all' ? true : sText === statusFilter;
+
+      return hitKW && hitType && hitStatus;
+    });
+  }, [rows, keyword, typeFilter, statusFilter]);
+
+  // mapTypeToChinese 已移至元件外
+
+  const getStatusBadgeClass = (text) => {
+    if (!text) return ADMIN_STYLES.statusInfo;
+    const s = String(text);
+    const success = ['成功', '完成', '已配達', '已取件', '領取', '撥款'];
+    const warning = ['待', '處理', '配送', '運送', '轉運', '重新'];
+    const error = ['失敗', '取消', '逾期', '異常', '未取', '退回'];
+    if (error.some(k => s.includes(k))) return ADMIN_STYLES.statusError;
+    if (success.some(k => s.includes(k))) return ADMIN_STYLES.statusSuccess;
+    if (warning.some(k => s.includes(k))) return ADMIN_STYLES.statusWarning;
+    return ADMIN_STYLES.statusInfo;
   };
+
+  const getStatusBadge = (text) => (
+    <span className={getStatusBadgeClass(text)}>{text || '未知狀態'}</span>
+  );
+
+  const getTypeBadgeClass = (type, subType) => {
+    if (type === 'Home') return ADMIN_STYLES.statusInfo; // 宅配：藍色
+    if (type === 'CVS') {
+      const m = {
+        UNIMART: ADMIN_STYLES.statusSuccess,
+        UNIMARTC2C: ADMIN_STYLES.statusSuccess,
+        FAMI: ADMIN_STYLES.statusInfo,
+        FAMIC2C: ADMIN_STYLES.statusInfo,
+        HILIFE: ADMIN_STYLES.statusWarning,
+        HILIFEC2C: ADMIN_STYLES.statusWarning,
+        OKMART: ADMIN_STYLES.statusInactive,
+        OKMARTC2C: ADMIN_STYLES.statusInactive,
+      };
+      return m[subType] || ADMIN_STYLES.statusInfo;
+    }
+    return ADMIN_STYLES.statusInfo;
+  };
+
+  const columns = useMemo(() => [
+    // 訂單成立時間
+    { key: 'TradeDate', label: '訂單成立時間', sortable: true, render: (v) => v || '-' },
+    // 更新時間
+    { key: 'UpdateStatusDate', label: '更新時間', sortable: true },
+    // 物流方式（中文）
+    { key: 'LogisticsType', label: '物流方式', sortable: true, render: (_, item) => (
+      <span className={getTypeBadgeClass(item.LogisticsType, item.LogisticsSubType)}>
+        {mapTypeToChinese(item.LogisticsType, item.LogisticsSubType)}
+      </span>
+    )},
+    // 狀態（徽章）
+    { key: 'LogisticsStatus', label: '物流狀態', sortable: false, render: (v, item) => getStatusBadge(mapStatusToText(v || item.Status, item.LogisticsType, item.LogisticsSubType)) },
+    // 商品金額
+    { key: 'GoodsAmount', label: '商品金額', sortable: true },
+    // 收件人
+    { key: 'ReceiverName', label: '收件人', sortable: true },
+    // 手機
+    { key: 'ReceiverCellPhone', label: '手機', sortable: false },
+    // 回應代碼
+    { key: 'RtnCode', label: '回應代碼', sortable: true, render: (v) => {
+      if (v === null || v === undefined || v === '') return '-';
+      const num = Number(v);
+      if (!Number.isNaN(num)) {
+        const cls = num === 1 ? 'text-green-600 font-mono' : 'text-red-600 font-mono';
+        return <span className={cls}>{num}</span>;
+      }
+      return String(v);
+    } },
+    // 操作
+    { key: 'actions', label: '操作', sortable: false, render: (_, item, rowIndex) => (
+      <div className="flex items-center space-x-2">
+        <button
+          onClick={() => { setDetail(item); setActiveTab('overview'); }}
+          className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+          title="檢視詳情"
+          aria-label="檢視詳情"
+        >
+          <EyeIcon className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleUpdateContinue(rowIndex)}
+          className="p-2 text-gray-400 hover:text-amber-600 transition-colors"
+          title="更新此筆後繼續"
+          aria-label="更新此筆後繼續"
+        >
+          <ArrowPathIcon className="w-4 h-4" />
+        </button>
+      </div>
+    )},
+  ], []);
 
   return (
-    <div className="bg-[#fdf8f2] min-h-screen p-6">
-      {/* 頁面標題 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 font-chinese">物流追蹤</h1>
-        <p className="text-gray-600 mt-2">輸入追蹤號碼查詢包裹運送狀態</p>
-      </div>
-
-      {/* 追蹤查詢區域 */}
-      <div className="tracking-card bg-white/60 backdrop-blur-sm rounded-xl border border-white/20 p-8 mb-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-6">
-            <TruckIcon className="w-16 h-16 text-[#cc824d] mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 font-chinese">包裹追蹤查詢</h2>
-            <p className="text-gray-600 mt-2">請輸入完整的追蹤號碼</p>
+    <div className="bg-[#fdf8f2] min-h-screen">
+      <div className="container mx-auto px-6 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <TruckIcon className="w-8 h-8 text-amber-500 mr-3" />
+            <h1 className="text-3xl font-bold text-gray-800 font-chinese">物流追蹤</h1>
           </div>
-          
-          <div className="flex space-x-4">
-            <div className="flex-1 relative">
-              <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" />
-              <input
-                type="text"
-                value={trackingNumber}
-                onChange={(e) => setTrackingNumber(e.target.value)}
-                placeholder="請輸入追蹤號碼，例如：TW1234567890"
-                className="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent text-lg"
-                onKeyPress={(e) => e.key === 'Enter' && handleTrack()}
+          {/* 移除 ECPay 設定按鈕 */}
+        </div>
+
+        {/* 新搜尋/篩選區域 */}
+        <div className="glass rounded-2xl p-6 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            {/* 關鍵字搜尋（全欄位） */}
+            <input
+              value={keyword}
+              onChange={(e)=>setKeyword(e.target.value)}
+              className={`${ADMIN_STYLES.input} flex-1`}
+              placeholder="輸入關鍵字，搜尋所有欄位"
+            />
+            {/* 右側篩選器 */}
+            <div className="flex items-center gap-3 md:ml-auto">
+              <div className="min-w-[14rem]">
+                <SearchableSelect
+                  value={typeFilter}
+                  onChange={(v) => setTypeFilter(v)}
+                  options={typeOptions}
+                  placeholder="選擇物流方式"
+                  searchPlaceholder="搜尋物流方式..."
+                  className="font-chinese"
+                  maxDisplayOptions={9999}
+                />
+              </div>
+              <div className="w-full md:w-[30rem]">
+                <SearchableSelect
+                  value={statusFilter}
+                  onChange={(v) => setStatusFilter(v)}
+                  options={statusOptions}
+                  placeholder="選擇狀態"
+                  searchPlaceholder="搜尋狀態..."
+                  className="font-chinese"
+                  maxDisplayOptions={9999}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 主要表格 */}
+        <StandardTable
+          data={displayRows}
+          columns={columns}
+          title={loading ? '載入中…' : '物流清單'}
+          emptyMessage="沒有找到符合條件的物流資料"
+          exportFileName="物流清單"
+        />
+
+        {/* 移除 從第一筆開始更新 按鈕 */}
+
+        {detail && (
+          <GlassModal
+            isOpen={!!detail}
+            onClose={() => setDetail(null)}
+            title="物流詳情"
+            size="max-w-5xl"
+          >
+            <div className="p-6">
+              <TabNavigation
+                mode="controlled"
+                activeKey={activeTab}
+                onTabChange={(t)=>setActiveTab(t.key || t.label)}
+                tabs={[
+                  { key: 'overview', label: '概要' },
+                  { key: 'order', label: '訂單/交易' },
+                  { key: 'logistics', label: '物流' },
+                  { key: 'receiver', label: '收件/寄件' },
+                  { key: 'address', label: '門市/地址' },
+                  { key: 'fees', label: '費用/重量' },
+                  { key: 'raw', label: '原始資料' },
+                ]}
+                className="mb-4"
+                layout="left"
               />
-            </div>
-            <button
-              onClick={handleTrack}
-              disabled={loading || !trackingNumber.trim()}
-              className="px-8 py-4 bg-[#cc824d] text-white rounded-lg hover:bg-[#b8743d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>查詢中...</span>
-                </>
-              ) : (
-                <>
-                  <MagnifyingGlassIcon className="w-5 h-5" />
-                  <span>查詢</span>
-                </>
+
+              {activeTab === 'overview' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-chinese">
+                  <div className="glass p-4 rounded-xl">
+                    <div className="text-gray-500 mb-1">訂單成立時間</div>
+                    <div className="font-medium">{detail.TradeDate || '-'}</div>
+                  </div>
+                  <div className="glass p-4 rounded-xl">
+                    <div className="text-gray-500 mb-1">更新時間</div>
+                    <div className="font-medium">{detail.UpdateStatusDate || '-'}</div>
+                  </div>
+                  <div className="glass p-4 rounded-xl">
+                    <div className="text-gray-500 mb-1">物流方式</div>
+                    <div className={getTypeBadgeClass(detail.LogisticsType, detail.LogisticsSubType)}>
+                      {mapTypeToChinese(detail.LogisticsType, detail.LogisticsSubType)}
+                    </div>
+                  </div>
+                  <div className="glass p-4 rounded-xl">
+                    <div className="text-gray-500 mb-1">物流狀態</div>
+                    <div className="font-medium">{getStatusBadge(mapStatusToText(detail.LogisticsStatus || detail.Status, detail.LogisticsType, detail.LogisticsSubType))}</div>
+                  </div>
+                  <div className="glass p-4 rounded-xl">
+                    <div className="text-gray-500 mb-1">商品金額</div>
+                    <div className="font-medium">{detail.GoodsAmount}</div>
+                  </div>
+                  <div className="glass p-4 rounded-xl">
+                    <div className="text-gray-500 mb-1">收件人</div>
+                    <div className="font-medium">{detail.ReceiverName}</div>
+                  </div>
+                </div>
               )}
-            </button>
-          </div>
-          
-          <div className="mt-4 flex justify-center">
-            <button className="flex items-center space-x-2 text-[#cc824d] hover:text-[#b8743d] transition-colors">
-              <QrCodeIcon className="w-4 h-4" />
-              <span className="text-sm">掃描追蹤二維碼</span>
-            </button>
-          </div>
-        </div>
-      </div>
 
-      {/* 追蹤結果 */}
-      {trackingResult && (
-        <div className="tracking-card bg-white/60 backdrop-blur-sm rounded-xl border border-white/20 overflow-hidden mb-8">
-          {/* 結果標題 */}
-          <div className="bg-gradient-to-r from-[#cc824d] to-[#b8743d] p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold font-chinese">追蹤結果</h3>
-                <p className="text-white/80 mt-1">追蹤號碼：{trackingResult.trackingNumber}</p>
-              </div>
-              <div className="text-right">
-                <span className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(trackingResult.status)} bg-white/20 backdrop-blur-sm border border-white/30`}>
-                  {getStatusText(trackingResult.status)}
-                </span>
-              </div>
-            </div>
-          </div>
+              {activeTab === 'order' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                  <Field label="特店編號" value={detail.MerchantID} />
+                  <Field label="商店訂單" value={detail.MerchantTradeNo} />
+                  <Field label="綠界交易" value={detail.TradeNo} />
+                  <Field label="訂單成立時間" value={detail.TradeDate} />
+                  <Field label="回應代碼" value={detail.RtnCode} />
+                  <Field label="回應訊息" value={detail.RtnMsg} />
+                </div>
+              )}
 
-          <div className="p-6">
-            {/* 基本資訊 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center space-x-3 mb-3">
-                  <BuildingOfficeIcon className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium text-gray-900">承運商資訊</span>
-                </div>
-                <p className="text-gray-700">{trackingResult.carrier}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  客服電話：{trackingResult.carrierPhone}
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center space-x-3 mb-3">
-                  <MapPinIcon className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium text-gray-900">配送資訊</span>
-                </div>
-                <p className="text-gray-700">收件人：{trackingResult.recipient}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  目的地：{trackingResult.destination}
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center space-x-3 mb-3">
-                  <ClockIcon className="w-5 h-5 text-gray-600" />
-                  <span className="font-medium text-gray-900">預計送達</span>
-                </div>
-                <p className="text-gray-700">{trackingResult.estimatedDelivery}</p>
-                <p className="text-sm text-gray-500 mt-1">
-                  目前位置：{trackingResult.currentLocation}
-                </p>
-              </div>
-            </div>
-
-            {/* 包裹詳情 */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-              <h4 className="font-medium text-blue-900 mb-2">包裹詳情</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="text-blue-600">訂單編號：</span>
-                  <span className="text-blue-900">{trackingResult.orderNumber}</span>
-                </div>
-                <div>
-                  <span className="text-blue-600">包裹數量：</span>
-                  <span className="text-blue-900">{trackingResult.packageCount} 件</span>
-                </div>
-                <div>
-                  <span className="text-blue-600">總重量：</span>
-                  <span className="text-blue-900">{trackingResult.weight}</span>
-                </div>
-                <div>
-                  <span className="text-blue-600">收件電話：</span>
-                  <span className="text-blue-900">{trackingResult.recipientPhone}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 運送時間軸 */}
-            <div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-6 font-chinese">運送進度</h4>
-              <div className="space-y-4">
-                {trackingResult.timeline.map((event, index) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                      event.completed ? 'bg-green-100' : 'bg-gray-100'
-                    }`}>
-                      {getStatusIcon(event.status)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3">
-                        <h5 className={`font-medium ${
-                          event.completed ? 'text-gray-900' : 'text-gray-500'
-                        }`}>
-                          {event.description}
-                        </h5>
-                        {event.completed && (
-                          <CheckCircleIcon className="w-4 h-4 text-green-500" />
-                        )}
-                      </div>
-                      <div className="mt-1 text-sm text-gray-500">
-                        <span>{event.location}</span>
-                        {event.time && (
-                          <span className="ml-4">{formatDateTime(event.time)}</span>
-                        )}
-                      </div>
+              {activeTab === 'logistics' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                  <Field label="綠界物流編號" value={detail.LogisticsID || detail.AllPayLogisticsID} />
+                  <Field label="更新時間" value={detail.UpdateStatusDate} />
+                  <div className="glass p-4 rounded-xl">
+                    <div className="text-gray-500 mb-1">物流方式</div>
+                    <div className={getTypeBadgeClass(detail.LogisticsType, detail.LogisticsSubType)}>
+                      {mapTypeToChinese(detail.LogisticsType, detail.LogisticsSubType)}
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="glass p-4 rounded-xl">
+                    <div className="text-gray-500 mb-1">狀態</div>
+                    {getStatusBadge(mapStatusToText(detail.LogisticsStatus || detail.Status, detail.LogisticsType, detail.LogisticsSubType))}
+                  </div>
+                  <Field label="寄貨/配送編號" value={detail.CVSPaymentNo || detail.ShipmentNo} />
+                  <Field label="托運單號" value={detail.BookingNote} />
+                </div>
+              )}
+
+              {activeTab === 'receiver' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                  <Field label="收件人" value={detail.ReceiverName} />
+                  <Field label="Email" value={detail.ReceiverEmail} />
+                  <Field label="手機" value={detail.ReceiverCellPhone} />
+                  <Field label="電話" value={detail.ReceiverPhone} />
+                  <Field label="寄件人" value={detail.SenderName} />
+                  <Field label="寄件人手機" value={detail.SenderCellPhone} />
+                  <Field label="寄件人電話" value={detail.SenderPhone} />
+                </div>
+              )}
+
+              {activeTab === 'address' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                  <Field label="收件地址" value={detail.ReceiverAddress} />
+                  <Field label="門市代碼" value={detail.CVSStoreID} />
+                  <Field label="門市名稱" value={detail.CVSStoreName} />
+                  <Field label="門市地址" value={detail.CVSAddress} />
+                </div>
+              )}
+
+              {activeTab === 'fees' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                  <Field label="物流費" value={detail.HandlingCharge} />
+                  <Field label="代收金額" value={detail.CollectionAmount} />
+                  <Field label="代收手續費" value={detail.CollectionChargeFee} />
+                  <Field label="撥款日" value={detail.CollectionAllocateDate} />
+                  <Field label="撥款金額" value={detail.CollectionAllocateAmount} />
+                  <Field label="商品重量(kg)" value={detail.GoodsWeight} />
+                  <Field label="實際重量(kg)" value={detail.ActualWeight} />
+                  <Field label="運費扣款日" value={detail.ShipChargeDate} />
+                </div>
+              )}
+
+              {activeTab === 'raw' && (
+                <pre className="text-xs bg-gray-50 p-3 rounded overflow-auto max-h-[60vh]">
+{JSON.stringify(detail, null, 2)}
+                </pre>
+              )}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* 最近查詢記錄 */}
-      {recentTrackings.length > 0 && (
-        <div className="tracking-card bg-white/60 backdrop-blur-sm rounded-xl border border-white/20 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 font-chinese">最近查詢記錄</h3>
-          <div className="space-y-3">
-            {recentTrackings.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                onClick={() => {
-                  setTrackingNumber(item.trackingNumber);
-                  setTrackingResult(item.result);
-                }}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="flex-shrink-0">
-                    {getStatusIcon(item.result.status)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{item.trackingNumber}</p>
-                    <p className="text-sm text-gray-500">
-                      {item.result.carrier}  {item.result.recipient}  {item.result.orderNumber}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(item.result.status)}`}>
-                    {getStatusText(item.result.status)}
-                  </span>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formatDateTime(item.queriedAt)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 幫助資訊 */}
-      <div className="tracking-card bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mt-8">
-        <div className="flex items-start space-x-4">
-          <ExclamationTriangleIcon className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
-          <div>
-            <h4 className="font-medium text-blue-900 mb-2">追蹤說明</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li> 追蹤號碼通常在出貨通知中提供</li>
-              <li> 物流資訊可能有1-2小時的延遲更新</li>
-              <li> 如有問題請聯繫對應的承運商客服</li>
-              <li> 支援掃描包裹上的追蹤二維碼</li>
-            </ul>
-          </div>
-        </div>
+          </GlassModal>
+        )}
       </div>
     </div>
   );
-};
+}
 
-export default LogisticsTracking;
+// 小型欄位顯示元件（沿用玻璃樣式，提升可讀性）
+const Field = ({ label, value }) => (
+  <div className="glass p-4 rounded-xl">
+    <div className="text-gray-500 mb-1">{label}</div>
+    <div className="font-medium break-words">{value ?? '-'}</div>
+  </div>
+);
