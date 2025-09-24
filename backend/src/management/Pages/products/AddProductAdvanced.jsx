@@ -876,7 +876,7 @@ const AddProductAdvanced = () => {
                   <ImageUpload
                     images={productData.images}
                     onChange={(images) => handleInputChange('images', images)}
-                    maxImages={5}
+                    maxImages={10}
                   />
                 </div>
               </div>
