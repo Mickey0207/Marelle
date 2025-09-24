@@ -6,7 +6,7 @@ import {
   ArrowUpTrayIcon
 } from '@heroicons/react/24/outline';
 
-const ImageUpload = ({ images = [], onChange, maxImages = 5 }) => {
+const ImageUpload = ({ images = [], onChange, maxImages = 10 }) => {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -24,31 +24,38 @@ const ImageUpload = ({ images = [], onChange, maxImages = 5 }) => {
         alert(`${file.name} 文件過大，請選擇小於 10MB 的圖片`);
         return false;
       }
-      
       return true;
     });
 
-    if (images.length + validFiles.length > maxImages) {
+    const remainingSlots = Math.max(0, maxImages - images.length);
+    if (remainingSlots === 0) {
       alert(`最多只能上傳 ${maxImages} 張圖片`);
       return;
     }
 
-    // 處理每個文件
-    validFiles.forEach(file => {
+    const filesToAdd = validFiles.slice(0, remainingSlots);
+    if (validFiles.length > remainingSlots) {
+      alert(`已達上限，只加入前 ${remainingSlots} 張圖片`);
+    }
+
+    // 以批次方式加入，避免多次 onChange 造成狀態不同步
+    const readers = filesToAdd.map(file => new Promise(resolve => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const newImage = {
+        resolve({
           id: Date.now() + Math.random(),
-          file: file,
+          file,
           url: e.target.result,
           name: file.name,
           size: file.size,
           type: file.type
-        };
-        
-        onChange([...images, newImage]);
+        });
       };
       reader.readAsDataURL(file);
+    }));
+
+    Promise.all(readers).then(newImages => {
+      onChange([...images, ...newImages]);
     });
   };
 

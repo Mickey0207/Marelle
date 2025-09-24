@@ -15,7 +15,7 @@ import {
 import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
 import ImageUpload from '../../components/products/ImageUpload';
 import CategoryTreeSelector from '../../components/products/CategoryTreeSelector';
-import VariantManager from '../../components/products/VariantManager';
+import NestedSKUManager from '../../components/products/NestedSKUManager';
 import SEOSettings from '../../components/products/SEOSettings';
 import ProgressIndicator from '../../components/ui/ProgressIndicator';
 import AlertBox from '../../components/ui/AlertBox';
@@ -32,19 +32,17 @@ const AddProductAdvanced = () => {
     categories: [], // 複選分類
     tags: [],
     
-    // 定價資訊
+    // 定價資訊 (僅用於無變體商品)
     price: '',
     comparePrice: '',
     costPrice: '',
     profit: '',
     profitMargin: '',
     
-    // 庫存資訊
-    sku: '',
-    trackQuantity: true,
-    quantity: '',
-    allowBackorder: false,
-    lowStockThreshold: '',
+    // SKU 資訊
+    baseSKU: '', // 基礎 SKU，所有變體都會以此為基礎
+    hasVariants: false,
+    skuVariants: [], // 五層巢狀 SKU 變體
     
     // 圖片資訊
     images: [],
@@ -72,20 +70,7 @@ const AddProductAdvanced = () => {
     searchImage: '',
     useMetaTitleForSearch: true,
     useMetaDescriptionForSearch: true,
-    useOpenGraphImageForSearch: true,
-    
-    // 運送資訊
-    weight: '',
-    dimensions: {
-      length: '',
-      width: '',
-      height: ''
-    },
-    shippingRequired: true,
-    
-    // 變體資訊
-    hasVariants: false,
-    variants: []
+    useOpenGraphImageForSearch: true
   });
 
   const [errors, setErrors] = useState({});
@@ -97,28 +82,21 @@ const AddProductAdvanced = () => {
     {
       id: 'basic',
       title: '基本資訊',
-      description: '設定產品名稱、描述和分類',
+      description: '設定產品名稱、描述和基礎 SKU',
       icon: InformationCircleIcon,
       isCompleted: false
     },
     {
       id: 'pricing',
       title: '定價設定',
-      description: '設定價格、成本和利潤',
+      description: '設定價格、成本和利潤（無變體商品）',
       icon: CurrencyDollarIcon,
       isCompleted: false
     },
     {
-      id: 'inventory',
-      title: '庫存管理',
-      description: '設定 SKU、庫存數量和警告',
-      icon: CubeIcon,
-      isCompleted: false
-    },
-    {
       id: 'variants',
-      title: '變體設定',
-      description: '設定產品變體和選項',
+      title: 'SKU 變體管理',
+      description: '設定五層巢狀 SKU 變體和庫存',
       icon: TagIcon,
       isCompleted: false
     },
@@ -242,42 +220,39 @@ const AddProductAdvanced = () => {
         if (!productData.slug.trim()) newErrors.slug = '產品路由為必填項目';
         else if (!/^[a-z0-9-]+$/.test(productData.slug)) newErrors.slug = '路由只能包含小寫英文、數字和連字符';
         if (!productData.description.trim()) newErrors.description = '產品描述為必填項目';
+        if (!productData.baseSKU.trim()) newErrors.baseSKU = '基礎 SKU 為必填項目';
+        else if (!/^[a-z0-9]+$/.test(productData.baseSKU)) newErrors.baseSKU = '基礎 SKU 只能包含小寫英文和數字';
         break;
       
       case 'pricing':
-        if (!productData.price || parseFloat(productData.price) <= 0) {
-          newErrors.price = '請輸入有效的銷售價格';
-        }
-        break;
-      
-      case 'inventory':
-        if (!productData.sku.trim()) newErrors.sku = 'SKU 為必填項目';
-        if (productData.trackQuantity && (!productData.quantity || parseInt(productData.quantity) < 0)) {
-          newErrors.quantity = '請輸入有效的庫存數量';
+        // 僅在無變體時驗證價格
+        if (!productData.hasVariants) {
+          if (!productData.price || parseFloat(productData.price) <= 0) {
+            newErrors.price = '請輸入有效的銷售價格';
+          }
         }
         break;
       
       case 'variants':
-        if (productData.hasVariants && productData.variants.length === 0) {
-          newErrors.variants = '請設定至少一個產品變體';
-        }
         if (productData.hasVariants) {
-          // 檢查變體是否有設定價格和庫存
-          const invalidVariants = productData.variants.filter(v => 
-            v.isActive && (!v.price || !v.quantity)
-          );
-          if (invalidVariants.length > 0) {
-            newErrors.variants = '請為所有啟用的變體設定價格和庫存';
+          if (productData.skuVariants.length === 0) {
+            newErrors.skuVariants = '請設定至少一個 SKU 變體';
+          } else {
+            // 檢查變體是否有設定價格和庫存
+            const invalidVariants = productData.skuVariants.filter(v => 
+              v.isActive && (!v.price || (v.trackQuantity && !v.quantity))
+            );
+            if (invalidVariants.length > 0) {
+              newErrors.skuVariants = '請為所有啟用的變體設定價格和庫存';
+            }
           }
         }
         break;
         
+      case 'categories':
       case 'media':
-        // 圖片不是必填項目，但可以在這裡加入其他媒體驗證
-        break;
-        
       case 'seo':
-        // SEO 設定不是必填項目
+        // 這些步驟不是必填項目
         break;
     }
 
@@ -338,53 +313,52 @@ const AddProductAdvanced = () => {
               firstErrorField = 'description';
             }
           }
-
+          if (!productData.baseSKU.trim()) {
+            stepErrors.baseSKU = '基礎 SKU 為必填項目';
+            if (firstErrorStep === -1) {
+              firstErrorStep = i;
+              firstErrorField = 'baseSKU';
+            }
+          } else if (!/^[a-z0-9]+$/.test(productData.baseSKU)) {
+            stepErrors.baseSKU = '基礎 SKU 只能包含小寫英文和數字';
+            if (firstErrorStep === -1) {
+              firstErrorStep = i;
+              firstErrorField = 'baseSKU';
+            }
+          }
           break;
         
         case 'pricing':
-          if (!productData.price || parseFloat(productData.price) <= 0) {
-            stepErrors.price = '請輸入有效的銷售價格';
-            if (firstErrorStep === -1) {
-              firstErrorStep = i;
-              firstErrorField = 'price';
-            }
-          }
-          break;
-        
-        case 'inventory':
-          if (!productData.sku.trim()) {
-            stepErrors.sku = 'SKU 為必填項目';
-            if (firstErrorStep === -1) {
-              firstErrorStep = i;
-              firstErrorField = 'sku';
-            }
-          }
-          if (productData.trackQuantity && (!productData.quantity || parseInt(productData.quantity) < 0)) {
-            stepErrors.quantity = '請輸入有效的庫存數量';
-            if (firstErrorStep === -1) {
-              firstErrorStep = i;
-              firstErrorField = 'quantity';
+          // 僅在無變體時驗證價格
+          if (!productData.hasVariants) {
+            if (!productData.price || parseFloat(productData.price) <= 0) {
+              stepErrors.price = '請輸入有效的銷售價格';
+              if (firstErrorStep === -1) {
+                firstErrorStep = i;
+                firstErrorField = 'price';
+              }
             }
           }
           break;
         
         case 'variants':
-          if (productData.hasVariants && productData.variants.length === 0) {
-            stepErrors.variants = '請設定至少一個產品變體';
-            if (firstErrorStep === -1) {
-              firstErrorStep = i;
-              firstErrorField = 'variants';
-            }
-          }
           if (productData.hasVariants) {
-            const invalidVariants = productData.variants.filter(v => 
-              v.isActive && (!v.price || !v.quantity)
-            );
-            if (invalidVariants.length > 0) {
-              stepErrors.variants = '請為所有啟用的變體設定價格和庫存';
+            if (productData.skuVariants.length === 0) {
+              stepErrors.skuVariants = '請設定至少一個 SKU 變體';
               if (firstErrorStep === -1) {
                 firstErrorStep = i;
-                firstErrorField = 'variants';
+                firstErrorField = 'skuVariants';
+              }
+            } else {
+              const invalidVariants = productData.skuVariants.filter(v => 
+                v.isActive && (!v.price || (v.trackQuantity && !v.quantity))
+              );
+              if (invalidVariants.length > 0) {
+                stepErrors.skuVariants = '請為所有啟用的變體設定價格和庫存';
+                if (firstErrorStep === -1) {
+                  firstErrorStep = i;
+                  firstErrorField = 'skuVariants';
+                }
               }
             }
           }
@@ -436,19 +410,17 @@ const AddProductAdvanced = () => {
       // 準備提交的產品資料
       const submitData = {
         ...productData,
+        // 價格資訊 (僅用於無變體商品)
         price: parseFloat(productData.price) || 0,
         comparePrice: parseFloat(productData.comparePrice) || 0,
         costPrice: parseFloat(productData.costPrice) || 0,
-        quantity: parseInt(productData.quantity) || 0,
-        lowStockThreshold: parseInt(productData.lowStockThreshold) || 0,
-        weight: parseFloat(productData.weight) || 0,
-        trackQuantity: Boolean(productData.trackQuantity),
-        allowBackorder: Boolean(productData.allowBackorder),
-        hasVariants: Boolean(productData.hasVariants),
-        featured: Boolean(productData.featured),
+        
+        // 基本資訊
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        productId: `PROD-${Date.now()}`,
+        productId: `${productData.baseSKU}-${Date.now()}`,
+        
+        // 圖片資訊
         images: productData.images.map(img => ({
           id: img.id,
           url: img.url,
@@ -456,13 +428,29 @@ const AddProductAdvanced = () => {
           size: img.size,
           isMain: img === productData.images[0]
         })),
-        variants: productData.hasVariants ? productData.variants.map(variant => ({
+        
+        // SKU 變體資訊
+        skuVariants: productData.hasVariants ? productData.skuVariants.map(variant => ({
           ...variant,
           price: parseFloat(variant.price) || 0,
+          comparePrice: parseFloat(variant.comparePrice) || 0,
+          costPrice: parseFloat(variant.costPrice) || 0,
           quantity: parseInt(variant.quantity) || 0,
+          lowStockThreshold: parseInt(variant.lowStockThreshold) || 0,
           weight: parseFloat(variant.weight) || 0,
+          dimensions: {
+            length: parseFloat(variant.dimensions?.length) || 0,
+            width: parseFloat(variant.dimensions?.width) || 0,
+            height: parseFloat(variant.dimensions?.height) || 0
+          },
+          trackQuantity: Boolean(variant.trackQuantity),
+          allowBackorder: Boolean(variant.allowBackorder),
           isActive: Boolean(variant.isActive)
-        })) : []
+        })) : [],
+        
+        // 狀態資訊
+        hasVariants: Boolean(productData.hasVariants),
+        featured: Boolean(productData.featured)
       };
 
       console.log('準備提交的產品資料:', submitData);
@@ -606,6 +594,29 @@ const AddProductAdvanced = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                      基礎 SKU <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="baseSKU"
+                      id="baseSKU"
+                      value={productData.baseSKU}
+                      onChange={(e) => {
+                        const value = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        handleInputChange('baseSKU', value);
+                      }}
+                      className={`${ADMIN_STYLES.input} ${errors.baseSKU ? 'border-red-500' : ''}`}
+                      placeholder="例如：iphone"
+                      maxLength={20}
+                    />
+                    {errors.baseSKU && <p className="mt-1 text-sm text-red-600">{errors.baseSKU}</p>}
+                    <p className="mt-1 text-xs text-gray-500">
+                      基礎 SKU 將作為所有變體的前綴，例如：{productData.baseSKU || 'iphone'}bkpro
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       簡短描述
                     </label>
                     <input
@@ -679,6 +690,13 @@ const AddProductAdvanced = () => {
             {currentStep === 1 && (
               <div className="space-y-6">
                 <h3 className={ADMIN_STYLES.sectionTitle}>定價設定</h3>
+                
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-sm text-amber-800">
+                    💡 <strong>注意：</strong>如果您的商品有多個變體（如不同顏色、尺寸等），價格將在下一步的 SKU 變體管理中設定。
+                    此處的定價僅適用於無變體的單一商品。
+                  </p>
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -781,89 +799,10 @@ const AddProductAdvanced = () => {
 
             {currentStep === 2 && (
               <div className="space-y-6">
-                <h3 className={ADMIN_STYLES.sectionTitle}>庫存管理</h3>
+                <h3 className={ADMIN_STYLES.sectionTitle}>SKU 變體管理</h3>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    SKU (庫存單位) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="sku"
-                    id="sku"
-                    value={productData.sku}
-                    onChange={(e) => handleInputChange('sku', e.target.value)}
-                    className={`${ADMIN_STYLES.input} ${errors.sku ? 'border-red-500' : ''}`}
-                    placeholder="例如：PROD-001"
-                  />
-                  {errors.sku && <p className="mt-1 text-sm text-red-600">{errors.sku}</p>}
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="trackQuantity"
-                    checked={productData.trackQuantity}
-                    onChange={(e) => handleInputChange('trackQuantity', e.target.checked)}
-                    className="h-4 w-4 text-[#cc824d] border-gray-300 rounded focus:ring-[#cc824d]"
-                  />
-                  <label htmlFor="trackQuantity" className="ml-2 text-sm text-gray-700">
-                    追蹤庫存數量
-                  </label>
-                </div>
-
-                {productData.trackQuantity && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        庫存數量 <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        name="quantity"
-                        id="quantity"
-                        value={productData.quantity}
-                        onChange={(e) => handleInputChange('quantity', e.target.value)}
-                        className={`${ADMIN_STYLES.input} ${errors.quantity ? 'border-red-500' : ''}`}
-                        placeholder="0"
-                        min="0"
-                      />
-                      {errors.quantity && <p className="mt-1 text-sm text-red-600">{errors.quantity}</p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        低庫存警告
-                      </label>
-                      <input
-                        type="number"
-                        value={productData.lowStockThreshold}
-                        onChange={(e) => handleInputChange('lowStockThreshold', e.target.value)}
-                        className={ADMIN_STYLES.input}
-                        placeholder="5"
-                        min="0"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="allowBackorder"
-                    checked={productData.allowBackorder}
-                    onChange={(e) => handleInputChange('allowBackorder', e.target.checked)}
-                    className="h-4 w-4 text-[#cc824d] border-gray-300 rounded focus:ring-[#cc824d]"
-                  />
-                  <label htmlFor="allowBackorder" className="ml-2 text-sm text-gray-700">
-                    允許缺貨預訂
-                  </label>
-                </div>
-
                 <div className="border-t border-gray-200 pt-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">產品變體</h4>
-                  
-                  <div className="flex items-center">
+                  <div className="flex items-center mb-6">
                     <input
                       type="checkbox"
                       id="hasVariants"
@@ -872,37 +811,40 @@ const AddProductAdvanced = () => {
                       className="h-4 w-4 text-[#cc824d] border-gray-300 rounded focus:ring-[#cc824d]"
                     />
                     <label htmlFor="hasVariants" className="ml-2 text-sm text-gray-700">
-                      此產品有多個變體 (如不同顏色、尺寸等)
+                      此產品有多個 SKU 變體 (如不同顏色、尺寸、規格等)
                     </label>
                   </div>
                   
-                  {productData.hasVariants && (
-                    <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        💡 啟用變體後，您可以在下一步設定不同的產品選項和組合
+                  {!productData.hasVariants && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                      <CubeIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                      <p className="text-gray-600 mb-2">此商品為單一 SKU 商品</p>
+                      <p className="text-sm text-gray-500">
+                        如果商品有不同的變體選項，請勾選上方的變體選項
                       </p>
+                      {productData.baseSKU && (
+                        <div className="mt-4 p-3 bg-white rounded border">
+                          <p className="text-sm font-medium text-gray-700">商品 SKU:</p>
+                          <p className="font-mono text-lg text-[#cc824d]">{productData.baseSKU}</p>
+                        </div>
+                      )}
                     </div>
                   )}
+                  
+                  {productData.hasVariants && (
+                    <NestedSKUManager
+                      baseSKU={productData.baseSKU}
+                      skuVariants={productData.skuVariants}
+                      onChange={(variants) => handleInputChange('skuVariants', variants)}
+                    />
+                  )}
+                  
+                  {errors.skuVariants && <p className="mt-1 text-sm text-red-600">{errors.skuVariants}</p>}
                 </div>
               </div>
             )}
 
             {currentStep === 3 && (
-              <div className="space-y-6">
-                <h3 className={ADMIN_STYLES.sectionTitle}>變體設定</h3>
-                
-                <div id="variants">
-                  <VariantManager
-                    hasVariants={productData.hasVariants}
-                    variants={productData.variants}
-                    onChange={(variants) => handleInputChange('variants', variants)}
-                  />
-                  {errors.variants && <p className="mt-1 text-sm text-red-600">{errors.variants}</p>}
-                </div>
-              </div>
-            )}
-
-            {currentStep === 4 && (
               <div className="space-y-6">
                 <h3 className={ADMIN_STYLES.sectionTitle}>商品分類設定</h3>
                 
@@ -918,7 +860,7 @@ const AddProductAdvanced = () => {
               </div>
             )}
 
-            {currentStep === 5 && (
+            {currentStep === 4 && (
               <div className="space-y-6">
                 <h3 className={ADMIN_STYLES.sectionTitle}>圖片媒體</h3>
                 
@@ -932,72 +874,10 @@ const AddProductAdvanced = () => {
                     maxImages={5}
                   />
                 </div>
-
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="text-lg font-medium text-gray-900 mb-4">運送資訊</h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        重量 (公克)
-                      </label>
-                      <input
-                        type="number"
-                        value={productData.weight}
-                        onChange={(e) => handleInputChange('weight', e.target.value)}
-                        className={ADMIN_STYLES.input}
-                        placeholder="0"
-                        min="0"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        長度 (公分)
-                      </label>
-                      <input
-                        type="number"
-                        value={productData.dimensions.length}
-                        onChange={(e) => handleNestedInputChange('dimensions', 'length', e.target.value)}
-                        className={ADMIN_STYLES.input}
-                        placeholder="0"
-                        min="0"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        寬度 (公分)
-                      </label>
-                      <input
-                        type="number"
-                        value={productData.dimensions.width}
-                        onChange={(e) => handleNestedInputChange('dimensions', 'width', e.target.value)}
-                        className={ADMIN_STYLES.input}
-                        placeholder="0"
-                        min="0"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      高度 (公分)
-                    </label>
-                    <input
-                      type="number"
-                      value={productData.dimensions.height}
-                      onChange={(e) => handleNestedInputChange('dimensions', 'height', e.target.value)}
-                      className={ADMIN_STYLES.input}
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                </div>
               </div>
-            )}
+              )}
 
-            {currentStep === 6 && (
+            {currentStep === 5 && (
               <div className="space-y-6">
                 <h3 className={ADMIN_STYLES.sectionTitle}>SEO 設定</h3>
                 
