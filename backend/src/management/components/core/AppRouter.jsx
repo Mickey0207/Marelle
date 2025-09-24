@@ -29,13 +29,12 @@ import OrderForm from '../../Pages/orders/OrderForm';
 
 // Members 模組
 import MemberManagement from '../../Pages/members/MemberManagement';
-import Customers from '../../Pages/members/Customers';
 
 // Gifts 模組 
-import GiftManagement from '../../Pages/members/GiftManagement';
-import GiftTierRules from '../../Pages/members/GiftTierRules';
-import MemberGiftBenefits from '../../Pages/members/MemberGiftBenefits';
-import GiftAllocationTracking from '../../Pages/members/GiftAllocationTracking';
+import GiftManagement from '../../Pages/gifts/GiftManagement';
+import GiftTierRules from '../../Pages/gifts/GiftTierRules';
+import MemberGiftBenefits from '../../Pages/gifts/MemberGiftBenefits';
+import GiftAllocationTracking from '../../Pages/gifts/GiftAllocationTracking';
 
 // Suppliers 模組
 import SupplierList from '../../Pages/suppliers/SupplierList';
@@ -166,7 +165,6 @@ const AppRouter = () => {
 
               {/* Members 模組路由 */}
               <Route path="members" element={<MemberManagement />} />
-              <Route path="members/customers" element={<Customers />} />
 
               {/* Gifts 模組路由 */}
               <Route path="gifts" element={<GiftManagement />} />

@@ -28,7 +28,6 @@ const ordersTabs = [
 // Members 模組 tabs
 const membersTabs = [
   { label: '會員管理', path: '/members' },
-  { label: '客戶管理', path: '/members/customers' }
 ];
 
 // Gifts 模組 tabs - 已移除，因為gifts目錄為空

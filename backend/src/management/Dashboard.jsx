@@ -43,7 +43,6 @@ import AdminProducts from './Pages/products/Products';
 import AddProductAdvanced from './Pages/products/AddProductAdvanced';
 import EditProduct from './Pages/products/EditProduct';
 import AdminOrders from './Pages/orders/OrderList';
-import AdminCustomers from './Pages/members/Customers';
 import AdminAnalytics from './Pages/analytics/AnalyticsOverview';
 import AdminSettings from './Pages/settings/GeneralSettings';
 import Inventory from './Pages/inventory/Inventory';

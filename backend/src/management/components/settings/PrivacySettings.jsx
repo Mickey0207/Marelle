@@ -13,7 +13,7 @@ import {
   ArrowDownTrayIcon,
   CogIcon
 } from '@heroicons/react/24/outline';
-import { userTrackingDataManager } from '../../../lib/data/members/userTrackingDataManager';
+import { userTrackingDataManager } from '../../../lib/data/analytics/userTrackingDataManager';
 
 const PrivacySettings = () => {
   const [privacyData, setPrivacyData] = useState(null);

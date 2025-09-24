@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import {
   GiftIcon,
@@ -11,7 +11,7 @@ import {
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
-// import { giftDataManager } from "../../../shared/data/giftDataManager";
+import giftDataManager from "../../../lib/data/gifts/giftDataManager";
 
 const GiftStatus = {
   ACTIVE: 'active',
@@ -48,9 +48,7 @@ const GiftManagement = () => {
     setLoading(true);
     try {
       const result = await giftDataManager.getGifts();
-      if (result.success) {
-        setGifts(result.data);
-      }
+      if (result.success) setGifts(result.data);
     } catch (error) {
       console.error('Error loading gifts:', error);
     } finally {
@@ -61,23 +59,17 @@ const GiftManagement = () => {
   const loadStatistics = async () => {
     try {
       const result = await giftDataManager.getGiftStatistics();
-      if (result.success) {
-        setStatistics(result.data);
-      }
+      if (result.success) setStatistics(result.data);
     } catch (error) {
       console.error('Error loading statistics:', error);
     }
   };
 
-  const handleDeleteGift = (id) => {
+  const handleDeleteGift = async (id) => {
     if (window.confirm('確定要刪除這個禮品嗎？此操作無法復原。')) {
-      const result = giftDataManager.deleteGift(id);
-      if (result.success) {
-        loadGifts();
-        loadStatistics();
-      } else {
-        alert('刪除失敗：' + result.error);
-      }
+      const result = await giftDataManager.deleteGift(id);
+      if (result?.success) { await loadGifts(); await loadStatistics(); }
+      else alert('刪除失敗：' + (result?.error || '未知錯誤'));
     }
   };
 

@@ -14,8 +14,8 @@ export * from './orders/orderDataManager.js';
 export * from './logistics/logisticsDataManager.js';
 
 // 會員模組
-export * from './members/userTrackingDataManager.js';
-export * from './members/giftDataManager.js';
+export * from './analytics/userTrackingDataManager.js';
+export * from './gifts/giftDataManager.js';
 
 // 優惠券模組
 export * from './coupons/couponDataManager.js';

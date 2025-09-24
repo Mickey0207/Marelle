@@ -47,6 +47,24 @@ export const GiftCategory = {
   EXCLUSIVE: 'exclusive'
 };
 
+// UI 顯示用的預設點數與價值映射（可依實際需求調整）
+const GIFT_POINTS_MAP = {
+  gift_001: 100,
+  gift_002: 80,
+  gift_003: 150,
+  gift_004: 300,
+  gift_005: 500,
+  gift_006: 200
+};
+const GIFT_VALUE_MAP = {
+  gift_001: 150,
+  gift_002: 80,
+  gift_003: 200,
+  gift_004: 450,
+  gift_005: 1200,
+  gift_006: 600
+};
+
 // 創建預設贈品資料
 const createDefaultGifts = () => [
   {
@@ -387,6 +405,119 @@ const createDefaultGiftAllocations = () => [
   }
 ];
 
+// 供 GiftAllocationTracking 頁面使用的完整配送追蹤資料（包含會員資訊、成本、物流編號等）
+const createDefaultAllocationTrackingRecords = () => [
+  {
+    id: 'alloc-1',
+    memberId: 'member-1',
+    memberName: '張小明',
+    memberTier: 'gold',
+    orderId: 'order-1001',
+    allocatedDate: new Date('2024-01-15'),
+    gifts: [
+      { giftId: 'gift-1', name: '精美茶具組', quantity: 1, unitCost: 150, selectionType: 'automatic' },
+      { giftId: 'gift-2', name: '限量手錶', quantity: 1, unitCost: 200, selectionType: 'manual' }
+    ],
+    totalCost: 350,
+    status: 'shipped',
+    shippedDate: new Date('2024-01-16'),
+    trackingNumber: 'TW123456789'
+  },
+  {
+    id: 'alloc-2',
+    memberId: 'member-2',
+    memberName: '李小華',
+    memberTier: 'silver',
+    orderId: 'order-1002',
+    allocatedDate: new Date('2024-01-16'),
+    gifts: [
+      { giftId: 'gift-3', name: '香氛蠟燭', quantity: 2, unitCost: 80, selectionType: 'automatic' }
+    ],
+    totalCost: 160,
+    status: 'pending',
+    shippedDate: null,
+    trackingNumber: null
+  },
+  {
+    id: 'alloc-3',
+    memberId: 'member-3',
+    memberName: '王小美',
+    memberTier: 'platinum',
+    orderId: 'order-1003',
+    allocatedDate: new Date('2024-01-17'),
+    gifts: [
+      { giftId: 'gift-4', name: '高級護膚組', quantity: 1, unitCost: 300, selectionType: 'manual' },
+      { giftId: 'gift-5', name: '絲質圍巾', quantity: 1, unitCost: 120, selectionType: 'automatic' }
+    ],
+    totalCost: 420,
+    status: 'delivered',
+    shippedDate: new Date('2024-01-18'),
+    deliveredDate: new Date('2024-01-20'),
+    trackingNumber: 'TW987654321'
+  }
+];
+
+// 供 MemberGiftBenefits 頁面使用的會員等級與政策
+const createDefaultMemberTiers = () => [
+  {
+    id: 'tier-1',
+    name: '一般會員',
+    level: 1,
+    requirements: { minPurchaseAmount: 0, minPurchaseCount: 0, membershipDays: 0 },
+    benefits: { pointsMultiplier: 1.0, birthdayGift: true, freeShipping: false, exclusiveEvents: false, personalShopper: false },
+    giftAllocation: { quarterlyGifts: 0, birthdayGiftValue: 50, welcomeGift: true, anniversaryGift: false },
+    memberCount: 2486,
+    status: 'active'
+  },
+  {
+    id: 'tier-2',
+    name: '銀級會員',
+    level: 2,
+    requirements: { minPurchaseAmount: 5000, minPurchaseCount: 3, membershipDays: 30 },
+    benefits: { pointsMultiplier: 1.2, birthdayGift: true, freeShipping: true, exclusiveEvents: false, personalShopper: false },
+    giftAllocation: { quarterlyGifts: 1, birthdayGiftValue: 100, welcomeGift: true, anniversaryGift: true },
+    memberCount: 1245,
+    status: 'active'
+  },
+  {
+    id: 'tier-3',
+    name: '金級會員',
+    level: 3,
+    requirements: { minPurchaseAmount: 15000, minPurchaseCount: 8, membershipDays: 90 },
+    benefits: { pointsMultiplier: 1.5, birthdayGift: true, freeShipping: true, exclusiveEvents: true, personalShopper: false },
+    giftAllocation: { quarterlyGifts: 2, birthdayGiftValue: 200, welcomeGift: true, anniversaryGift: true },
+    memberCount: 567,
+    status: 'active'
+  },
+  {
+    id: 'tier-4',
+    name: '白金會員',
+    level: 4,
+    requirements: { minPurchaseAmount: 50000, minPurchaseCount: 20, membershipDays: 365 },
+    benefits: { pointsMultiplier: 2.0, birthdayGift: true, freeShipping: true, exclusiveEvents: true, personalShopper: true },
+    giftAllocation: { quarterlyGifts: 4, birthdayGiftValue: 500, welcomeGift: true, anniversaryGift: true },
+    memberCount: 123,
+    status: 'active'
+  }
+];
+
+const createDefaultGiftPolicies = () => [
+  {
+    id: 'policy-1',
+    name: '生日禮品政策',
+    description: '會員生日當月可領取的禮品',
+    applicableTiers: ['tier-1', 'tier-2', 'tier-3', 'tier-4'],
+    active: true
+  },
+  {
+    id: 'policy-2',
+    name: '季度禮品政策',
+    description: '高級會員季度自動發送的禮品',
+    applicableTiers: ['tier-2', 'tier-3', 'tier-4'],
+    active: true
+  }
+];
+
 // 贈品管理資料管理器
 class GiftDataManager {
   constructor() {
@@ -394,6 +525,10 @@ class GiftDataManager {
     this.tierRules = this.loadData('tierRules', createDefaultTierRules);
     this.memberGiftRules = this.loadData('memberGiftRules', createDefaultMemberGiftRules);
     this.giftAllocations = this.loadData('giftAllocations', createDefaultGiftAllocations);
+    // 供頁面使用的擴充 mock：配送追蹤、會員等級、政策規則
+    this.allocationTracking = this.loadData('allocationTracking', createDefaultAllocationTrackingRecords);
+    this.memberTiers = this.loadData('memberTiers', createDefaultMemberTiers);
+    this.giftPolicies = this.loadData('giftPolicies', createDefaultGiftPolicies);
   }
 
   loadData(key, defaultFactory) {
@@ -425,6 +560,19 @@ class GiftDataManager {
 
   saveData(key, data) {
     localStorage.setItem(`marelle_gift_${key}`, JSON.stringify(data));
+  }
+
+  // 包裝型 API（符合頁面期望的 {success, data} 介面）
+  async getGifts() {
+    // 映射成頁面所需欄位
+    const data = this.gifts.map(g => ({
+      ...g,
+      pointsRequired: GIFT_POINTS_MAP[g.id] ?? 100,
+      stock: g?.inventory?.available ?? 0,
+      redeemedCount: g?.inventory?.reserved ?? 0,
+      value: GIFT_VALUE_MAP[g.id] ?? 100
+    }));
+    return { success: true, data };
   }
 
   // 贈品管理方法
@@ -467,9 +615,9 @@ class GiftDataManager {
     if (index !== -1) {
       this.gifts.splice(index, 1);
       this.saveData('gifts', this.gifts);
-      return true;
+      return { success: true };
     }
-    return false;
+    return { success: false, error: 'Gift not found' };
   }
 
   // 庫存管理方法
@@ -550,6 +698,11 @@ class GiftDataManager {
     return this.memberGiftRules;
   }
 
+  // GiftTierRules 專用 API 包裝
+  async getTierRules() {
+    return { success: true, data: this.tierRules };
+  }
+
   // 贈品分配記錄管理
   getAllAllocations() {
     return this.giftAllocations;
@@ -566,7 +719,7 @@ class GiftDataManager {
     return newAllocation;
   }
 
-  // 統計方法
+  // 統計方法（頁面期望回傳 {success, data}）
   getGiftStatistics() {
     const totalGifts = this.gifts.length;
     const activeGifts = this.gifts.filter(g => g.status === GiftStatus.ACTIVE).length;
@@ -581,15 +734,45 @@ class GiftDataManager {
       const currentMonth = new Date().getMonth();
       return allocationMonth === currentMonth;
     }).length;
+    // 供 GiftManagement 頁面卡片顯示的總價值（以可用數量 * value 粗估）
+    const uiGifts = this.gifts.map(g => ({
+      stock: g?.inventory?.available ?? 0,
+      value: GIFT_VALUE_MAP[g.id] ?? 100
+    }));
+    const totalValue = uiGifts.reduce((sum, it) => sum + (Number(it.stock) * Number(it.value)), 0);
 
-    return {
+    const data = {
       totalGifts,
       activeGifts,
-      outOfStockGifts,
+      outOfStock: outOfStockGifts,
       lowStockGifts,
       totalAllocations,
-      thisMonthAllocations
+      thisMonthAllocations,
+      totalValue
     };
+    return { success: true, data };
+  }
+
+  // GiftAllocationTracking 專用 API
+  async getAllocationTracking() {
+    return { success: true, data: this.allocationTracking };
+  }
+
+  async getAllocationTrackingStatistics() {
+    const totalAllocations = this.allocationTracking.length;
+    const totalCost = this.allocationTracking.reduce((sum, a) => sum + (Number(a.totalCost) || 0), 0);
+    const pendingAllocations = this.allocationTracking.filter(a => a.status === 'pending').length;
+    const shippedAllocations = this.allocationTracking.filter(a => a.status === 'shipped').length;
+    return { success: true, data: { totalAllocations, totalCost, pendingAllocations, shippedAllocations } };
+  }
+
+  // MemberGiftBenefits 專用 API
+  async getMemberTiers() {
+    return { success: true, data: this.memberTiers };
+  }
+
+  async getGiftPolicies() {
+    return { success: true, data: this.giftPolicies };
   }
 
   // 搜尋和篩選

@@ -11,7 +11,7 @@ import {
   PlayIcon,
   PauseIcon
 } from '@heroicons/react/24/outline';
-import { userTrackingDataManager } from '../../../lib/data/members/userTrackingDataManager';
+import { userTrackingDataManager } from '../../../lib/data/analytics/userTrackingDataManager';
 
 const RealTimeActivityMonitor = () => {
   const [realTimeData, setRealTimeData] = useState(null);

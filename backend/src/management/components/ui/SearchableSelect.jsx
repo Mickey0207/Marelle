@@ -240,9 +240,19 @@ const SearchableSelect = ({
         `}
       >
         <div className="flex items-center justify-between">
-          <span className={`truncate ${!selectedValues[0] && !multiple ? 'text-gray-500' : 'text-gray-900'}`}>
-            {getDisplayValue()}
-          </span>
+          <div className="flex items-center gap-2 truncate">
+            {!multiple && selectedValues[0] && (() => {
+              const opt = formattedOptions.find(o => o.value === selectedValues[0]);
+              return opt?.icon ? (
+                <span className="inline-flex items-center justify-center w-4 h-4">
+                  {opt.icon}
+                </span>
+              ) : null;
+            })()}
+            <span className={`truncate ${!selectedValues[0] && !multiple ? 'text-gray-500' : 'text-gray-900'}`}>
+              {getDisplayValue()}
+            </span>
+          </div>
           
           <div className="flex items-center gap-2 ml-2">
             {allowClear && (selectedValues[0] || (multiple && selectedValues.length > 0)) && (
@@ -299,12 +309,12 @@ const SearchableSelect = ({
       {isOpen && createPortal(
         <div
           ref={listRef}
-          className="fixed z-[99999] glass-dropdown"
+          className="fixed z-[200000] glass-dropdown"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
             width: `${dropdownPosition.width}px`,
-            zIndex: 99999,
+            zIndex: 200000,
             minWidth: '200px'
           }}
         >
@@ -351,7 +361,14 @@ const SearchableSelect = ({
                 onClick={() => handleSelect(option)}
                 className={`glass-dropdown-option font-chinese ${isSelected(option.value) ? 'selected' : ''}`}
               >
-                <span className="truncate">{option.label}</span>
+                <span className="truncate flex items-center gap-2">
+                  {option.icon && (
+                    <span className="inline-flex items-center justify-center w-4 h-4">
+                      {option.icon}
+                    </span>
+                  )}
+                  <span className="truncate">{option.label}</span>
+                </span>
                 {isSelected(option.value) && (
                   <Check className="w-4 h-4 flex-shrink-0 ml-2" style={{ color: '#CC824D' }} />
                 )}

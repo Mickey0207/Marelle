@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import {
   GiftIcon,
@@ -12,6 +12,7 @@ import {
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
+import giftDataManager from "../../../lib/data/gifts/giftDataManager";
 
 const AllocationStatus = {
   PENDING: 'pending',
@@ -30,7 +31,7 @@ const GiftAllocationTracking = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [dateRange, setDateRange] = useState('all');
+  // 保留未來的日期篩選 UI，暫不實作
   const [statistics, setStatistics] = useState({
     totalAllocations: 0,
     totalCost: 0,
@@ -52,60 +53,8 @@ const GiftAllocationTracking = () => {
   const loadAllocations = async () => {
     setLoading(true);
     try {
-      // 模擬載入配送記錄資料
-      const mockAllocations = [
-        {
-          id: 'alloc-1',
-          memberId: 'member-1',
-          memberName: '張小明',
-          memberTier: 'gold',
-          orderId: 'order-1001',
-          allocatedDate: new Date('2024-01-15'),
-          gifts: [
-            { giftId: 'gift-1', name: '精美茶具組', quantity: 1, unitCost: 150, selectionType: 'automatic' },
-            { giftId: 'gift-2', name: '限量手錶', quantity: 1, unitCost: 200, selectionType: 'manual' }
-          ],
-          totalCost: 350,
-          status: 'shipped',
-          shippedDate: new Date('2024-01-16'),
-          trackingNumber: 'TW123456789'
-        },
-        {
-          id: 'alloc-2',
-          memberId: 'member-2',
-          memberName: '李小華',
-          memberTier: 'silver',
-          orderId: 'order-1002',
-          allocatedDate: new Date('2024-01-16'),
-          gifts: [
-            { giftId: 'gift-3', name: '香氛蠟燭', quantity: 2, unitCost: 80, selectionType: 'automatic' }
-          ],
-          totalCost: 160,
-          status: 'pending',
-          shippedDate: null,
-          trackingNumber: null
-        },
-        {
-          id: 'alloc-3',
-          memberId: 'member-3',
-          memberName: '王小美',
-          memberTier: 'platinum',
-          orderId: 'order-1003',
-          allocatedDate: new Date('2024-01-17'),
-          gifts: [
-            { giftId: 'gift-4', name: '高級護膚組', quantity: 1, unitCost: 300, selectionType: 'manual' },
-            { giftId: 'gift-5', name: '絲質圍巾', quantity: 1, unitCost: 120, selectionType: 'automatic' }
-          ],
-          totalCost: 420,
-          status: 'delivered',
-          shippedDate: new Date('2024-01-18'),
-          deliveredDate: new Date('2024-01-20'),
-          trackingNumber: 'TW987654321'
-        }
-      ];
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setAllocations(mockAllocations);
+      const { success, data } = await giftDataManager.getAllocationTracking();
+      if (success) setAllocations(data);
     } catch (error) {
       console.error('Error loading allocations:', error);
     } finally {
@@ -115,13 +64,8 @@ const GiftAllocationTracking = () => {
 
   const loadStatistics = async () => {
     try {
-      const mockStats = {
-        totalAllocations: 156,
-        totalCost: 45620,
-        pendingAllocations: 23,
-        shippedAllocations: 89
-      };
-      setStatistics(mockStats);
+      const { success, data } = await giftDataManager.getAllocationTrackingStatistics();
+      if (success) setStatistics(data);
     } catch (error) {
       console.error('Error loading statistics:', error);
     }

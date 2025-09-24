@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import {
   GiftIcon,
@@ -10,6 +10,7 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
+import giftDataManager from "../../../lib/data/gifts/giftDataManager";
 
 const MemberGiftBenefits = () => {
   const [memberTiers, setMemberTiers] = useState([]);
@@ -32,112 +33,8 @@ const MemberGiftBenefits = () => {
   const loadMemberTiers = async () => {
     setLoading(true);
     try {
-      // 模擬載入會員等級數據
-      const mockTiers = [
-        {
-          id: 'tier-1',
-          name: '一般會員',
-          level: 1,
-          requirements: {
-            minPurchaseAmount: 0,
-            minPurchaseCount: 0,
-            membershipDays: 0
-          },
-          benefits: {
-            pointsMultiplier: 1.0,
-            birthdayGift: true,
-            freeShipping: false,
-            exclusiveEvents: false,
-            personalShopper: false
-          },
-          giftAllocation: {
-            quarterlyGifts: 0,
-            birthdayGiftValue: 50,
-            welcomeGift: true,
-            anniversaryGift: false
-          },
-          memberCount: 2486,
-          status: 'active'
-        },
-        {
-          id: 'tier-2',
-          name: '銀級會員',
-          level: 2,
-          requirements: {
-            minPurchaseAmount: 5000,
-            minPurchaseCount: 3,
-            membershipDays: 30
-          },
-          benefits: {
-            pointsMultiplier: 1.2,
-            birthdayGift: true,
-            freeShipping: true,
-            exclusiveEvents: false,
-            personalShopper: false
-          },
-          giftAllocation: {
-            quarterlyGifts: 1,
-            birthdayGiftValue: 100,
-            welcomeGift: true,
-            anniversaryGift: true
-          },
-          memberCount: 1245,
-          status: 'active'
-        },
-        {
-          id: 'tier-3',
-          name: '金級會員',
-          level: 3,
-          requirements: {
-            minPurchaseAmount: 15000,
-            minPurchaseCount: 8,
-            membershipDays: 90
-          },
-          benefits: {
-            pointsMultiplier: 1.5,
-            birthdayGift: true,
-            freeShipping: true,
-            exclusiveEvents: true,
-            personalShopper: false
-          },
-          giftAllocation: {
-            quarterlyGifts: 2,
-            birthdayGiftValue: 200,
-            welcomeGift: true,
-            anniversaryGift: true
-          },
-          memberCount: 567,
-          status: 'active'
-        },
-        {
-          id: 'tier-4',
-          name: '白金會員',
-          level: 4,
-          requirements: {
-            minPurchaseAmount: 50000,
-            minPurchaseCount: 20,
-            membershipDays: 365
-          },
-          benefits: {
-            pointsMultiplier: 2.0,
-            birthdayGift: true,
-            freeShipping: true,
-            exclusiveEvents: true,
-            personalShopper: true
-          },
-          giftAllocation: {
-            quarterlyGifts: 4,
-            birthdayGiftValue: 500,
-            welcomeGift: true,
-            anniversaryGift: true
-          },
-          memberCount: 123,
-          status: 'active'
-        }
-      ];
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setMemberTiers(mockTiers);
+      const { success, data } = await giftDataManager.getMemberTiers();
+      if (success) setMemberTiers(data);
     } catch (error) {
       console.error('Error loading member tiers:', error);
     } finally {
@@ -147,24 +44,8 @@ const MemberGiftBenefits = () => {
 
   const loadGiftPolicies = async () => {
     try {
-      // 模擬載入禮品政策
-      const mockPolicies = [
-        {
-          id: 'policy-1',
-          name: '生日禮品政策',
-          description: '會員生日當月可領取的禮品',
-          applicableTiers: ['tier-1', 'tier-2', 'tier-3', 'tier-4'],
-          active: true
-        },
-        {
-          id: 'policy-2',
-          name: '季度禮品政策',
-          description: '高級會員季度自動發送的禮品',
-          applicableTiers: ['tier-2', 'tier-3', 'tier-4'],
-          active: true
-        }
-      ];
-      setGiftPolicies(mockPolicies);
+      const { success, data } = await giftDataManager.getGiftPolicies();
+      if (success) setGiftPolicies(data);
     } catch (error) {
       console.error('Error loading gift policies:', error);
     }
@@ -401,12 +282,7 @@ const MemberGiftBenefits = () => {
       {/* 編輯模態框 */}
       {showEditModal && selectedTier && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh]" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-gray-900 mb-4 font-chinese">
               編輯 {selectedTier.name}
             </h3>
@@ -471,7 +347,7 @@ const MemberGiftBenefits = () => {
                 <h4 className="font-medium text-gray-900 mb-3">禮品分配</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">季度禮品數量</label>
+                    <label className="block text.sm font-medium text-gray-700 mb-1">季度禮品數量</label>
                     <input
                       type="number"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"

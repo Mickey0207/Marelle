@@ -31,10 +31,10 @@ const GlassModal = ({
       ></div>
       
       {/* 玻璃態彈出視窗 */}
-      <div className={`relative ${size} w-full max-h-[90vh] overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl`}>
+  <div className={`relative ${size} w-full max-h-[90vh] overflow-visible rounded-3xl bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl`}>
         {/* 標題列 */}
         {title && (
-          <div className={`${headerClass} backdrop-blur-sm text-white px-6 py-4 border-b border-white/20`}>
+          <div className={`${headerClass} backdrop-blur-sm text-white px-6 py-4 border-b border-white/20 rounded-t-3xl`}>
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold font-chinese">{title}</h2>
               {showCloseButton && (
@@ -50,7 +50,7 @@ const GlassModal = ({
         )}
         
         {/* 內容區域 */}
-        <div className="relative overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="relative overflow-y-auto overflow-x-visible max-h-[calc(90vh-80px)]">
           {children}
         </div>
       </div>
