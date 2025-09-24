@@ -159,12 +159,8 @@ const adminTabs = [
 
 // Inventory 模組 tabs
 const inventoryTabs = [
-  { label: '庫存管理', path: '/inventory' }
-  // 暫時註解掉，因為還沒有對應的頁面
-  // { label: '庫存列表', path: '/inventory/list' },
-  // { label: '庫存調整', path: '/inventory/adjustments' },
-  // { label: '低庫存警告', path: '/inventory/alerts' },
-  // { label: '庫存報告', path: '/inventory/reports' }
+  { label: '庫存管理', path: '/inventory' },
+  { label: '倉庫管理', path: '/inventory/warehouses' }
 ];
 
 // Tab 配置映射函數

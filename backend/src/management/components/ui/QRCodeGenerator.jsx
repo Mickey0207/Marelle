@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   QrCodeIcon,
   ArrowDownTrayIcon,
@@ -11,7 +11,7 @@ import {
 // 單一模式：將「商品連結 + SKU 資訊 + 圖片」合併成一個 QR payload
 // product: { name, slug, categories?, images? }
 // sku: { sku/fullSKU, salePrice, comparePrice, costPrice, variantPath? }
-const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
+const QRCodeGenerator = ({ product, sku = null, onGenerated, autoGenerate = false, compact = false }) => {
   const [generating, setGenerating] = useState(false);
   const [generatedQR, setGeneratedQR] = useState(null);
   
@@ -120,6 +120,14 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
     }
   };
 
+  // 自動生成模式：掛載後直接生成
+  useEffect(() => {
+    if (autoGenerate && !generatedQR && !generating) {
+      handleGenerate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoGenerate]);
+
   // 下載 QR Code
   const handleDownload = () => {
     if (!generatedQR) return;
@@ -141,6 +149,27 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated }) => {
       alert('QR Code數據已複製到剪貼簿');
     });
   };
+
+  // 精簡顯示模式：只呈現 QR 圖片
+  if (compact) {
+    return (
+      <div className="qr-generator">
+        {generatedQR ? (
+          <div className="text-center">
+            <img 
+              src={generatedQR.imageUrl} 
+              alt="Generated QR Code"
+              className="w-56 h-56 mx-auto border rounded-lg shadow-md"
+            />
+          </div>
+        ) : (
+          <div className="py-10 text-center text-sm text-gray-500 font-chinese">
+            {generating ? '生成中…' : '準備中…'}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="qr-generator glass rounded-lg p-6">

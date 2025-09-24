@@ -20,6 +20,7 @@ import AdminProducts from '../../Pages/products/Products';
 import AddProductAdvanced from '../../Pages/products/AddProductAdvanced';
 import EditProduct from '../../Pages/products/EditProduct';
 import Inventory from '../../Pages/inventory/Inventory';
+import WarehouseManagement from '../../Pages/inventory/WarehouseManagement';
 
 // Orders 模組
 import OrderList from '../../Pages/orders/OrderList';
@@ -248,6 +249,7 @@ const AppRouter = () => {
 
               {/* Inventory 模組路由 (獨立模組) */}
               <Route path="inventory" element={<Inventory />} />
+              <Route path="inventory/warehouses" element={<WarehouseManagement />} />
               {/* 暫時註解掉，因為還沒有對應的頁面 */}
               {/* <Route path="inventory/list" element={<Inventory />} />
               <Route path="inventory/adjustments" element={<Inventory />} />
