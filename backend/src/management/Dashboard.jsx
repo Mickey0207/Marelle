@@ -47,7 +47,6 @@ import AdminAnalytics from './Pages/analytics/AnalyticsOverview';
 import AdminSettings from './Pages/settings/GeneralSettings';
 import Inventory from './Pages/inventory/Inventory';
 import MemberManagement from './Pages/members/MemberManagement';
-import NotificationManagementContainer from './Pages/notifications/NotificationManagement';
 import AdminManagement from './Pages/admin/AdminManagement';
 // // import GiftManagementContainer from './Pages/gifts/GiftManagement'; // 已移除，此檔案不在Pages/gifts中 // 已移除，gifts目錄為空
 import SupplierManagementContainer from './Pages/procurement/SupplierList';

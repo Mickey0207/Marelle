@@ -72,13 +72,13 @@ const couponsTabs = [
 
 // Notifications 模組 tabs
 const notificationsTabs = [
-  { label: '通知管理', path: '/notifications' },
-  { label: '模板管理', path: '/notifications/templates' },
-  { label: '變數管理', path: '/notifications/variables' },
-  { label: '觸發器管理', path: '/notifications/triggers' },
-  { label: '通道設定', path: '/notifications/channels' },
-  { label: '通知歷史', path: '/notifications/history' },
-  { label: '通知分析', path: '/notifications/analytics' }
+  { label: '通知歷史', path: '/notifications' },
+  { label: 'Line 一般訊息', path: '/notifications/line-text' },
+  { label: 'Line Flex message', path: '/notifications/line-flex' },
+  { label: 'Mail 一般訊息', path: '/notifications/mail-text' },
+  { label: 'Mail html', path: '/notifications/mail-html' },
+  { label: 'SMS', path: '/notifications/sms' },
+  { label: '網站通知', path: '/notifications/web' }
 ];
 
 // Accounting 模組 tabs

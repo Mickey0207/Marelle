@@ -51,14 +51,14 @@ import CouponManagement from '../../Pages/coupons/CouponManagementContainer';
 import SharingManager from '../coupons/SharingManager';
 import StackingRulesManager from '../coupons/StackingRulesManager';
 
-// Notifications 模組
-import TemplateManagement from '../notifications/TemplateManagement';
-import VariableManagement from '../notifications/VariableManagement';
-import TriggerManagement from '../notifications/TriggerManagement';
-import ChannelSettings from '../../Pages/notifications/ChannelSettings';
+// Notifications 模組頁面
 import NotificationHistory from '../../Pages/notifications/NotificationHistory';
-import AnalyticsOverview from '../../Pages/notifications/AnalyticsOverview';
-import NotificationManagement from '../../Pages/notifications/NotificationManagement';
+import LineTextMessage from '../../Pages/notifications/LineTextMessage';
+import LineFlexMessage from '../../Pages/notifications/LineFlexMessage';
+import MailTextMessage from '../../Pages/notifications/MailTextMessage';
+import MailHtmlMessage from '../../Pages/notifications/MailHtmlMessage';
+import SmsMessage from '../../Pages/notifications/SmsMessage';
+import WebNotification from '../../Pages/notifications/WebNotification';
 
 // Accounting 模組
 import AccountingOverview from '../../Pages/accounting/AccountingOverview';
@@ -176,13 +176,13 @@ const AppRouter = () => {
               <Route path="coupons/stacking-rules" element={<StackingRulesManager />} />
 
               {/* Notifications 模組路由 */}
-              <Route path="notifications" element={<NotificationManagement />} />
-              <Route path="notifications/templates" element={<TemplateManagement />} />
-              <Route path="notifications/variables" element={<VariableManagement />} />
-              <Route path="notifications/triggers" element={<TriggerManagement />} />
-              <Route path="notifications/channels" element={<ChannelSettings />} />
-              <Route path="notifications/history" element={<NotificationHistory />} />
-              <Route path="notifications/analytics" element={<AnalyticsOverview />} />
+              <Route path="notifications" element={<NotificationHistory />} />
+              <Route path="notifications/line-text" element={<LineTextMessage />} />
+              <Route path="notifications/line-flex" element={<LineFlexMessage />} />
+              <Route path="notifications/mail-text" element={<MailTextMessage />} />
+              <Route path="notifications/mail-html" element={<MailHtmlMessage />} />
+              <Route path="notifications/sms" element={<SmsMessage />} />
+              <Route path="notifications/web" element={<WebNotification />} />
 
               {/* Accounting 模組路由 */}
               <Route path="accounting" element={<AccountingOverview />} />
