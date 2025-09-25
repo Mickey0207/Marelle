@@ -50,7 +50,7 @@ import MemberManagement from './Pages/members/MemberManagement';
 import NotificationManagementContainer from './Pages/notifications/NotificationManagement';
 import AdminManagement from './Pages/admin/AdminManagement';
 // // import GiftManagementContainer from './Pages/gifts/GiftManagement'; // 已移除，此檔案不在Pages/gifts中 // 已移除，gifts目錄為空
-import SupplierManagementContainer from './Pages/suppliers/SupplierList';
+import SupplierManagementContainer from './Pages/procurement/SupplierList';
 import ProcurementManagementContainer from './Pages/procurement/ProcurementOverview';
 import CouponManagementContainer from './Pages/coupons/CouponManagementContainer';
 // import LogisticsManagementContainer from './Pages/logistics/LogisticsOverview'; // 已移除
@@ -141,7 +141,6 @@ const AdminDashboard = () => {
     { name: '行銷管理', href: '/marketing', icon: SpeakerWaveIcon },
     { name: '會員管理', href: '/members', icon: UsersIcon },
     { name: '贈品管理', href: '/gifts', icon: GiftIcon },
-    { name: '供應商管理', href: '/suppliers', icon: TruckIcon },
     { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon },
     { name: '會計管理', href: '/accounting', icon: CalculatorIcon },
     { name: '文檔管理', href: '/documents', icon: DocumentTextIcon },

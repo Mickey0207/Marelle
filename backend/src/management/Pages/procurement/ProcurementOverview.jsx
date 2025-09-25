@@ -1,23 +1,11 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { gsap } from 'gsap';
 import SearchableSelect from '../../components/ui/SearchableSelect';
-import {
-  PlusIcon,
-  DocumentTextIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  TruckIcon,
-  ExclamationTriangleIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  ChartBarIcon,
-  CurrencyDollarIcon,
-  CalendarIcon
-} from '@heroicons/react/24/outline';
+import StandardTable from '../../components/ui/StandardTable';
+import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
+import { procurementDataManager } from '../../../lib/data/procurement/procurementDataManager.js';
+import supplierDataManager from '../../../lib/data/procurement/supplierDataManager.js';
+import GlassModal from '../../components/ui/GlassModal';
+import { DocumentTextIcon, MagnifyingGlassIcon, EyeIcon, PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 const ProcurementOverview = () => {
   const [procurementOrders, setProcurementOrders] = useState([]);
@@ -25,141 +13,45 @@ const ProcurementOverview = () => {
   const [filters, setFilters] = useState({
     status: 'all',
     priority: 'all',
-    supplier: 'all',
-    dateRange: '30days',
     searchQuery: ''
   });
-
-  // 模擬採購訂單數據
-  const mockProcurementOrders = [
-    {
-      id: 'PO-2024-001',
-      title: '春季商品採購計劃',
-      supplierId: 'SUP-001',
-      supplierName: '優質材料有限公司',
-      status: 'approved',
-      priority: 'high',
-      totalAmount: 1250000,
-      currency: 'TWD',
-      itemCount: 15,
-      createdDate: '2024-01-15',
-      expectedDelivery: '2024-02-15',
-      approvedBy: '張經理',
-      description: '春季新品原材料採購，包含高品質皮革和金屬配件',
-      department: '採購部',
-      category: '原材料'
-    },
-    {
-      id: 'PO-2024-002',
-      title: '包裝材料補貨訂單',
-      supplierId: 'SUP-002',
-      supplierName: '包裝專家股份有限公司',
-      status: 'pending',
-      priority: 'medium',
-      totalAmount: 350000,
-      currency: 'TWD',
-      itemCount: 8,
-      createdDate: '2024-01-20',
-      expectedDelivery: '2024-02-05',
-      approvedBy: null,
-      description: '環保包裝盒、手提袋及防護材料採購',
-      department: '倉儲部',
-      category: '包裝材料'
-    },
-    {
-      id: 'PO-2024-003',
-      title: '辦公設備採購',
-      supplierId: 'SUP-003',
-      supplierName: '科技辦公設備公司',
-      status: 'production',
-      priority: 'low',
-      totalAmount: 180000,
-      currency: 'TWD',
-      itemCount: 5,
-      createdDate: '2024-01-10',
-      expectedDelivery: '2024-01-30',
-      approvedBy: '王主任',
-      description: '辦公室電腦、印表機及相關設備更新',
-      department: 'IT部',
-      category: '辦公設備'
-    },
-    {
-      id: 'PO-2024-004',
-      title: '夏季預購商品訂單',
-      supplierId: 'SUP-001',
-      supplierName: '優質材料有限公司',
-      status: 'draft',
-      priority: 'high',
-      totalAmount: 2100000,
-      currency: 'TWD',
-      itemCount: 25,
-      createdDate: '2024-01-22',
-      expectedDelivery: '2024-03-15',
-      approvedBy: null,
-      description: '夏季新品預購，預計大量採購輕質材料',
-      department: '商品部',
-      category: '原材料'
-    },
-    {
-      id: 'PO-2024-005',
-      title: '緊急維修材料採購',
-      supplierId: 'SUP-004',
-      supplierName: '工業維修供應商',
-      status: 'shipped',
-      priority: 'urgent',
-      totalAmount: 45000,
-      currency: 'TWD',
-      itemCount: 3,
-      createdDate: '2024-01-18',
-      expectedDelivery: '2024-01-25',
-      approvedBy: '李技師',
-      description: '生產線設備緊急維修所需零件和工具',
-      department: '維修部',
-      category: '維修材料'
-    }
-  ];
+  const [viewOpen, setViewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [editForm, setEditForm] = useState({ status: '', priority: '', expectedDeliveryDate: '', notes: '' });
+  const [createForm, setCreateForm] = useState({ supplierId: '', supplierName: '', type: 'standard', priority: 'normal', totalAmount: '', taxRate: 0.05, expectedDeliveryDate: '', notes: '' });
+  const [supplierOptions, setSupplierOptions] = useState([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadProcurementData();
-    
-    // 動畫效果
-    gsap.fromTo(
-      '.procurement-card',
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" }
-    );
   }, [filters]);
+
+  useEffect(() => {
+    // 載入供應商選項
+    try {
+      const suppliers = supplierDataManager.getAllSuppliers ? supplierDataManager.getAllSuppliers() : [];
+      const options = (suppliers || []).map(s => ({ value: s.id, label: s.companyName }));
+      setSupplierOptions(options);
+    } catch (e) {
+      console.warn('載入供應商失敗或未提供供應商管理器', e);
+      setSupplierOptions([]);
+    }
+  }, []);
 
   const loadProcurementData = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      let filteredOrders = [...mockProcurementOrders];
-      
-      // 應用篩選器
-      if (filters.status !== 'all') {
-        filteredOrders = filteredOrders.filter(order => order.status === filters.status);
-      }
-      
-      if (filters.priority !== 'all') {
-        filteredOrders = filteredOrders.filter(order => order.priority === filters.priority);
-      }
-      
-      if (filters.supplier !== 'all') {
-        filteredOrders = filteredOrders.filter(order => order.supplierId === filters.supplier);
-      }
-      
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        filteredOrders = filteredOrders.filter(order => 
-          order.title.toLowerCase().includes(query) ||
-          order.supplierName.toLowerCase().includes(query) ||
-          order.id.toLowerCase().includes(query)
-        );
-      }
-      
-      setProcurementOrders(filteredOrders);
+      const params = {};
+      if (filters.status !== 'all') params.status = filters.status;
+      if (filters.searchQuery) params.search = filters.searchQuery;
+      const orders = procurementDataManager.getPurchaseOrders(params) || [];
+
+      const filtered = filters.priority === 'all'
+        ? orders
+        : orders.filter(o => o.priority === filters.priority);
+      setProcurementOrders(filtered);
     } catch (error) {
       console.error('Error loading procurement data:', error);
     } finally {
@@ -167,83 +59,119 @@ const ProcurementOverview = () => {
     }
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      'draft': 'bg-gray-100 text-gray-800',
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'approved': 'bg-blue-100 text-blue-800',
-      'confirmed': 'bg-green-100 text-green-800',
-      'production': 'bg-purple-100 text-purple-800',
-      'shipped': 'bg-indigo-100 text-indigo-800',
-      'completed': 'bg-emerald-100 text-emerald-800',
-      'cancelled': 'bg-red-100 text-red-800'
+  const statusBadge = (status) => {
+    const map = {
+      draft: ADMIN_STYLES.statusInactive,
+      pending: ADMIN_STYLES.statusPending,
+      approved: ADMIN_STYLES.statusInfo,
+      confirmed: ADMIN_STYLES.statusSuccess,
+      production: ADMIN_STYLES.statusWarning,
+      shipped: ADMIN_STYLES.statusInfo,
+      delivered: ADMIN_STYLES.statusSuccess,
+      completed: ADMIN_STYLES.statusSuccess,
+      cancelled: ADMIN_STYLES.statusError,
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    const textMap = {
+      draft: '草稿',
+      pending: '待審核',
+      approved: '已核准',
+      confirmed: '已確認',
+      production: '生產中',
+      shipped: '已出貨',
+      delivered: '已送達',
+      completed: '已完成',
+      cancelled: '已取消',
+    };
+    const cls = map[status] || ADMIN_STYLES.statusInactive;
+    return <span className={cls}>{textMap[status] || status}</span>;
   };
 
-  const getStatusText = (status) => {
-    const statusMap = {
-      'draft': '草稿',
-      'pending': '待審核',
-      'approved': '已核准',
-      'confirmed': '已確認',
-      'production': '生產中',
-      'shipped': '已出貨',
-      'completed': '已完成',
-      'cancelled': '已取消'
+  const priorityBadge = (priority) => {
+    const map = {
+      low: 'bg-gray-100 text-gray-800',
+      normal: 'bg-blue-100 text-blue-800',
+      high: 'bg-orange-100 text-orange-800',
+      urgent: 'bg-red-100 text-red-800',
+      critical: 'bg-red-100 text-red-800',
     };
-    return statusMap[status] || '未知';
+    const textMap = { low: '低', normal: '一般', high: '高', urgent: '緊急', critical: '關鍵' };
+    const cls = map[priority] || 'bg-gray-100 text-gray-800';
+    return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${cls}`}>{textMap[priority] || priority}</span>;
   };
 
-  const getPriorityColor = (priority) => {
-    const colors = {
-      'low': 'text-gray-600',
-      'medium': 'text-blue-600',
-      'high': 'text-orange-600',
-      'urgent': 'text-red-600'
-    };
-    return colors[priority] || 'text-gray-600';
+  const openView = (order) => {
+    setSelectedOrder(order);
+    setViewOpen(true);
   };
 
-  const getPriorityText = (priority) => {
-    const priorityMap = {
-      'low': '低',
-      'medium': '中',
-      'high': '高',
-      'urgent': '緊急'
-    };
-    return priorityMap[priority] || '普通';
+  const openEdit = (order) => {
+    setSelectedOrder(order);
+    setEditForm({
+      status: order.status || 'draft',
+      priority: order.priority || 'normal',
+      expectedDeliveryDate: order.expectedDeliveryDate || '',
+      notes: order.notes || ''
+    });
+    setEditOpen(true);
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'draft':
-        return <DocumentTextIcon className="w-5 h-5 text-gray-500" />;
-      case 'pending':
-        return <ClockIcon className="w-5 h-5 text-yellow-500" />;
-      case 'approved':
-        return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-      case 'production':
-        return <ChartBarIcon className="w-5 h-5 text-purple-500" />;
-      case 'shipped':
-        return <TruckIcon className="w-5 h-5 text-blue-500" />;
-      case 'completed':
-        return <CheckCircleIcon className="w-5 h-5 text-emerald-500" />;
-      default:
-        return <DocumentTextIcon className="w-5 h-5 text-gray-500" />;
+  const handleSaveEdit = async () => {
+    if (!selectedOrder) return;
+    setSaving(true);
+    try {
+      procurementDataManager.updatePurchaseOrder(selectedOrder.id, {
+        status: editForm.status,
+        priority: editForm.priority,
+        expectedDeliveryDate: editForm.expectedDeliveryDate,
+        notes: editForm.notes
+      });
+      await loadProcurementData();
+      setEditOpen(false);
+    } catch (e) {
+      console.error('更新失敗', e);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const calculateTotalValue = () => {
-    return procurementOrders.reduce((total, order) => total + order.totalAmount, 0);
-  };
+  const handleCreateOrder = async () => {
+    // 簡易驗證
+    if (!createForm.supplierId && !createForm.supplierName) {
+      alert('請選擇或輸入供應商');
+      return;
+    }
+    setSaving(true);
+    try {
+      const totalAmountNum = Number(createForm.totalAmount) || 0;
+      const taxRateNum = Number(createForm.taxRate) || 0;
+      const totalWithTax = Math.round(totalAmountNum * (1 + taxRateNum));
 
-  const getStatusCounts = () => {
-    const counts = {};
-    procurementOrders.forEach(order => {
-      counts[order.status] = (counts[order.status] || 0) + 1;
-    });
-    return counts;
+      const payload = {
+        supplierId: createForm.supplierId || undefined,
+        supplierName: createForm.supplierName || (supplierOptions.find(o => o.value === createForm.supplierId)?.label) || '',
+        type: createForm.type,
+        priority: createForm.priority,
+        totalAmount: totalAmountNum,
+        taxRate: taxRateNum,
+        totalWithTax,
+        expectedDeliveryDate: createForm.expectedDeliveryDate || '',
+        notes: createForm.notes || ''
+      };
+      const created = procurementDataManager.createPurchaseOrder(payload);
+      await loadProcurementData();
+      setCreateOpen(false);
+      // 開啟編輯或檢視（可選），這裡直接打開檢視
+      if (created) {
+        setSelectedOrder(created);
+        setViewOpen(true);
+      }
+      // 重置表單
+      setCreateForm({ supplierId: '', supplierName: '', type: 'standard', priority: 'normal', totalAmount: '', taxRate: 0.05, expectedDeliveryDate: '', notes: '' });
+    } catch (e) {
+      console.error('建立失敗', e);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -257,82 +185,26 @@ const ProcurementOverview = () => {
     );
   }
 
-  const statusCounts = getStatusCounts();
-
   return (
     <div className="bg-[#fdf8f2] min-h-screen p-6">
-      {/* 頁面標題 */}
-      <div className="flex justify-between items-center mb-8">
+      {/* 頁面標題 + 主動作 */}
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 font-chinese">採購管理</h1>
           <p className="text-gray-600 mt-2">管理所有採購訂單和供應商關係</p>
         </div>
-        <Link
-          to="/admin/procurement/create"
-          className="px-6 py-3 bg-[#cc824d] text-white rounded-lg hover:bg-[#b8743d] transition-colors flex items-center space-x-2"
-        >
-          <PlusIcon className="w-5 h-5" />
-          <span>新增採購訂單</span>
-        </Link>
-      </div>
-
-      {/* 統計概覽 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="procurement-card bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <DocumentTextIcon className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">{procurementOrders.length}</p>
-              <p className="text-gray-500 text-sm">總訂單數</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="procurement-card bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CurrencyDollarIcon className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">
-                {calculateTotalValue().toLocaleString()}
-              </p>
-              <p className="text-gray-500 text-sm">總採購金額</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="procurement-card bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <ClockIcon className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">{statusCounts.pending || 0}</p>
-              <p className="text-gray-500 text-sm">待審核</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="procurement-card bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900">
-                {procurementOrders.filter(o => o.priority === 'urgent').length}
-              </p>
-              <p className="text-gray-500 text-sm">緊急訂單</p>
-            </div>
-          </div>
+        <div>
+          <button
+            className={`${ADMIN_STYLES.primaryButton} inline-flex items-center`}
+            onClick={() => setCreateOpen(true)}
+          >
+            <PlusIcon className="w-5 h-5 mr-2" /> 新增採購單
+          </button>
         </div>
       </div>
 
       {/* 篩選器 */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 p-6 mb-8">
+      <div className={`${ADMIN_STYLES.glassCard} mb-6`}>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* 搜尋 */}
           <div className="md:col-span-2">
@@ -340,7 +212,7 @@ const ProcurementOverview = () => {
               <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="搜尋訂單號、標題、供應商..."
+                placeholder="搜尋採購單號、供應商..."
                 value={filters.searchQuery}
                 onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
@@ -359,9 +231,12 @@ const ProcurementOverview = () => {
                 { value: 'draft', label: '草稿' },
                 { value: 'pending', label: '待審核' },
                 { value: 'approved', label: '已核准' },
+                { value: 'confirmed', label: '已確認' },
                 { value: 'production', label: '生產中' },
                 { value: 'shipped', label: '已出貨' },
-                { value: 'completed', label: '已完成' }
+                { value: 'delivered', label: '已送達' },
+                { value: 'completed', label: '已完成' },
+                { value: 'cancelled', label: '已取消' }
               ]}
               size="sm"
             />
@@ -376,174 +251,302 @@ const ProcurementOverview = () => {
               options={[
                 { value: 'all', label: '所有優先級' },
                 { value: 'low', label: '低' },
-                { value: 'medium', label: '中' },
+                { value: 'normal', label: '一般' },
                 { value: 'high', label: '高' },
-                { value: 'urgent', label: '緊急' }
+                { value: 'urgent', label: '緊急' },
+                { value: 'critical', label: '關鍵' }
               ]}
             />
           </div>
-
-          {/* 日期範圍 */}
-          <div>
-            <SearchableSelect
-              placeholder="日期範圍"
-              value={filters.dateRange}
-              onChange={(value) => setFilters(prev => ({ ...prev, dateRange: value }))}
-              options={[
-                { value: '7days', label: '最近7天' },
-                { value: '30days', label: '最近30天' },
-                { value: '90days', label: '最近90天' },
-                { value: 'all', label: '所有時間' }
-              ]}
-            />
-          </div>
+          <div></div>
         </div>
       </div>
+      {/* 採購訂單表格 */}
+      <StandardTable
+        title="採購訂單"
+        data={procurementOrders}
+        columns={[
+          { key: 'poNumber', label: '採購單號', sortable: true },
+          { key: 'supplierName', label: '供應商', sortable: true },
+          { key: 'type', label: '類型', sortable: true, render: (val) => (
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{val}</span>
+          ) },
+          { key: 'status', label: '狀態', sortable: true, render: (val) => statusBadge(val) },
+          { key: 'priority', label: '優先級', sortable: true, render: (val) => priorityBadge(val) },
+          { key: 'totalWithTax', label: '總金額(含稅)', sortable: true, render: (val, row) => (
+            <span className="text-gray-900">{(val ?? row.totalAmount ?? 0).toLocaleString()}</span>
+          ) },
+          { key: 'expectedDeliveryDate', label: '預計交期', sortable: true },
+          { key: 'createdAt', label: '建立時間', sortable: true },
+          { key: 'actions', label: '操作', sortable: false, render: (_val, row) => (
+            <div className="flex items-center space-x-2">
+              <button
+                className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                title="檢視"
+                aria-label="檢視"
+                onClick={() => openView(row)}
+              >
+                <EyeIcon className="w-4 h-4" />
+              </button>
+              <button
+                className="p-2 text-gray-400 hover:text-amber-600 transition-colors"
+                title="編輯"
+                aria-label="編輯"
+                onClick={() => openEdit(row)}
+              >
+                <PencilIcon className="w-4 h-4" />
+              </button>
+            </div>
+          ) }
+        ]}
+        showExport={true}
+        exportFileName="採購訂單"
+        emptyIcon={DocumentTextIcon}
+        emptyTitle="沒有找到採購訂單"
+        emptyDescription="請調整篩選條件或稍後再試"
+        enableBatchSelection={false}
+      />
 
-      {/* 採購訂單列表 */}
-      <div className="space-y-6">
-        {procurementOrders.length === 0 ? (
-          <div className="bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 p-12 text-center">
-            <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">沒有找到採購訂單</h3>
-            <p className="text-gray-500 mb-6">請調整篩選條件或創建新的採購訂單</p>
-            <Link
-              to="/admin/procurement/create"
-              className="inline-flex items-center px-4 py-2 bg-[#cc824d] text-white rounded-lg hover:bg-[#b8743d] transition-colors"
-            >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              新增採購訂單
-            </Link>
+      {/* 新增採購單彈窗 */}
+      <GlassModal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="新增採購單"
+      >
+        <div className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">供應商</label>
+              {supplierOptions.length > 0 ? (
+                <SearchableSelect
+                  placeholder="選擇供應商"
+                  value={createForm.supplierId || 'custom'}
+                  onChange={(value) => {
+                    if (value === 'custom') {
+                      setCreateForm(prev => ({ ...prev, supplierId: '', supplierName: '' }));
+                    } else {
+                      setCreateForm(prev => ({ ...prev, supplierId: value, supplierName: '' }));
+                    }
+                  }}
+                  options={[{ value: 'custom', label: '手動輸入供應商名稱' }, ...supplierOptions]}
+                />
+              ) : (
+                <input
+                  type="text"
+                  className={ADMIN_STYLES.input}
+                  placeholder="輸入供應商名稱"
+                  value={createForm.supplierName}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, supplierName: e.target.value }))}
+                />
+              )}
+              {supplierOptions.length > 0 && !createForm.supplierId && (
+                <input
+                  type="text"
+                  className={`${ADMIN_STYLES.input} mt-2`}
+                  placeholder="或輸入供應商名稱"
+                  value={createForm.supplierName}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, supplierName: e.target.value }))}
+                />
+              )}
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">類型</label>
+              <SearchableSelect
+                value={createForm.type}
+                onChange={(value) => setCreateForm(prev => ({ ...prev, type: value }))}
+                options={[
+                  { value: 'standard', label: '一般' },
+                  { value: 'urgent', label: '緊急' },
+                  { value: 'planned', label: '預定' },
+                  { value: 'sample', label: '樣品' }
+                ]}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">優先級</label>
+              <SearchableSelect
+                value={createForm.priority}
+                onChange={(value) => setCreateForm(prev => ({ ...prev, priority: value }))}
+                options={[
+                  { value: 'low', label: '低' },
+                  { value: 'normal', label: '一般' },
+                  { value: 'high', label: '高' },
+                  { value: 'urgent', label: '緊急' },
+                  { value: 'critical', label: '關鍵' }
+                ]}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">預計交期</label>
+              <input
+                type="date"
+                className={ADMIN_STYLES.input}
+                value={createForm.expectedDeliveryDate}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, expectedDeliveryDate: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">金額（未稅）</label>
+              <input
+                type="number"
+                min="0"
+                className={ADMIN_STYLES.input}
+                placeholder="例如 50000"
+                value={createForm.totalAmount}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, totalAmount: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">稅率</label>
+              <SearchableSelect
+                value={String(createForm.taxRate)}
+                onChange={(value) => setCreateForm(prev => ({ ...prev, taxRate: Number(value) }))}
+                options={[
+                  { value: '0', label: '0%' },
+                  { value: '0.05', label: '5%' },
+                  { value: '0.1', label: '10%' }
+                ]}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm text-gray-700 mb-1">備註</label>
+              <textarea
+                className={`${ADMIN_STYLES.input} min-h-[100px]`}
+                value={createForm.notes}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, notes: e.target.value }))}
+              />
+            </div>
           </div>
-        ) : (
-          procurementOrders.map((order) => (
-            <div
-              key={order.id}
-              className="procurement-card bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 p-6 hover:shadow-lg transition-all duration-200"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  {/* 訂單標題和狀態 */}
-                  <div className="flex items-center space-x-3 mb-3">
-                    {getStatusIcon(order.status)}
-                    <h3 className="text-xl font-semibold text-gray-900 font-chinese">
-                      {order.title}
-                    </h3>
-                    <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(order.status)}`}>
-                      {getStatusText(order.status)}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded ${getPriorityColor(order.priority)}`}>
-                      {getPriorityText(order.priority)}
-                    </span>
-                  </div>
+          <div className="flex justify-end gap-3">
+            <button className={ADMIN_STYLES.secondaryButton} onClick={() => setCreateOpen(false)}>取消</button>
+            <button className={`${ADMIN_STYLES.primaryButton} ${saving ? 'opacity-70 pointer-events-none' : ''}`} onClick={handleCreateOrder}>
+              {saving ? '建立中…' : '建立採購單'}
+            </button>
+          </div>
+        </div>
+      </GlassModal>
 
-                  {/* 訂單詳情 */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                      <p className="text-sm text-gray-500">訂單編號</p>
-                      <p className="font-medium">{order.id}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">供應商</p>
-                      <p className="font-medium">{order.supplierName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">採購金額</p>
-                      <p className="font-medium text-[#cc824d]">
-                        {order.totalAmount.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                      <p className="text-sm text-gray-500">商品數量</p>
-                      <p className="font-medium">{order.itemCount} 項</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">預計交期</p>
-                      <p className="font-medium">{order.expectedDelivery}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">負責部門</p>
-                      <p className="font-medium">{order.department}</p>
-                    </div>
-                  </div>
-
-                  {/* 描述 */}
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {order.description}
-                  </p>
-
-                  {/* 審批資訊 */}
-                  <div className="flex items-center space-x-6 text-sm text-gray-500">
-                    <span>建立日期：{order.createdDate}</span>
-                    {order.approvedBy && (
-                      <span>審批人：{order.approvedBy}</span>
-                    )}
-                    <span>類別：{order.category}</span>
-                  </div>
-                </div>
-
-                {/* 操作按鈕 */}
-                <div className="flex space-x-2 ml-6">
-                  <button className="p-2 text-gray-400 hover:text-blue-600 transition-colors">
-                    <EyeIcon className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 text-gray-400 hover:text-green-600 transition-colors">
-                    <PencilIcon className="w-5 h-5" />
-                  </button>
-                  <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                    <TrashIcon className="w-5 h-5" />
-                  </button>
-                </div>
+      {/* 檢視彈窗 */}
+      <GlassModal
+        isOpen={viewOpen && !!selectedOrder}
+        onClose={() => setViewOpen(false)}
+        title={selectedOrder ? `檢視採購單 ${selectedOrder.poNumber}` : '檢視採購單'}
+      >
+        {selectedOrder && (
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div className="text-sm text-gray-500">採購單號</div>
+                <div className="font-medium">{selectedOrder.poNumber}</div>
               </div>
-
-              {/* 進度條 */}
-              <div className="mt-4">
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>訂單進度</span>
-                  <span>
-                    {order.status === 'completed' ? '100%' : 
-                     order.status === 'shipped' ? '80%' :
-                     order.status === 'production' ? '60%' :
-                     order.status === 'approved' ? '40%' :
-                     order.status === 'pending' ? '20%' : '10%'}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-[#cc824d] h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: 
-                        order.status === 'completed' ? '100%' : 
-                        order.status === 'shipped' ? '80%' :
-                        order.status === 'production' ? '60%' :
-                        order.status === 'approved' ? '40%' :
-                        order.status === 'pending' ? '20%' : '10%'
-                    }}
-                  ></div>
-                </div>
+              <div>
+                <div className="text-sm text-gray-500">供應商</div>
+                <div className="font-medium">{selectedOrder.supplierName}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">狀態</div>
+                <div className="font-medium">{statusBadge(selectedOrder.status)}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">優先級</div>
+                <div className="font-medium">{priorityBadge(selectedOrder.priority)}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">總金額(含稅)</div>
+                <div className="font-medium">{(selectedOrder.totalWithTax ?? selectedOrder.totalAmount ?? 0).toLocaleString()}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">預計交期</div>
+                <div className="font-medium">{selectedOrder.expectedDeliveryDate || '-'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">建立時間</div>
+                <div className="font-medium">{selectedOrder.createdAt}</div>
               </div>
             </div>
-          ))
-        )}
-      </div>
-
-      {/* 分頁 */}
-      {procurementOrders.length > 0 && (
-        <div className="mt-8 flex justify-center">
-          <div className="flex items-center space-x-2">
-            <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              上一頁
-            </button>
-            <span className="px-3 py-2 bg-[#cc824d] text-white rounded-lg">1</span>
-            <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              下一頁
-            </button>
+            <div>
+              <div className="text-sm text-gray-500 mb-1">備註</div>
+              <div className="text-gray-700 whitespace-pre-line">{selectedOrder.notes || '—'}</div>
+            </div>
+            <div className="px-0 pt-2">
+              <button className={ADMIN_STYLES.primaryButton} onClick={() => { setViewOpen(false); openEdit(selectedOrder); }}>
+                編輯此採購單
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </GlassModal>
+
+      {/* 編輯彈窗 */}
+      <GlassModal
+        isOpen={editOpen && !!selectedOrder}
+        onClose={() => setEditOpen(false)}
+        title={selectedOrder ? `編輯採購單 ${selectedOrder.poNumber}` : '編輯採購單'}
+      >
+        {selectedOrder && (
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">狀態</label>
+                <SearchableSelect
+                  value={editForm.status}
+                  onChange={(value) => setEditForm(prev => ({ ...prev, status: value }))}
+                  options={[
+                    { value: 'draft', label: '草稿' },
+                    { value: 'pending', label: '待審核' },
+                    { value: 'approved', label: '已核准' },
+                    { value: 'confirmed', label: '已確認' },
+                    { value: 'production', label: '生產中' },
+                    { value: 'ready', label: '準備出貨' },
+                    { value: 'shipped', label: '已出貨' },
+                    { value: 'delivered', label: '已送達' },
+                    { value: 'inspecting', label: '驗收中' },
+                    { value: 'completed', label: '已完成' },
+                    { value: 'cancelled', label: '已取消' }
+                  ]}
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">優先級</label>
+                <SearchableSelect
+                  value={editForm.priority}
+                  onChange={(value) => setEditForm(prev => ({ ...prev, priority: value }))}
+                  options={[
+                    { value: 'low', label: '低' },
+                    { value: 'normal', label: '一般' },
+                    { value: 'high', label: '高' },
+                    { value: 'urgent', label: '緊急' },
+                    { value: 'critical', label: '關鍵' }
+                  ]}
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">預計交期</label>
+                <input
+                  type="date"
+                  className={ADMIN_STYLES.input}
+                  value={editForm.expectedDeliveryDate || ''}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, expectedDeliveryDate: e.target.value }))}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 mb-1">備註</label>
+                <textarea
+                  className={`${ADMIN_STYLES.input} min-h-[100px]`}
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button className={ADMIN_STYLES.secondaryButton} onClick={() => setEditOpen(false)}>取消</button>
+              <button className={`${ADMIN_STYLES.primaryButton} ${saving ? 'opacity-70 pointer-events-none' : ''}`} onClick={handleSaveEdit}>
+                {saving ? '儲存中…' : '儲存變更'}
+              </button>
+            </div>
+          </div>
+        )}
+      </GlassModal>
     </div>
   );
 };

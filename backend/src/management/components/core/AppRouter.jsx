@@ -37,18 +37,10 @@ import MemberGiftBenefits from '../../Pages/gifts/MemberGiftBenefits';
 import GiftAllocationTracking from '../../Pages/gifts/GiftAllocationTracking';
 
 // Suppliers 模組
-import SupplierList from '../../Pages/suppliers/SupplierList';
-import SupplierForm from '../../Pages/suppliers/SupplierForm';
-import SupplierDetails from '../../Pages/suppliers/SupplierDetails';
+import SupplierList from '../../Pages/procurement/SupplierList';
 
 // Procurement 模組
 import ProcurementOverview from '../../Pages/procurement/ProcurementOverview';
-import PurchaseOrderList from '../../Pages/procurement/PurchaseOrderList';
-import PurchaseOrderDetails from '../../Pages/procurement/PurchaseOrderDetails';
-import AddPurchaseOrder from '../../Pages/procurement/AddPurchaseOrder';
-import ProcurementSuggestions from '../../Pages/procurement/ProcurementSuggestions';
-import InspectionReceipt from '../../Pages/procurement/InspectionReceipt';
-import ProcurementAnalytics from '../../Pages/procurement/ProcurementAnalytics';
 
 // Logistics 模組
 import LogisticsTracking from '../../Pages/logistics/LogisticsTracking';
@@ -167,20 +159,12 @@ const AppRouter = () => {
               <Route path="gifts/member-benefits" element={<MemberGiftBenefits />} />
               <Route path="gifts/allocation-tracking" element={<GiftAllocationTracking />} />
 
-              {/* Suppliers 模組路由 */}
+              {/* Suppliers 模組路由（集中於採購模組的子頁 /procurement/suppliers） */}
               <Route path="suppliers" element={<SupplierList />} />
-              <Route path="suppliers/new" element={<SupplierForm />} />
-              <Route path="suppliers/edit/:id" element={<SupplierForm />} />
-              <Route path="suppliers/details/:id" element={<SupplierDetails />} />
 
               {/* Procurement 模組路由 */}
               <Route path="procurement" element={<ProcurementOverview />} />
-              <Route path="procurement/purchase-orders" element={<PurchaseOrderList />} />
-              <Route path="procurement/purchase-orders/details/:id" element={<PurchaseOrderDetails />} />
-              <Route path="procurement/purchase-orders/new" element={<AddPurchaseOrder />} />
-              <Route path="procurement/suggestions" element={<ProcurementSuggestions />} />
-              <Route path="procurement/inspection" element={<InspectionReceipt />} />
-              <Route path="procurement/analytics" element={<ProcurementAnalytics />} />
+              <Route path="procurement/suppliers" element={<SupplierList />} />
 
               {/* Logistics 模組路由 */}
               <Route path="logistics" element={<LogisticsTracking />} />

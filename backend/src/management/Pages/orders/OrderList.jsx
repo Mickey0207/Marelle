@@ -169,32 +169,7 @@ const OrderList = () => {
       </div>
 
       {/* 統計卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-        <div className="order-card bg-white/60 backdrop-blur-md rounded-lg border border-white/20 p-4">
-          <div className="text-2xl font-bold text-gray-900">{statistics.total}</div>
-          <div className="text-sm text-gray-600">總訂單</div>
-        </div>
-        <div className="order-card bg-white/60 backdrop-blur-md rounded-lg border border-white/20 p-4">
-          <div className="text-2xl font-bold text-yellow-600">{statistics.pending}</div>
-          <div className="text-sm text-gray-600">待處理</div>
-        </div>
-        <div className="order-card bg-white/60 backdrop-blur-md rounded-lg border border-white/20 p-4">
-          <div className="text-2xl font-bold text-blue-600">{statistics.processing}</div>
-          <div className="text-sm text-gray-600">處理中</div>
-        </div>
-        <div className="order-card bg-white/60 backdrop-blur-md rounded-lg border border-white/20 p-4">
-          <div className="text-2xl font-bold text-purple-600">{statistics.shipped}</div>
-          <div className="text-sm text-gray-600">已發貨</div>
-        </div>
-        <div className="order-card bg-white/60 backdrop-blur-md rounded-lg border border-white/20 p-4">
-          <div className="text-2xl font-bold text-green-600">{statistics.delivered}</div>
-          <div className="text-sm text-gray-600">已送達</div>
-        </div>
-        <div className="order-card bg-white/60 backdrop-blur-md rounded-lg border border-white/20 p-4">
-          <div className="text-2xl font-bold text-red-600">{statistics.cancelled}</div>
-          <div className="text-sm text-gray-600">已取消</div>
-        </div>
-      </div>
+      {/* 已移除統計卡片 */}
 
       {/* 篩選 */}
       <div className={`${ADMIN_STYLES.glassCard} p-6 mb-6`}>

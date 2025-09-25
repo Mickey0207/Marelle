@@ -41,17 +41,12 @@ const membersTabs = [
 // Suppliers 模組 tabs
 const suppliersTabs = [
   { label: '供應商列表', path: '/suppliers' },
-  { label: '新增供應商', path: '/suppliers/new' }
 ];
 
 // Procurement 模組 tabs
 const procurementTabs = [
   { label: '採購概覽', path: '/procurement' },
-  { label: '採購訂單', path: '/procurement/purchase-orders' },
-  { label: '新增採購訂單', path: '/procurement/purchase-orders/new' },
-  { label: '採購建議', path: '/procurement/suggestions' },
-  { label: '檢驗收貨', path: '/procurement/inspection' },
-  { label: '採購分析', path: '/procurement/analytics' }
+  { label: '供應商管理', path: '/procurement/suppliers' }
 ];
 
 // Logistics 模組 tabs

@@ -23,9 +23,9 @@ export * from './coupons/couponDataManager.js';
 // 財務模組
 export * from './finance/accountingDataManager.js';
 
-// 供應商模組
-export * from './suppliers/supplierDataManager.js';
-export * from './suppliers/procurementDataManager.js';
+// 採購/供應商模組
+export * from './procurement/supplierDataManager.js';
+export * from './procurement/procurementDataManager.js';
 
 // 分析模組
 export * from './analytics/analyticsDataManager.js';
@@ -57,7 +57,7 @@ export const MODULE_CATEGORIES = {
   members: ['userTrackingDataManager', 'giftDataManager'],
   coupons: ['couponDataManager'],
   finance: ['accountingDataManager'],
-  suppliers: ['supplierDataManager', 'procurementDataManager'],
+  procurement: ['supplierDataManager', 'procurementDataManager'],
   analytics: ['analyticsDataManager'],
   marketing: ['marketingDataManager', 'festivalDataManager'],
   documents: ['documentDataManager'],
