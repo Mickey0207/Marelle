@@ -70,6 +70,13 @@ const couponsTabs = [
   { label: '叠加規則', path: '/coupons/stacking-rules' }
 ];
 
+// Marketing 模組 tabs（整合 優惠券/節慶/贈品 於頂部子頁籤）
+const marketingTabs = [
+  { label: '優惠券管理', path: '/marketing/coupons' },
+  { label: '節慶管理', path: '/marketing/festivals' },
+  { label: '贈品管理', path: '/marketing/gifts' },
+];
+
 // Notifications 模組 tabs
 const notificationsTabs = [
   { label: '通知歷史', path: '/notifications' },
@@ -113,20 +120,14 @@ const settingsTabs = [
   { label: '運送設定', path: '/settings/shipping' }
 ];
 
-// Documents 模組 tabs
+// Documents 模組 tabs（精簡：僅保留銷售文件）
 const documentsTabs = [
-  { label: '文件概覽', path: '/documents' },
   { label: '銷售文件', path: '/documents/sales' },
-  { label: '採購文件', path: '/documents/purchase' },
-  { label: '庫存文件', path: '/documents/inventory' },
-  { label: '審批工作流程', path: '/documents/approval-workflow' }
 ];
 
 // Admin 模組 tabs
 const adminTabs = [
   { label: '管理員管理', path: '/admin' },
-  { label: '角色管理', path: '/admin/roles' },
-  { label: '用戶管理', path: '/admin/users' }
 ];
 
 // Marketing 模組 tabs - 已移除，因為marketing目錄為空
@@ -137,13 +138,10 @@ const adminTabs = [
 //   { label: '受眾管理', path: '/admin/marketing/audience' }
 // ];
 
-// Festivals 模組 tabs - 已移除，因為festivals目錄為空
-// const festivalsTabs = [
-//   { label: '節慶概覽', path: '/admin/festivals' },
-//   { label: '節慶管理', path: '/admin/festivals/management' },
-//   { label: '促銷設定', path: '/admin/festivals/promotions' },
-//   { label: '節慶分析', path: '/admin/festivals/analytics' }
-// ];
+// Festivals 模組 tabs
+const festivalsTabs = [
+  { label: '管理', path: '/festivals/manage' },
+];
 
 // User Tracking 模組 tabs - 已移除，因為user-tracking目錄為空
 // const userTrackingTabs = [
@@ -204,6 +202,11 @@ export const getTabsForPath = (currentPath) => {
   if (cleanPath.startsWith('/coupons')) {
     return couponsTabs;
   }
+
+  // Marketing 模組
+  if (cleanPath.startsWith('/marketing')) {
+    return marketingTabs;
+  }
   
   // Notifications 模組
   if (cleanPath.startsWith('/notifications')) {
@@ -223,6 +226,11 @@ export const getTabsForPath = (currentPath) => {
   // Settings 模組
   if (cleanPath.startsWith('/settings')) {
     return settingsTabs;
+  }
+  
+  // Festivals 模組
+  if (cleanPath.startsWith('/festivals')) {
+    return festivalsTabs;
   }
   
   // Documents 模組
@@ -260,8 +268,8 @@ export default {
   settingsTabs,
   documentsTabs,
   adminTabs,
-  // marketingTabs, // 已移除
-  // festivalsTabs, // 已移除
+  marketingTabs,
+  festivalsTabs,
   // userTrackingTabs, // 已移除
   inventoryTabs
 };

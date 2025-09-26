@@ -18,7 +18,9 @@ const GlassModal = ({
   children, 
   size = 'max-w-4xl',
   showCloseButton = true,
-  headerClass = 'bg-gradient-to-r from-[#cc824d]/80 to-[#b3723f]/80'
+  headerClass = 'bg-gradient-to-r from-[#cc824d]/80 to-[#b3723f]/80',
+  footer = null,
+  actions = []
 }) => {
   if (!isOpen) return null;
 
@@ -53,6 +55,29 @@ const GlassModal = ({
         <div className="relative overflow-y-auto overflow-x-visible max-h-[calc(90vh-80px)]">
           {children}
         </div>
+
+        {/* 底部區域：優先使用 footer，其次渲染 actions */}
+        {(footer || actions.length > 0) && (
+          <div className="px-6 py-4 border-t border-white/20 flex justify-end gap-3">
+            {footer ? footer : (
+              actions.map((a, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={a.onClick}
+                  disabled={a.disabled}
+                  className={`px-4 py-2 rounded-md transition text-white ${
+                    a.variant === 'secondary' ? 'text-gray-700 bg-white/70 hover:bg-white border border-gray-300' :
+                    a.variant === 'danger' ? 'bg-red-600 hover:bg-red-700' :
+                    'bg-[#cc824d] hover:bg-[#b8734a]'
+                  } ${a.disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  {a.label}
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

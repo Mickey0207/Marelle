@@ -202,7 +202,7 @@ const AdminProducts = () => {
 
   return (
     <div className={ADMIN_STYLES.pageContainer}>
-      <div className={ADMIN_STYLES.contentContainerStandard}>
+  <div className={ADMIN_STYLES.contentContainerFluid}>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>

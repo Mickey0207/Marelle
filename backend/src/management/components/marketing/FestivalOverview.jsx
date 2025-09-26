@@ -11,7 +11,7 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
-import festivalDataManager from '../../../lib/data/marketing/festivalDataManager';
+import festivalDataManager from '../../../lib/data/marketing/festivals/festivalDataManager';
 
 const FestivalOverview = () => {
   const [overallStats, setOverallStats] = useState({});

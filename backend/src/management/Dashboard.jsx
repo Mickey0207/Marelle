@@ -77,10 +77,10 @@ import { getTabsForPath } from '../lib/data/ui/tabsConfig';
 // Import accounting system components
 import AccountingManagementContainer from './Pages/accounting/AccountingOverview';
 
-// Import festival management components
-import FestivalOverview from './components/marketing/FestivalOverview';
-import FestivalManagement from './components/marketing/FestivalManagement';
-import PromotionSettings from './components/marketing/PromotionSettings';
+// Import festival management components (moved from marketing to festivals domain)
+import FestivalOverview from './components/festivals/FestivalOverview';
+import FestivalManagement from './components/festivals/FestivalManagement';
+import PromotionSettings from './components/festivals/PromotionSettings';
 import FestivalAnalytics from './components/analytics/FestivalAnalytics';
 
 // Import marketing management components
@@ -90,11 +90,7 @@ import AdvertisingManagement from './components/marketing/AdvertisingManagement'
 import AudienceManagement from './components/marketing/AudienceManagement';
 
 // Document management components
-import DocumentOverview from './Pages/documents/DocumentOverview';
 import SalesDocumentManagement from './Pages/documents/SalesDocumentManagement';
-import PurchaseDocumentManagement from './Pages/documents/PurchaseDocumentManagement';
-import InventoryDocumentManagement from './Pages/documents/InventoryDocumentManagement';
-import ApprovalWorkflowSystem from './Pages/documents/ApprovalWorkflowSystem';
 
 const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -142,10 +138,9 @@ const AdminDashboard = () => {
     { name: '贈品管理', href: '/gifts', icon: GiftIcon },
     { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon },
     { name: '會計管理', href: '/accounting', icon: CalculatorIcon },
-    { name: '文檔管理', href: '/documents', icon: DocumentTextIcon },
     { name: '用戶追蹤', href: '/user-tracking', icon: ChartBarIcon },
     { name: '通知管理', href: '/notifications', icon: BellIcon },
-    { name: '管理員管理', href: '/admin-management', icon: ShieldCheckIcon },
+    { name: '管理員管理', href: '/admin', icon: ShieldCheckIcon },
     { name: '數據分析', href: '/analytics', icon: ChartBarIcon },
     { name: '系統設定', href: '/settings', icon: Cog6ToothIcon },
   ];

@@ -30,9 +30,12 @@ export const ADMIN_COLORS = {
 export const ADMIN_STYLES = {
   // 頁面容器
   pageContainer: 'min-h-screen bg-[#fdf8f2]',
+  // 內容容器（調整為更寬、更自適應，避免超大螢幕左右留白過多）
   contentContainer: 'p-6 space-y-6',
-  contentContainerWide: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8',
-  contentContainerStandard: 'container mx-auto px-6 py-8',
+  contentContainerWide: 'w-full max-w-[1800px] 2xl:max-w-[2100px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8',
+  contentContainerStandard: 'w-full max-w-[1600px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8',
+  // 全幅容器：不限制 max-width，適合寬表格/圖表
+  contentContainerFluid: 'w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8',
   
   // 頁面標題
   pageTitle: 'text-3xl font-bold text-gray-900 font-chinese mb-2',

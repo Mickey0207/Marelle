@@ -15,10 +15,10 @@ export * from './logistics/logisticsDataManager.js';
 
 // 會員模組
 export * from './analytics/userTrackingDataManager.js';
-export * from './gifts/giftDataManager.js';
+export * from './marketing/gifts/giftDataManager.js';
 
 // 優惠券模組
-export * from './coupons/couponDataManager.js';
+export * from './marketing/coupons/couponDataManager.js';
 
 // 財務模組
 export * from './finance/accountingDataManager.js';
@@ -32,15 +32,17 @@ export * from './analytics/analyticsDataManager.js';
 
 // 行銷模組
 export * from './marketing/marketingDataManager.js';
-export * from './marketing/festivalDataManager.js';
+
+// 節慶模組
+export { default as festivalDataManager } from './marketing/festivals/festivalDataManager.js';
 
 // 文件模組
 export * from './documents/documentDataManager.js';
 
 // 系統設定模組
 export * from './settings/systemSettingsDataManager.js';
-export * from './settings/adminConfig.js';
-export * from './settings/adminDataManager.js';
+export * from './admin/adminConfig.js';
+export * from './admin/adminDataManager.js';
 
 // 核心功能模組
 export * from './core/dashboardDataManager.js';
@@ -59,9 +61,11 @@ export const MODULE_CATEGORIES = {
   finance: ['accountingDataManager'],
   procurement: ['supplierDataManager', 'procurementDataManager'],
   analytics: ['analyticsDataManager'],
-  marketing: ['marketingDataManager', 'festivalDataManager'],
+  marketing: ['marketingDataManager'],
+  festivals: ['festivalDataManager'],
   documents: ['documentDataManager'],
-  settings: ['systemSettingsDataManager', 'adminConfig', 'adminDataManager'],
+  settings: ['systemSettingsDataManager', 'adminConfig'],
+  admin: ['adminDataManager'],
   core: ['dashboardDataManager', 'data'],
   ui: ['styleUpdater']
 };

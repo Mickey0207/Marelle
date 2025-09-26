@@ -261,7 +261,7 @@ const EditProduct = () => {
   if (!original) {
     return (
       <div className={ADMIN_STYLES.pageContainer}>
-        <div className={ADMIN_STYLES.contentContainerStandard}>
+  <div className={ADMIN_STYLES.contentContainerFluid}>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900">找不到此商品</h1>
             <p className="text-gray-600 mt-2">SKU: {sku}</p>
@@ -274,7 +274,7 @@ const EditProduct = () => {
 
   return (
     <div className={ADMIN_STYLES.pageContainer}>
-      <div className={ADMIN_STYLES.contentContainerStandard}>
+  <div className={ADMIN_STYLES.contentContainerFluid}>
         <AlertBox
           show={alert.show}
           onClose={() => setAlert({ ...alert, show: false })}

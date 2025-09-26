@@ -194,7 +194,7 @@ const MemberManagement = () => {
 
   return (
     <div className="bg-[#fdf8f2] min-h-screen">
-      <div className="container mx-auto px-6 py-8">
+  <div className={ADMIN_STYLES.contentContainerFluid}>
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
             <UsersIcon className="w-8 h-8 text-amber-500 mr-3" />

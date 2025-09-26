@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
 import { Navigate } from 'react-router-dom';
-import { adminDataManager } from '../../../lib/data/settings/adminDataManager.js';
-import { hasPermission } from '../../../lib/data/settings/adminConfig.js';
+import { adminDataManager } from '../../../lib/data/admin/adminDataManager.js';
+import { hasPermission } from '../../../lib/data/admin/adminConfig.js';
+import { authManager } from '../../../lib/data/auth/authManager.js';
 
 // 創建認證上下文
 const AuthContext = createContext();
@@ -16,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     // 檢查現有會話
     const token = localStorage.getItem('marelle-admin-token');
     if (token) {
-      const session = adminDataManager.validateSession(token);
+  const session = authManager.validateSession(token);
       if (session) {
         setCurrentUser(session);
         setupSessionWarning(session);
@@ -59,12 +60,12 @@ export const AuthProvider = ({ children }) => {
   const handleExtendSession = () => {
     const token = localStorage.getItem('marelle-admin-token');
     if (token) {
-      adminDataManager.updateSessionActivity(token);
+  authManager.updateSessionActivity(token);
       setSessionWarning(false);
       setCountdown(0);
       
       // 重新設定提醒
-      const session = adminDataManager.validateSession(token);
+  const session = authManager.validateSession(token);
       if (session) {
         setupSessionWarning(session);
       }
@@ -77,7 +78,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = (credentials) => {
-    const result = adminDataManager.authenticate(credentials.email, credentials.password);
+  const result = authManager.authenticate(credentials.email, credentials.password);
     if (result.success) {
       localStorage.setItem('marelle-admin-token', result.sessionToken);
       setCurrentUser(result.user);
@@ -90,7 +91,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     const token = localStorage.getItem('marelle-admin-token');
     if (token) {
-      adminDataManager.invalidateSession(token);
+  authManager.invalidateSession(token);
     }
     localStorage.removeItem('marelle-admin-token');
     setCurrentUser(null);

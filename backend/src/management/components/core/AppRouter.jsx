@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, ProtectedRoute } from '../auth/AuthComponents';
 import { AppStateProvider } from './AppStateContext';
@@ -30,11 +30,7 @@ import OrderForm from '../../Pages/orders/OrderForm';
 // Members 模組
 import MemberManagement from '../../Pages/members/MemberManagement';
 
-// Gifts 模組 
-import GiftManagement from '../../Pages/gifts/GiftManagement';
-import GiftTierRules from '../../Pages/gifts/GiftTierRules';
-import MemberGiftBenefits from '../../Pages/gifts/MemberGiftBenefits';
-import GiftAllocationTracking from '../../Pages/gifts/GiftAllocationTracking';
+// Gifts 模組 （整合至 marketing，移除不存在頁面的匯入）
 
 // Suppliers 模組
 import SupplierList from '../../Pages/procurement/SupplierList';
@@ -47,9 +43,6 @@ import LogisticsTracking from '../../Pages/logistics/LogisticsTracking';
 // 移除 Logistics 通知頁面（不再使用）
 
 // Coupons 模組
-import CouponManagement from '../../Pages/coupons/CouponManagementContainer';
-import SharingManager from '../coupons/SharingManager';
-import StackingRulesManager from '../coupons/StackingRulesManager';
 
 // Notifications 模組頁面
 import NotificationHistory from '../../Pages/notifications/NotificationHistory';
@@ -83,29 +76,16 @@ import NotificationSettings from '../../Pages/settings/NotificationSettings';
 import PaymentSettings from '../../Pages/settings/PaymentSettings';
 import ShippingSettings from '../../Pages/settings/ShippingSettings';
 
-// Documents 模組
-import DocumentOverview from '../../Pages/documents/DocumentOverview';
-import SalesDocumentManagement from '../../Pages/documents/SalesDocumentManagement';
-import PurchaseDocumentManagement from '../../Pages/documents/PurchaseDocumentManagement';
-import InventoryDocumentManagement from '../../Pages/documents/InventoryDocumentManagement';
-import ApprovalWorkflowSystem from '../../Pages/documents/ApprovalWorkflowSystem';
-
 // Admin 模組
 import AdminManagement from '../../Pages/admin/AdminManagement';
-import AdminRoleManagement from '../../Pages/admin/AdminRoleManagement';
-import AdminUserManagement from '../../Pages/admin/AdminUserManagement';
 
-// Marketing 模組 - 暫時移除，因為marketing目錄為空
-// import MarketingOverview from '../../management/components/marketing/MarketingOverview';
-// import CampaignManagement from '../../management/components/marketing/CampaignManagement';
-// import AdvertisingManagement from '../../management/components/marketing/AdvertisingManagement';
-// import AudienceManagement from '../../management/components/marketing/AudienceManagement';
+// Marketing 模組 Pages - 動態載入以進行 code splitting
+const MarketingOverviewPage = lazy(() => import('../../Pages/marketing/MarketingMange'));
+const CouponManagement = lazy(() => import('../../Pages/marketing/coupons/CouponManagementContainer'));
+const FestivalManagement = lazy(() => import('../../Pages/marketing/festivals/FestivalManagement'));
+const GiftManagement = lazy(() => import('../../Pages/marketing/gifts/GiftManagement'));
 
-// Festival 模組 - 暫時移除，因為festivals目錄為空
-// import FestivalOverview from '../../management/components/marketing/FestivalOverview';
-// import FestivalManagement from '../../management/components/marketing/FestivalManagement';
-// import PromotionSettings from '../../management/components/marketing/PromotionSettings';
-// import FestivalAnalytics from '../../management/components/analytics/FestivalAnalytics';
+// Festival 模組 Pages（整合進行銷管理後，舊路由將導向 marketing）
 
 // User Tracking 模組 - 暫時移除，因為user-tracking目錄為空
 // import UserTrackingOverview from '../../management/components/users/UserTrackingOverview';
@@ -153,11 +133,8 @@ const AppRouter = () => {
               {/* Members 模組路由 */}
               <Route path="members" element={<MemberManagement />} />
 
-              {/* Gifts 模組路由 */}
-              <Route path="gifts" element={<GiftManagement />} />
-              <Route path="gifts/tier-rules" element={<GiftTierRules />} />
-              <Route path="gifts/member-benefits" element={<MemberGiftBenefits />} />
-              <Route path="gifts/allocation-tracking" element={<GiftAllocationTracking />} />
+              {/* Gifts 模組路由（整合後導向行銷管理） */}
+              <Route path="gifts" element={<Navigate to="/marketing" replace />} />
 
               {/* Suppliers 模組路由（集中於採購模組的子頁 /procurement/suppliers） */}
               <Route path="suppliers" element={<SupplierList />} />
@@ -170,10 +147,10 @@ const AppRouter = () => {
               <Route path="logistics" element={<LogisticsTracking />} />
               {/* 移除 logistics/notifications 與 logistics/reverse-notifications */}
 
-              {/* Coupons 模組路由 */}
-              <Route path="coupons" element={<CouponManagement />} />
-              <Route path="coupons/sharing" element={<SharingManager />} />
-              <Route path="coupons/stacking-rules" element={<StackingRulesManager />} />
+              {/* Coupons 模組路由（整合後導向行銷管理） */}
+              <Route path="coupons" element={<Navigate to="/marketing" replace />} />
+              <Route path="coupons/sharing" element={<Navigate to="/marketing" replace />} />
+              <Route path="coupons/stacking-rules" element={<Navigate to="/marketing" replace />} />
 
               {/* Notifications 模組路由 */}
               <Route path="notifications" element={<NotificationHistory />} />
@@ -183,6 +160,45 @@ const AppRouter = () => {
               <Route path="notifications/mail-html" element={<MailHtmlMessage />} />
               <Route path="notifications/sms" element={<SmsMessage />} />
               <Route path="notifications/web" element={<WebNotification />} />
+
+              {/* Marketing 模組路由（整合入口 + 子頁） */}
+              <Route
+                path="marketing"
+                element={
+                  <Suspense fallback={<div className="p-6 text-gray-600">載入行銷管理中...</div>}>
+                    <MarketingOverviewPage />
+                  </Suspense>
+                }
+              >
+                <Route index element={<Navigate to="coupons" replace />} />
+                <Route
+                  path="coupons"
+                  element={
+                    <Suspense fallback={<div className="p-6 text-gray-600">載入優惠券...</div>}>
+                      <CouponManagement />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="festivals"
+                  element={
+                    <Suspense fallback={<div className="p-6 text-gray-600">載入節慶管理...</div>}>
+                      <FestivalManagement />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="gifts"
+                  element={
+                    <Suspense fallback={<div className="p-6 text-gray-600">載入贈品管理...</div>}>
+                      <GiftManagement />
+                    </Suspense>
+                  }
+                />
+              </Route>
+
+              {/* Festivals 模組路由（整合後導向行銷管理） */}
+              <Route path="festivals/manage" element={<Navigate to="/marketing" replace />} />
 
               {/* Accounting 模組路由 */}
               <Route path="accounting" element={<AccountingOverview />} />
@@ -207,17 +223,8 @@ const AppRouter = () => {
               <Route path="settings/payment" element={<PaymentSettings />} />
               <Route path="settings/shipping" element={<ShippingSettings />} />
 
-              {/* Documents 模組路由 */}
-              <Route path="documents" element={<DocumentOverview />} />
-              <Route path="documents/sales" element={<SalesDocumentManagement />} />
-              <Route path="documents/purchase" element={<PurchaseDocumentManagement />} />
-              <Route path="documents/inventory" element={<InventoryDocumentManagement />} />
-              <Route path="documents/approval-workflow" element={<ApprovalWorkflowSystem />} />
-
               {/* Admin 模組路由 */}
               <Route path="admin" element={<AdminManagement />} />
-              <Route path="admin/roles" element={<AdminRoleManagement />} />
-              <Route path="admin/users" element={<AdminUserManagement />} />
 
               {/* Inventory 模組路由 (獨立模組) */}
               <Route path="inventory" element={<Inventory />} />

@@ -144,7 +144,7 @@ const Inventory = () => {
 
   return (
     <div className="bg-[#fdf8f2] min-h-screen">
-      <div className="container mx-auto px-6 py-8">
+  <div className={ADMIN_STYLES.contentContainerFluid}>
       <div className="flex items-center mb-8">
         <ArchiveBoxIcon className="w-8 h-8 text-amber-500 mr-3" />
         <h1 className="text-3xl font-bold text-gray-800 font-chinese">庫存管理</h1>

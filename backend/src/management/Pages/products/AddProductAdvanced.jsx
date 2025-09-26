@@ -484,7 +484,7 @@ const AddProductAdvanced = () => {
 
   return (
     <div className={ADMIN_STYLES.pageContainer}>
-      <div className={ADMIN_STYLES.contentContainerStandard}>
+  <div className={ADMIN_STYLES.contentContainerFluid}>
         {/* 警告框 */}
         <AlertBox
           show={alert.show}
