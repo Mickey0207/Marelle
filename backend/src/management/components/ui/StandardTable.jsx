@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Download } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { ChevronUp, ChevronDown, ChevronRight, Download } from 'lucide-react';
 
 const StandardTable = ({ 
   data = [], 
@@ -18,17 +18,25 @@ const StandardTable = ({
   selectedItems = [],
   onSelectedItemsChange = null,
   batchActions = [],
-  getRowId = (item, index) => item.id || index
+  getRowId = (item, index) => item.id || index,
+  // 子表格相關 props（可選）
+  enableRowExpansion = false,
+  getSubRows = null, // (row) => []
+  subColumns = [],
+  renderSubtableHeader = null, // (row) => ReactNode（子表格上方自定義抬頭，可選）
+  subtableClassName = ""
 }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [expandedRows, setExpandedRows] = useState(new Set()); // Set of rowIds
+  const [subSortConfigs, setSubSortConfigs] = useState({}); // { [rowId]: { key, direction } }
 
-  // 排序功能
-  const sortedData = useMemo(() => {
-    if (!sortConfig.key) return data;
-
-    return [...data].sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
+  // 通用排序函式（供主表與子表使用）
+  const sortData = (arr, cfg) => {
+    if (!cfg || !cfg.key) return arr;
+    const { key, direction } = cfg;
+    return [...arr].sort((a, b) => {
+      const aValue = a[key];
+      const bValue = b[key];
 
       // 處理空值
       if (aValue === null || aValue === undefined) return 1;
@@ -36,31 +44,29 @@ const StandardTable = ({
 
       // 數字排序
       if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        return direction === 'asc' ? aValue - bValue : bValue - aValue;
       }
 
-      // 日期排序
+      // 日期排序（嘗試將字串轉日期）
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         const dateA = new Date(aValue);
         const dateB = new Date(bValue);
         if (!isNaN(dateA) && !isNaN(dateB)) {
-          return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+          return direction === 'asc' ? dateA - dateB : dateB - dateA;
         }
       }
 
       // 字串排序
       const stringA = String(aValue).toLowerCase();
       const stringB = String(bValue).toLowerCase();
-      
-      if (stringA < stringB) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
-      }
-      if (stringA > stringB) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
+      if (stringA < stringB) return direction === 'asc' ? -1 : 1;
+      if (stringA > stringB) return direction === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [data, sortConfig]);
+  };
+
+  // 主表排序
+  const sortedData = useMemo(() => sortData(data, sortConfig), [data, sortConfig]);
 
   // 批量選擇功能
   const handleSelectAll = (checked) => {
@@ -106,6 +112,18 @@ const StandardTable = ({
     setSortConfig({ key: direction ? key : null, direction });
   };
 
+  // 子表格排序處理（每一列獨立）
+  const handleSubSort = (rowId, key, sortable = true) => {
+    if (!sortable) return;
+    setSubSortConfigs(prev => {
+      const current = prev[rowId] || { key: null, direction: 'asc' };
+      let direction = 'asc';
+      if (current.key === key && current.direction === 'asc') direction = 'desc';
+      else if (current.key === key && current.direction === 'desc') direction = null;
+      return { ...prev, [rowId]: { key: direction ? key : null, direction } };
+    });
+  };
+
   // 獲取排序圖示
   const getSortIcon = (key, sortable = true) => {
     if (!sortable) return null;
@@ -131,6 +149,36 @@ const StandardTable = ({
         <ChevronDown className="w-3 h-3" />
       </div>
     );
+  };
+
+  const getSubSortIcon = (rowId, key, sortable = true) => {
+    if (!sortable) return null;
+    const cfg = subSortConfigs[rowId] || { key: null, direction: 'asc' };
+    if (cfg.key !== key) {
+      return (
+        <div className="flex flex-col ml-1 opacity-30">
+          <ChevronUp className="w-3 h-3 -mb-1" />
+          <ChevronDown className="w-3 h-3" />
+        </div>
+      );
+    }
+    if (cfg.direction === 'asc') return <ChevronUp className="w-4 h-4 ml-1 text-apricot-600" />;
+    if (cfg.direction === 'desc') return <ChevronDown className="w-4 h-4 ml-1 text-apricot-600" />;
+    return (
+      <div className="flex flex-col ml-1 opacity-30">
+        <ChevronUp className="w-3 h-3 -mb-1" />
+        <ChevronDown className="w-3 h-3" />
+      </div>
+    );
+  };
+
+  // 切換展開/收合
+  const toggleExpand = (rowId) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(rowId)) next.delete(rowId); else next.add(rowId);
+      return next;
+    });
   };
 
   // 默認導出功能
@@ -217,6 +265,9 @@ const StandardTable = ({
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
+                {enableRowExpansion && (
+                  <th className="px-3 py-3 text-left w-8"></th>
+                )}
                 {enableBatchSelection && (
                   <th className="px-6 py-3 text-left">
                     <input
@@ -248,32 +299,118 @@ const StandardTable = ({
               {sortedData.map((row, rowIndex) => {
                 const rowId = getRowId(row, rowIndex);
                 const isSelected = selectedItems.includes(rowId);
+                const subRows = enableRowExpansion && typeof getSubRows === 'function' ? (getSubRows(row) || []) : [];
+                const isExpandable = enableRowExpansion && subRows.length > 0;
+                const isExpanded = isExpandable && expandedRows.has(rowId);
                 
                 return (
-                  <tr key={rowId} className="hover:bg-gray-50">
-                    {enableBatchSelection && (
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => handleSelectItem(rowId, e.target.checked)}
-                          className="rounded border-gray-300 text-apricot-600 focus:ring-apricot-500"
-                        />
-                      </td>
+                  <>
+                    <tr key={rowId} className="hover:bg-gray-50">
+                      {enableRowExpansion && (
+                        <td className="px-3 py-4 whitespace-nowrap align-top">
+                          {isExpandable ? (
+                            <button
+                              type="button"
+                              onClick={() => toggleExpand(rowId)}
+                              className="p-1 rounded hover:bg-gray-100 transition-colors"
+                              aria-label={isExpanded ? '收合' : '展開'}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="w-4 h-4 text-gray-600" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-gray-600" />
+                              )}
+                            </button>
+                          ) : null}
+                        </td>
+                      )}
+                      {enableBatchSelection && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => handleSelectItem(rowId, e.target.checked)}
+                            className="rounded border-gray-300 text-apricot-600 focus:ring-apricot-500"
+                          />
+                        </td>
+                      )}
+                      {columns.map((column, colIndex) => (
+                        <td 
+                          key={column.key || colIndex}
+                          className="px-6 py-4 whitespace-nowrap text-sm font-chinese"
+                        >
+                          {column.render ? column.render(row[column.key], row, rowIndex) : (
+                            <span className={column.className || "text-gray-900"}>
+                              {row[column.key]}
+                            </span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* 子表格區塊 */}
+                    {isExpanded && (
+                      <tr>
+                        <td
+                          className="px-0 py-0 bg-gray-50"
+                          colSpan={columns.length + (enableBatchSelection ? 1 : 0) + (enableRowExpansion ? 1 : 0)}
+                        >
+                          <div className={`p-4 border-t border-gray-200 ${subtableClassName}`}>
+                            {typeof renderSubtableHeader === 'function' && (
+                              <div className="mb-3">{renderSubtableHeader(row)}</div>
+                            )}
+
+                            {/* 子表格（有獨立排序） */}
+                            {subRows && subRows.length > 0 ? (
+                              <div className="overflow-x-auto">
+                                <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-sm">
+                                  <thead className="bg-gray-100">
+                                    <tr>
+                                      {subColumns && subColumns.length > 0 ? (
+                                        subColumns.map((col, idx) => (
+                                          <th
+                                            key={col.key || idx}
+                                            className={`px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider font-chinese ${col.sortable !== false ? 'cursor-pointer hover:bg-gray-200 select-none' : ''}`}
+                                            onClick={() => handleSubSort(rowId, col.key, col.sortable)}
+                                          >
+                                            <div className="flex items-center">
+                                              {col.label || col.title}
+                                              {getSubSortIcon(rowId, col.key, col.sortable)}
+                                            </div>
+                                          </th>
+                                        ))
+                                      ) : (
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">子表格</th>
+                                      )}
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-200">
+                                    {sortData(subRows, subSortConfigs[rowId]).map((child, childIdx) => (
+                                      <tr key={child.id || childIdx} className="hover:bg-gray-50">
+                                        {(subColumns && subColumns.length > 0) ? (
+                                          subColumns.map((col, cidx) => (
+                                            <td key={col.key || cidx} className="px-4 py-2 text-sm font-chinese">
+                                              {col.render ? col.render(child[col.key], child, childIdx, row) : (
+                                                <span className={col.className || 'text-gray-900'}>{child[col.key]}</span>
+                                              )}
+                                            </td>
+                                          ))
+                                        ) : (
+                                          <td className="px-4 py-2 text-sm text-gray-700">未提供子表格欄位設定</td>
+                                        )}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">沒有可顯示的子項目</div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
                     )}
-                    {columns.map((column, colIndex) => (
-                      <td 
-                        key={column.key || colIndex}
-                        className="px-6 py-4 whitespace-nowrap text-sm font-chinese"
-                      >
-                        {column.render ? column.render(row[column.key], row, rowIndex) : (
-                          <span className={column.className || "text-gray-900"}>
-                            {row[column.key]}
-                          </span>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
+                  </>
                 );
               })}
             </tbody>

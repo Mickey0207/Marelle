@@ -26,21 +26,41 @@ const ManagementLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const sidebarRef = useRef(null);
+  // Hover intent control to avoid accidental expansions
+  const collapseTimerRef = useRef(null);
+  const EDGE_TRIGGER_PX = 2; // Touch the very left screen edge to expand
+  const COLLAPSE_GRACE_MS = 200; // Grace period before auto-collapsing
 
   // 以滑鼠位置偵測是否離開側邊欄，離開即自動收合（僅桌面版生效）
   useEffect(() => {
     const handleMouseMove = (e) => {
-      // 僅在桌面版啟用（Tailwind lg: ≥1024px）
-      if (window.innerWidth < 1024) return;
+  // 桌面版固定行為（不做響應式處理）
+      // Only expand when pointer touches the very left screen edge
+      if (e.clientX <= EDGE_TRIGGER_PX) {
+        if (!sidebarHovered) setSidebarHovered(true);
+        if (collapseTimerRef.current) {
+          clearTimeout(collapseTimerRef.current);
+          collapseTimerRef.current = null;
+        }
+        return; // prevent collapse logic on the same event
+      }
       const el = sidebarRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      // When pointer leaves, start a gentle collapse timer; cancel if pointer comes back in
       if (!inside && sidebarHovered) {
-        setSidebarHovered(false);
+        if (!collapseTimerRef.current) {
+          collapseTimerRef.current = setTimeout(() => {
+            setSidebarHovered(false);
+            collapseTimerRef.current = null;
+          }, COLLAPSE_GRACE_MS);
+        }
+      } else if (inside && collapseTimerRef.current) {
+        clearTimeout(collapseTimerRef.current);
+        collapseTimerRef.current = null;
       }
     };
     window.addEventListener('mousemove', handleMouseMove);
@@ -78,35 +98,38 @@ const ManagementLayout = () => {
     return location.pathname.startsWith(path);
   };
 
+  // Expanded state helper
+  const isExpanded = sidebarHovered;
+
   return (
     <div className={`${ADMIN_STYLES.pageContainer} flex`}>
-      {/* Overlays with glass effect */}
-      {/* Mobile: glass overlay, click to close */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 lg:hidden bg-white/30 backdrop-blur-md transition-opacity duration-300"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
-      {/* Desktop: non-blocking glass overlay while sidebar expanded */}
+      {/* Overlay: non-blocking glass effect while sidebar expanded (desktop-only app) */}
       {sidebarHovered && (
-        <div
-          className="hidden lg:block fixed inset-0 z-40 bg-white/20 backdrop-blur-sm pointer-events-none transition-opacity duration-300"
-        ></div>
+        <div className="fixed inset-0 z-40 bg-white/20 backdrop-blur-sm pointer-events-none transition-opacity duration-300"></div>
       )}
 
       {/* Sidebar */}
       <div 
         className={`fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out will-change-transform ${
-          sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'
-        } lg:translate-x-0 ${sidebarHovered ? 'lg:w-64' : 'lg:w-16'} ${
-          sidebarOpen || sidebarHovered ? 'shadow-xl' : 'shadow-sm'
-        }`}
+          sidebarHovered ? 'w-64' : 'w-16'
+        } ${sidebarHovered ? 'shadow-xl' : 'shadow-sm'}`}
         ref={sidebarRef}
-        onMouseEnter={() => setSidebarHovered(true)}
-        onMouseLeave={() => setSidebarHovered(false)}
+        onMouseEnter={() => {
+          if (collapseTimerRef.current) {
+            clearTimeout(collapseTimerRef.current);
+            collapseTimerRef.current = null;
+          }
+        }}
+        onMouseLeave={() => {
+          if (!collapseTimerRef.current) {
+            collapseTimerRef.current = setTimeout(() => {
+              setSidebarHovered(false);
+              collapseTimerRef.current = null;
+            }, COLLAPSE_GRACE_MS);
+          }
+        }}
       >
-        <div className="flex flex-col h-full bg-[#fdf8f2] border-r border-gray-200 shadow-sm">
+        <div className={`flex flex-col h-full bg-[#fdf8f2] border-r border-gray-200 shadow-sm ${isExpanded ? '' : 'pointer-events-none'}`}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 h-16 border-b border-gray-200">
             <div className="flex items-center space-x-3 min-w-0">
@@ -114,28 +137,22 @@ const ManagementLayout = () => {
                 <span className="text-white font-bold text-lg">M</span>
               </div>
               <span className={`font-bold text-xl text-[#2d1e0f] font-serif transition-opacity duration-300 whitespace-nowrap ${
-                sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
+                sidebarHovered ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
               }`}>
-                管理後台
+                Marelle 管理後台
               </span>
             </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className={`lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-opacity duration-300 ${
-                sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0'
-              }`}
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
+            {/* No mobile close button in desktop-only layout */}
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-6 space-y-1">
+          <nav className="flex-1 px-3 py-6 space-y-1" aria-hidden={!isExpanded}>
             {navigation.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
-                onClick={() => setSidebarOpen(false)}
+                tabIndex={isExpanded ? 0 : -1}
+                aria-disabled={!isExpanded}
                 className={({ isActive: navIsActive }) => 
                   `flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 font-serif group ${
                     navIsActive || isActive(item.href)
@@ -143,16 +160,16 @@ const ManagementLayout = () => {
                       : 'text-gray-700 hover:bg-gray-100 hover:text-[#cc824d]'
                   }`
                 }
-                title={!(sidebarHovered || sidebarOpen) ? item.name : ''}
+                title={!sidebarHovered ? item.name : ''}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 <span className={`ml-3 transition-opacity duration-300 whitespace-nowrap ${
-                  sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
+                  sidebarHovered ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
                 }`}>
                   {item.name}
                 </span>
                 {/* Tooltip for collapsed state */}
-                {!(sidebarHovered || sidebarOpen) && (
+                {!sidebarHovered && (
                   <div className="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
                     {item.name}
                   </div>
@@ -166,18 +183,11 @@ const ManagementLayout = () => {
       </div>
 
       {/* Main content */}
-  <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${sidebarHovered ? 'lg:ml-64' : 'lg:ml-16'}`}>
+  <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${sidebarHovered ? 'ml-64' : 'ml-16'}`}>
         {/* Top bar with tabs */}
         <header className="bg-[#fdf8f2] border-b border-gray-200 sticky top-0 z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
             <div className="flex items-center flex-1">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg mr-4"
-              >
-                <Bars3Icon className="w-5 h-5" />
-              </button>
-              
               {/* 子頁籤導航 - 在頂部導航列內 */}
               {currentTabs && currentTabs.length > 0 && (
                 <div className="flex-1">

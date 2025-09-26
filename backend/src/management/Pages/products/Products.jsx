@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import StandardTable from "../../components/ui/StandardTable";
 import ProductQuickViewModal from "../../components/products/ProductQuickViewModal";
+import GlassModal from "../../components/ui/GlassModal";
+import NestedSKUManager from "../../components/products/NestedSKUManager";
 import {
   PlusIcon,
   PencilIcon,
@@ -11,6 +13,7 @@ import {
   ChevronUpIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
+import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 // 改用擴充後的模擬商品資料（包含新增/編輯頁完整欄位）
 import { mockProducts, formatPrice } from "../../../lib/data/products/mockProductData";
 import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../../../lib/ui/adminStyles";
@@ -20,6 +23,8 @@ const AdminProducts = () => {
   const [products, setProducts] = useState(mockProducts);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [skuManagerOpen, setSkuManagerOpen] = useState(false);
+  const [skuManagerTarget, setSkuManagerTarget] = useState(null); // { productId, product, variant }
 
   const openQuickView = (product) => {
     setQuickViewProduct(product);
@@ -28,6 +33,35 @@ const AdminProducts = () => {
   const closeQuickView = () => {
     setQuickViewOpen(false);
     setQuickViewProduct(null);
+  };
+
+  // 開啟單一 SKU 管理彈窗
+  const openSkuManager = (product, variant) => {
+    setSkuManagerTarget({
+      productId: product?.id,
+      product,
+      variant
+    });
+    setSkuManagerOpen(true);
+  };
+
+  const closeSkuManager = () => {
+    setSkuManagerOpen(false);
+    setSkuManagerTarget(null);
+  };
+
+  // 當 NestedSKUManager 變更時合併回產品列表（用 id 對應）
+  const handleSkuManagerChange = (newVariants) => {
+    if (!skuManagerTarget?.productId) return;
+    const targetVariantId = skuManagerTarget?.variant?.id;
+    setProducts(prev => prev.map(p => {
+      if (p.id !== skuManagerTarget.productId) return p;
+      const merged = Array.isArray(p.skuVariants) ? p.skuVariants.map(v => {
+        const updated = (newVariants || []).find(nv => nv.id === v.id || nv.sku === v.sku);
+        return updated ? { ...v, ...updated, config: { ...v.config, ...(updated.config || {}) } } : v;
+      }) : (newVariants || []);
+      return { ...p, skuVariants: merged };
+    }));
   };
 
   const getStockStatus = (inStock) => {
@@ -200,6 +234,83 @@ const AdminProducts = () => {
     }
   ];
 
+  // 子表格欄位（SKU 列表）
+  const subColumns = [
+    {
+      key: 'sku',
+      label: 'SKU',
+      sortable: true,
+      render: (v) => <span className="font-mono text-xs text-gray-800">{v}</span>
+    },
+    {
+      key: 'pathDisplay',
+      label: '組合',
+      sortable: true,
+      render: (v, child) => (
+        <div className="text-gray-900 text-sm">
+          {v || child?.name || '-'}
+        </div>
+      )
+    },
+    {
+      key: 'price',
+      label: '售價',
+      sortable: true,
+      render: (v) => (
+        <span className="text-gray-900 font-medium">{typeof v === 'number' ? formatPrice(v) : '-'}</span>
+      )
+    },
+    {
+      key: 'comparePrice',
+      label: '參考價',
+      sortable: true,
+      render: (v) => (
+        <span className="text-gray-500 line-through">{typeof v === 'number' ? formatPrice(v) : '-'}</span>
+      )
+    },
+    {
+      key: 'quantity',
+      label: '庫存',
+      sortable: true,
+      render: (v, child) => {
+        const low = child?.lowStockThreshold ?? 0;
+        const isLow = typeof v === 'number' && v <= low && v > 0;
+        const isZero = v === 0;
+        return (
+          <span className={`text-sm font-medium ${isZero ? 'text-red-600' : isLow ? 'text-yellow-700' : 'text-gray-900'}`}>
+            {typeof v === 'number' ? v : '-'}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'active',
+      label: '狀態',
+      sortable: true,
+      render: (v) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${v ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+          {v ? '上架' : '停用'}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (_v, child, _idx, product) => (
+        <button
+          type="button"
+          onClick={() => openSkuManager(product, child)}
+          className="p-2 text-gray-400 hover:text-[#cc824d] transition-colors"
+          aria-label="管理 SKU"
+          title="管理 SKU"
+        >
+          <Cog6ToothIcon className="w-4 h-4" />
+        </button>
+      )
+    },
+  ];
+
   return (
     <div className={ADMIN_STYLES.pageContainer}>
   <div className={ADMIN_STYLES.contentContainerFluid}>
@@ -230,6 +341,29 @@ const AdminProducts = () => {
             data={products}
             exportFileName="products"
             emptyMessage="沒有找到符合條件的商品"
+            // 啟用子表格：將 SKU 顯示為展開子表
+            enableRowExpansion
+            getSubRows={(product) => (product?.skuVariants || []).map(v => ({
+              ...v,
+              price: v?.config?.price ?? null,
+              comparePrice: v?.config?.comparePrice ?? null,
+              costPrice: v?.config?.costPrice ?? null,
+              quantity: v?.config?.quantity ?? null,
+              lowStockThreshold: v?.config?.lowStockThreshold ?? null,
+              active: v?.config?.isActive ?? null,
+            }))}
+            subColumns={subColumns}
+            renderSubtableHeader={(product) => (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  {product?.name || '商品'} 的 SKU 清單
+                </div>
+                <div className="text-xs text-gray-500">
+                  共 {product?.skuVariants?.length || 0} 項
+                </div>
+              </div>
+            )}
+            subtableClassName="bg-white/70 rounded-xl"
           />
         </div>
 
@@ -239,6 +373,33 @@ const AdminProducts = () => {
           onClose={closeQuickView}
           product={quickViewProduct}
         />
+
+        {/* 單一 SKU 管理彈窗（使用 NestedSKUManager + GlassModal） */}
+        <GlassModal
+          isOpen={skuManagerOpen}
+          onClose={closeSkuManager}
+          title={skuManagerTarget ? `管理 SKU - ${skuManagerTarget?.variant?.sku || ''}` : ''}
+          size="max-w-6xl"
+          maxHeight="max-h-[95vh]"
+          contentMaxHeight="max-h-[calc(95vh-80px)]"
+        >
+          {skuManagerTarget && (
+            <div className="p-6">
+              <NestedSKUManager
+                baseSKU={skuManagerTarget.product?.baseSKU}
+                skuVariants={[skuManagerTarget.variant]}
+                onChange={handleSkuManagerChange}
+                basePrice={skuManagerTarget.product?.price || 0}
+                baseComparePrice={skuManagerTarget.product?.originalPrice || 0}
+                baseCostPrice={skuManagerTarget.product?.costPrice || 0}
+                productName={skuManagerTarget.product?.name || ''}
+                productCategories={skuManagerTarget.product?.categories || []}
+                singleVariant
+                variantSelected={skuManagerTarget.variant}
+              />
+            </div>
+          )}
+        </GlassModal>
       </div>
     </div>
   );

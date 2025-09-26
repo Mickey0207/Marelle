@@ -17,7 +17,7 @@ import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
 import QRCodeGenerator from '../../components/ui/QRCodeGenerator';
 import ImageUpload from './ImageUpload';
 
-const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [] }) => {
+const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [], singleVariant = false, variantSelected = null }) => {
   const [skuTree, setSKUTree] = useState([]);
   const [expandedItems, setExpandedItems] = useState(new Set());
   const [selectedSKU, setSelectedSKU] = useState(null);
@@ -74,9 +74,14 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
             currentLevel.push(existingNode);
           }
           
-          // 如果是最後一層級，保存變體的配置
-          if (index === variant.path.length - 1 && variant.config) {
-            existingNode.config = { ...createDefaultConfig(), ...variant.config };
+          // 如果是最後一層級，保存變體的配置與完整 SKU
+          if (index === variant.path.length - 1) {
+            if (variant.config) {
+              existingNode.config = { ...createDefaultConfig(), ...variant.config };
+            }
+            if (variant.sku) {
+              existingNode.fullSKU = variant.sku;
+            }
           }
           
           // 移動到下一層級
@@ -88,6 +93,23 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     setSKUTree(tree);
     setLevelTitles(levelTitlesMap);
   };
+
+  // 單一變體模式：初始化右側詳情
+  useEffect(() => {
+    if (!singleVariant) return;
+    if (!variantSelected) return;
+    const v = variantSelected || {};
+    const prepared = {
+      id: v.id || `var-${Date.now()}`,
+      fullSKU: v.sku || baseSKU || '',
+      sku: v.sku || baseSKU || '',
+      name: v.name || '',
+      config: { ...createDefaultConfig(), ...(v.config || {}) },
+      pathInfo: Array.isArray(v.path) ? v.path.map(p => ({ level: p.level, option: p.option })) : []
+    };
+    setSelectedSKU(prepared);
+    setShowDetailPanel(true);
+  }, [singleVariant, variantSelected, baseSKU]);
 
   // 創建默認配置
   const createDefaultConfig = () => ({
@@ -556,7 +578,8 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     <div className="space-y-6">
       {/* 主要容器 */}
       <div className="flex gap-6">
-        {/* 左側：SKU 樹狀結構 */}
+        {/* 左側：SKU 樹狀結構（單一變體模式隱藏） */}
+        {!singleVariant && (
         <div className={`bg-white border border-gray-200 rounded-lg transition-all duration-300 ${
           showDetailPanel ? 'w-2/3' : 'w-full'
         }`}>
@@ -605,10 +628,11 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
             )}
           </div>
         </div>
+        )}
 
         {/* 右側：SKU 詳細設定面板 */}
         {showDetailPanel && selectedSKU && (
-          <div className="w-1/3 bg-white border border-gray-200 rounded-lg">
+          <div className={`${singleVariant ? 'w-full' : 'w-1/3'} bg-white border border-gray-200 rounded-lg`}>
             <div className="p-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-gray-900">SKU 詳細設定</h4>
@@ -668,7 +692,7 @@ const SKUTreeNode = ({
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expandedItems.has(node.id);
   const canAddChildren = node.level < 5;
-  const isLeafNode = !hasChildren && node.skuCode;
+  const isLeafNode = !hasChildren;
 
   // 開始編輯
   const startEdit = () => {
@@ -846,7 +870,7 @@ const SKUTreeNode = ({
                     </span>
                   )}
                 </div>
-                {node.fullSKU && node.skuCode && (
+                {node.fullSKU && (
                   <div className="text-xs text-gray-500 font-mono">
                     完整 SKU: {node.fullSKU}
                   </div>

@@ -20,7 +20,9 @@ const GlassModal = ({
   showCloseButton = true,
   headerClass = 'bg-gradient-to-r from-[#cc824d]/80 to-[#b3723f]/80',
   footer = null,
-  actions = []
+  actions = [],
+  maxHeight = 'max-h-[90vh]',
+  contentMaxHeight = 'max-h-[calc(90vh-80px)]'
 }) => {
   if (!isOpen) return null;
 
@@ -32,8 +34,8 @@ const GlassModal = ({
         onClick={onClose}
       ></div>
       
-      {/* 玻璃態彈出視窗 */}
-  <div className={`relative ${size} w-full max-h-[90vh] overflow-visible rounded-3xl bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl`}>
+    {/* 玻璃態彈出視窗 */}
+  <div className={`relative ${size} w-full ${maxHeight} overflow-visible rounded-3xl bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl`}>
         {/* 標題列 */}
         {title && (
           <div className={`${headerClass} backdrop-blur-sm text-white px-6 py-4 border-b border-white/20 rounded-t-3xl`}>
@@ -52,7 +54,7 @@ const GlassModal = ({
         )}
         
         {/* 內容區域 */}
-        <div className="relative overflow-y-auto overflow-x-visible max-h-[calc(90vh-80px)]">
+        <div className={`relative overflow-y-auto overflow-x-visible ${contentMaxHeight}`}>
           {children}
         </div>
 
