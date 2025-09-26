@@ -72,9 +72,10 @@ export const COMPONENT_STYLE_MAP = {
   'space-y-4': 'ADMIN_STYLES.componentSpacing',
   
   // 網格樣式
-  'grid grid-cols-1 md:grid-cols-2 gap-6': 'ADMIN_STYLES.gridCols2',
-  'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6': 'ADMIN_STYLES.gridCols3',
-  'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6': 'ADMIN_STYLES.gridCols4',
+  // 將響應式網格替換為桌面固定網格
+  'grid grid-cols-2 gap-6': 'ADMIN_STYLES.gridCols2',
+  'grid grid-cols-3 gap-6': 'ADMIN_STYLES.gridCols3',
+  'grid grid-cols-4 gap-6': 'ADMIN_STYLES.gridCols4',
   
   // 狀態樣式
   'bg-green-100 text-green-800': 'ADMIN_STYLES.statusSuccess',

@@ -22,7 +22,7 @@ const Section = ({ title, children }) => (
 const ImageGrid = ({ images = [] }) => {
   if (!images || images.length === 0) return <div className="text-sm text-gray-500">尚未上傳圖片</div>;
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+  <div className="grid grid-cols-5 gap-3">
       {images.slice(0, 10).map((img, idx) => (
         <img
           key={idx}

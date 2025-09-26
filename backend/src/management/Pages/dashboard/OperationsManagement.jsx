@@ -136,8 +136,8 @@ const OperationsManagement = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* 庫存狀況 */}
+  <div className="grid grid-cols-2 gap-8">
+          {/* 庫存狀況 */}
         <div className="operations-section">
           <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">庫存狀況</h2>
           <div className={ADMIN_STYLES.glassCard}>

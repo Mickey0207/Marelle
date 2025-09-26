@@ -172,18 +172,11 @@ const AdminDashboard = () => {
   return (
     <div className={`${ADMIN_STYLES.pageContainer} flex`}>
       {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
+      {/* 移除行動版遮罩（桌面版專用） */}
 
       {/* Sidebar */}
       <div 
-        className={`fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out lg:relative ${
-          sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'
-        } lg:translate-x-0 ${sidebarHovered ? 'lg:w-64' : 'lg:w-16'}`}
+        className={`fixed inset-y-0 left-0 z-50 transition-all duration-300 ease-in-out ${sidebarHovered ? 'w-64' : 'w-16'}`}
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
       >
@@ -195,19 +188,12 @@ const AdminDashboard = () => {
                 <span className="text-white font-bold text-lg">M</span>
               </div>
               <span className={`font-bold text-xl text-[#2d1e0f] font-serif transition-opacity duration-300 whitespace-nowrap ${
-                sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
+                sidebarHovered ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
               }`}>
                 管理後台
               </span>
             </Link>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className={`lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-opacity duration-300 ${
-                sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0'
-              }`}
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
+            {/* 移除行動版關閉按鈕 */}
           </div>
 
           {/* Navigation */}
@@ -226,13 +212,13 @@ const AdminDashboard = () => {
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
                 <span className={`ml-3 transition-opacity duration-300 whitespace-nowrap ${
-                  sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
+                  sidebarHovered ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
                 }`}>
                   {item.name}
                 </span>
                 {/* Tooltip for collapsed state */}
-                {!(sidebarHovered || sidebarOpen) && (
-                  <div className="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                {!sidebarHovered && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
                     {item.name}
                   </div>
                 )}
@@ -249,13 +235,13 @@ const AdminDashboard = () => {
             >
               <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
               <span className={`ml-3 transition-opacity duration-300 whitespace-nowrap ${
-                sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
+                sidebarHovered ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'
               }`}>
                 登出
               </span>
               {/* Tooltip for collapsed state */}
-              {!(sidebarHovered || sidebarOpen) && (
-                <div className="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+              {!sidebarHovered && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
                   登出
                 </div>
               )}
@@ -268,14 +254,9 @@ const AdminDashboard = () => {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <header className="bg-[#fdf8f2] border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
+          <div className="flex items-center justify-between px-8 h-16">
             <div className="flex items-center flex-1">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-lg mr-4"
-              >
-                <Bars3Icon className="w-5 h-5" />
-              </button>
+              {/* 移除行動版展開按鈕 */}
               
               {/* Left: Logo/Brand */}
               <div className="flex items-center mr-8">
@@ -290,7 +271,7 @@ const AdminDashboard = () => {
               </div>
 
               {/* Center: 子頁籤導航 */}
-              <div className="hidden lg:flex items-center space-x-6 h-full flex-1 justify-center">
+              <div className="flex items-center space-x-6 h-full flex-1 justify-center">
                 {currentTabs.length > 0 && (
                   <TabNavigation 
                     tabs={currentTabs} 

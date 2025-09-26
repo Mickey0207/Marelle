@@ -321,9 +321,9 @@ const NotificationHistory = () => {
 
       {/* 篩選器 */}
       <div className="bg-white/60 backdrop-blur-sm rounded-lg border border-white/20 p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           {/* 搜尋 */}
-          <div className="md:col-span-2">
+          <div className="col-span-2">
             <div className="relative">
               <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
@@ -368,7 +368,7 @@ const NotificationHistory = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+  <div className="grid grid-cols-3 gap-4 mt-4">
           {/* 日期範圍 */}
           <div>
             <select
@@ -385,7 +385,7 @@ const NotificationHistory = () => {
           </div>
 
           {/* 預留右側工具區 */}
-          <div className="md:col-span-2" />
+          <div className="col-span-2" />
         </div>
       </div>
 

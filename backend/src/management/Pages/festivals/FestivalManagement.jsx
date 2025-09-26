@@ -221,12 +221,12 @@ const FestivalManagement = () => {
   return (
     <div className="min-h-screen bg-[#fdf8f2] p-6">
       <div>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+  <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">節慶管理</h1>
             <p className="text-gray-600">管理所有節慶活動的詳細設定</p>
           </div>
-          <div className="mt-4 sm:mt-0 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setShowCreateModal(true)}
               className="inline-flex items-center px-4 py-2 bg-[#cc824d] text-white font-medium rounded-lg hover:bg-[#b8734a] transition-colors"
@@ -239,7 +239,7 @@ const FestivalManagement = () => {
 
         {/* 篩選 */}
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 mb-8 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <SearchableSelect
                 className="w-full"
@@ -383,7 +383,7 @@ const FestivalManagement = () => {
           { label: showCreateModal ? '創建' : '更新', onClick: showCreateModal ? handleCreateFestival : handleUpdateFestival }
         ]}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700">節慶名稱</label>

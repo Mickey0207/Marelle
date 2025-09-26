@@ -164,9 +164,9 @@ const GiftManagement = () => {
 
       {/* 搜尋和操作欄 */}
       <div className={`${ADMIN_STYLES.glassCard} p-6 mb-6`}>
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="flex gap-4 items-center justify-between">
           <div className="flex flex-1 gap-4">
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 max-w-xl">
               <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"

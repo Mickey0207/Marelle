@@ -151,7 +151,7 @@ const AnalyticsOverview = () => {
             </span>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-4 gap-6 mb-6">
             <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-600">當前訪客</h3>
@@ -222,7 +222,7 @@ const AnalyticsOverview = () => {
           {/* 財務 KPI */}
           <div className="mb-6">
             <h3 className="text-lg font-medium text-gray-800 mb-3">財務績效</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 gap-6">
               <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-sm font-medium text-gray-600">總營收</h4>
@@ -270,7 +270,7 @@ const AnalyticsOverview = () => {
           {/* 營運 KPI */}
           <div className="mb-6">
             <h3 className="text-lg font-medium text-gray-800 mb-3">營運績效</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-4 gap-6">
               <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-sm font-medium text-gray-600">轉換率</h4>
@@ -337,7 +337,7 @@ const AnalyticsOverview = () => {
             AI 智能洞察
           </h2>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6">
             {/* 商業機會 */}
             <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
               <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">
@@ -411,7 +411,7 @@ const AnalyticsOverview = () => {
         </div>
 
         {/* 地理分布和熱門商品 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
           {/* 地理分布 */}
           <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <h3 className="text-lg font-medium text-gray-800 mb-4 flex items-center">

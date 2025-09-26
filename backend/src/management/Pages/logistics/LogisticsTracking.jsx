@@ -217,7 +217,7 @@ export default function LogisticsTracking() {
 
         {/* 新搜尋/篩選區域 */}
         <div className="glass rounded-2xl p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div className="flex items-center gap-4">
             {/* 關鍵字搜尋（全欄位） */}
             <input
               value={keyword}
@@ -226,7 +226,7 @@ export default function LogisticsTracking() {
               placeholder="輸入關鍵字，搜尋所有欄位"
             />
             {/* 右側篩選器 */}
-            <div className="flex items-center gap-3 md:ml-auto">
+            <div className="flex items-center gap-3 ml-auto">
               <div className="min-w-[14rem]">
                 <SearchableSelect
                   value={typeFilter}
@@ -238,7 +238,7 @@ export default function LogisticsTracking() {
                   maxDisplayOptions={9999}
                 />
               </div>
-              <div className="w-full md:w-[30rem]">
+              <div className="w-[30rem]">
                 <SearchableSelect
                   value={statusFilter}
                   onChange={(v) => setStatusFilter(v)}
@@ -290,7 +290,7 @@ export default function LogisticsTracking() {
               />
 
               {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-chinese">
+                <div className="grid grid-cols-3 gap-4 text-sm font-chinese">
                   <div className="glass p-4 rounded-xl">
                     <div className="text-gray-500 mb-1">訂單成立時間</div>
                     <div className="font-medium">{detail.TradeDate || '-'}</div>
@@ -321,7 +321,7 @@ export default function LogisticsTracking() {
               )}
 
               {activeTab === 'order' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                <div className="grid grid-cols-2 gap-4 text-sm font-chinese">
                   <Field label="特店編號" value={detail.MerchantID} />
                   <Field label="商店訂單" value={detail.MerchantTradeNo} />
                   <Field label="綠界交易" value={detail.TradeNo} />
@@ -332,7 +332,7 @@ export default function LogisticsTracking() {
               )}
 
               {activeTab === 'logistics' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                <div className="grid grid-cols-2 gap-4 text-sm font-chinese">
                   <Field label="綠界物流編號" value={detail.LogisticsID || detail.AllPayLogisticsID} />
                   <Field label="更新時間" value={detail.UpdateStatusDate} />
                   <div className="glass p-4 rounded-xl">
@@ -351,7 +351,7 @@ export default function LogisticsTracking() {
               )}
 
               {activeTab === 'receiver' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                <div className="grid grid-cols-2 gap-4 text-sm font-chinese">
                   <Field label="收件人" value={detail.ReceiverName} />
                   <Field label="Email" value={detail.ReceiverEmail} />
                   <Field label="手機" value={detail.ReceiverCellPhone} />
@@ -363,7 +363,7 @@ export default function LogisticsTracking() {
               )}
 
               {activeTab === 'address' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                <div className="grid grid-cols-2 gap-4 text-sm font-chinese">
                   <Field label="收件地址" value={detail.ReceiverAddress} />
                   <Field label="門市代碼" value={detail.CVSStoreID} />
                   <Field label="門市名稱" value={detail.CVSStoreName} />
@@ -372,7 +372,7 @@ export default function LogisticsTracking() {
               )}
 
               {activeTab === 'fees' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-chinese">
+                <div className="grid grid-cols-2 gap-4 text-sm font-chinese">
                   <Field label="物流費" value={detail.HandlingCharge} />
                   <Field label="代收金額" value={detail.CollectionAmount} />
                   <Field label="代收手續費" value={detail.CollectionChargeFee} />

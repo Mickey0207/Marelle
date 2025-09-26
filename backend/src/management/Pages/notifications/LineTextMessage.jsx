@@ -23,11 +23,11 @@ const LineTextMessage = () => {
     const content = text?.trim() ? text : '（尚未輸入內容）';
     return (
       <div className="w-full">
-        <div className="w-full max-w-md xl:max-w-lg rounded-2xl border border-gray-200 overflow-hidden bg-white shadow">
+  <div className="w-full max-w-lg rounded-2xl border border-gray-200 overflow-hidden bg-white shadow">
           {/* Header */}
           <div className="bg-[#06c755] text-white px-4 py-2 text-sm font-medium">{title}</div>
           {/* Messages */}
-          <div className="bg-gray-100 p-3 space-y-2 min-h-[320px] lg:min-h-[360px] max-h-[480px] overflow-y-auto">
+          <div className="bg-gray-100 p-3 space-y-2 min-h-[360px] max-h-[480px] overflow-y-auto">
             {/* Outgoing bubble from brand (left) */}
             <div className="flex items-end gap-2">
               <div className="flex-1">
@@ -299,9 +299,9 @@ const LineTextMessage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 左側：清單（lg: 1 欄） */}
-          <div className="lg:col-span-1">
+  <div className="grid grid-cols-3 gap-6">
+          {/* 左側：清單（固定 1 欄） */}
+          <div className="col-span-1">
             <div className={`${ADMIN_STYLES.glassCard} space-y-4`}>
               <div className="flex gap-3">
                 <input
@@ -337,14 +337,14 @@ const LineTextMessage = () => {
             </div>
           </div>
 
-          {/* 右側：編輯器（lg: 2 欄） */}
-          <div className="lg:col-span-2">
+          {/* 右側：編輯器（固定 2 欄） */}
+          <div className="col-span-2">
             <div className={`${ADMIN_STYLES.glassCard} space-y-6`}>
               {!current ? (
                 <div className="text-gray-500">請先在左側選擇或新增一個範本</div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 font-chinese mb-1">範本名稱</label>
                       <input className={ADMIN_STYLES.input} value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
@@ -380,7 +380,7 @@ const LineTextMessage = () => {
                     <div className="flex items-center justify-between mb-2 gap-3">
                       <label className="block text-sm font-medium text-gray-700 font-chinese">內容</label>
                       <div className="flex items-center gap-2">
-                        <div className="text-xs text-gray-500 hidden sm:block">可用變數：{'{{user.name}}'}, {'{{order.number}}'}, {'{{shipment.tracking}}'}</div>
+                        <div className="text-xs text-gray-500">可用變數：{'{{user.name}}'}, {'{{order.number}}'}, {'{{shipment.tracking}}'}</div>
                         <button className={ADMIN_STYLES.btnGhost} onClick={() => setShowVarPicker(true)}>插入變數</button>
                       </div>
                     </div>
@@ -442,11 +442,11 @@ const LineTextMessage = () => {
           />
 
           {previewActiveTab === 'preview' && (
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-              <div className="xl:col-span-6">
+            <div className="grid grid-cols-12 gap-6 items-start">
+              <div className="col-span-6">
                 <LineChatPreview text={renderTemplateWithContext(form.content, previewCtx)} title="Marelle" />
               </div>
-              <div className="xl:col-span-6">
+              <div className="col-span-6">
                 <div className="text-sm text-gray-700 font-medium mb-3">發送測試</div>
                 <div className="space-y-3">
                   <div>
@@ -468,8 +468,8 @@ const LineTextMessage = () => {
           )}
 
           {previewActiveTab === 'context' && (
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-              <div className="xl:col-span-12">
+            <div className="grid grid-cols-12 gap-6 items-start">
+              <div className="col-span-12">
                 <div className="text-sm text-gray-700 font-medium mb-3">情境與欄位</div>
                 <div className="space-y-5">
                   <div>
@@ -485,7 +485,7 @@ const LineTextMessage = () => {
                   {usedVarEntries.length === 0 ? (
                     <div className="text-xs text-gray-500">此範本未插入任何變數，無需調整欄位。</div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       {usedVarEntries.map((v) => {
                         const isSystem = v.category === 'system' || v.path.startsWith('system.');
                         const val = getByPath(previewCtx, v.path);

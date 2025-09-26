@@ -86,7 +86,7 @@ const DashboardOverview = () => {
         </motion.div>
 
         {/* 關鍵指標卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div className="grid grid-cols-4 gap-6 mb-8">
           {/* 今日訂單 */}
           <MetricCard
             title="今日訂單"
@@ -134,9 +134,9 @@ const DashboardOverview = () => {
         </div>
 
         {/* 詳細儀表板區域 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-3 gap-6">
           {/* 左側 - 任務和簽核狀態 */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="col-span-2 space-y-6">
             {/* 任務概況 */}
             <TaskOverview tasks={tasks} />
             
@@ -218,7 +218,7 @@ const TaskOverview = ({ tasks }) => (
       <ChartBarIcon className="h-5 w-5 text-gray-500" />
     </div>
     
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div className="grid grid-cols-4 gap-4">
       <div className="text-center">
         <div className="text-2xl font-bold text-blue-600">{tasks.by_status?.pending || 0}</div>
         <div className="text-sm text-gray-500">待處理</div>
@@ -265,7 +265,7 @@ const ApprovalOverview = ({ approvals }) => (
       <CheckCircleIcon className="h-5 w-5 text-gray-500" />
     </div>
     
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+  <div className="grid grid-cols-3 gap-4">
       <div className="text-center">
         <div className="text-2xl font-bold text-amber-600">{approvals.by_status?.pending || 0}</div>
         <div className="text-sm text-gray-500">待簽核</div>
@@ -302,7 +302,7 @@ const OperationalEfficiency = ({ metrics }) => (
       <Cog6ToothIcon className="h-5 w-5 text-gray-500" />
     </div>
     
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
       <div>
         <h4 className="text-sm font-medium text-gray-700 mb-3">處理效率</h4>
         <div className="space-y-2">

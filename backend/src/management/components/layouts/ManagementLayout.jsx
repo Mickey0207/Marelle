@@ -168,12 +168,7 @@ const ManagementLayout = () => {
                 }`}>
                   {item.name}
                 </span>
-                {/* Tooltip for collapsed state */}
-                {!sidebarHovered && (
-                  <div className="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                    {item.name}
-                  </div>
-                )}
+                {/* Tooltip removed in desktop-only simplification */}
               </NavLink>
             ))}
           </nav>
@@ -186,7 +181,7 @@ const ManagementLayout = () => {
   <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${sidebarHovered ? 'ml-64' : 'ml-16'}`}>
         {/* Top bar with tabs */}
         <header className="bg-[#fdf8f2] border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
+          <div className="flex items-center justify-between px-8 h-16">
             <div className="flex items-center flex-1">
               {/* 子頁籤導航 - 在頂部導航列內 */}
               {currentTabs && currentTabs.length > 0 && (

@@ -223,9 +223,9 @@ const SystemSettingsOverview = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           {/* 左側主要內容 */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="col-span-2 space-y-6">
             {/* 系統狀態監控 */}
             <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -264,7 +264,7 @@ const SystemSettingsOverview = () => {
                 快速設定
               </h3>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <label className="block text-sm font-medium text-gray-700 mb-2">系統名稱</label>
                     <input

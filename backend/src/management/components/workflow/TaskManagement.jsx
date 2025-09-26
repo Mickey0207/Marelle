@@ -264,7 +264,7 @@ const TaskManagement = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/70 backdrop-blur-md rounded-xl p-6 border border-white/20 shadow-lg mb-6"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-3 gap-4 mb-4">
             {/* 狀態篩選 */}
             <FilterDropdown
               label="狀態"
@@ -477,7 +477,7 @@ const TaskSummaryStats = ({ tasks }) => {
   };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+  <div className="grid grid-cols-5 gap-4 mb-6">
       <div className="bg-white/70 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-lg">
         <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
         <div className="text-sm text-gray-600">總任務</div>

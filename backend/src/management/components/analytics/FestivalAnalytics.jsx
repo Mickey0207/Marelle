@@ -197,14 +197,14 @@ const FestivalAnalytics = () => {
     <div className="min-h-screen bg-[#fdf8f2] p-6">
       <div>
         {/* 頁面標題 */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+  <div className="flex flex-row items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">節慶分析</h1>
             <p className="text-gray-600">深入分析節慶活動的效果與ROI</p>
           </div>
           <button
             onClick={exportData}
-            className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-[#cc824d] text-white font-medium rounded-lg hover:bg-[#b8734a] transition-colors"
+            className="mt-0 inline-flex items-center px-4 py-2 bg-[#cc824d] text-white font-medium rounded-lg hover:bg-[#b8734a] transition-colors"
           >
             <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
             導出數據
@@ -213,7 +213,7 @@ const FestivalAnalytics = () => {
 
         {/* 控制面板 */}
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 mb-8 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">選擇節慶</label>
               <select
@@ -262,7 +262,7 @@ const FestivalAnalytics = () => {
         </div>
 
         {/* 核心指標 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div className="grid grid-cols-4 gap-6 mb-8">
           <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -333,7 +333,7 @@ const FestivalAnalytics = () => {
         </div>
 
         {/* 詳細分析 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+  <div className="grid grid-cols-2 gap-8 mb-8">
           {/* 效果指標 */}
           <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -480,7 +480,7 @@ const FestivalAnalytics = () => {
             <UserGroupIcon className="h-5 w-5 text-[#cc824d]" />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 gap-6">
             <div className="text-center p-4 bg-white/50 rounded-lg">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <EyeIcon className="h-8 w-8 text-blue-600" />

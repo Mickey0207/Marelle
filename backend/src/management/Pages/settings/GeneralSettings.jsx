@@ -37,7 +37,7 @@ const GeneralSettings = () => {
           {/* 網站基本資訊 */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 font-chinese">網站基本資訊</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">網站名稱</label>
                 <input
@@ -62,7 +62,7 @@ const GeneralSettings = () => {
           {/* 地區設定 */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 font-chinese">地區設定</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <SearchableSelect
                   placeholder="語言"
@@ -112,7 +112,7 @@ const GeneralSettings = () => {
           {/* 格式設定 */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 font-chinese">格式設定</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">日期格式</label>
                 <select

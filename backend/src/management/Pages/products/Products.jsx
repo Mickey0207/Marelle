@@ -315,14 +315,14 @@ const AdminProducts = () => {
     <div className={ADMIN_STYLES.pageContainer}>
   <div className={ADMIN_STYLES.contentContainerFluid}>
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+  <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className={ADMIN_STYLES.pageTitle}>商品管理</h1>
             <p className={ADMIN_STYLES.pageSubtitle}>
               管理商品資訊、庫存和雜貨
             </p>
           </div>
-          <div className="flex items-center space-x-3 mt-4 sm:mt-0">
+          <div className="flex items-center space-x-3">
             <Link 
               to="/products/add"
               className="inline-flex items-center px-6 py-3 bg-[#cc824d] text-white font-medium rounded-lg hover:bg-[#b86c37] transition-all duration-200 shadow-md hover:shadow-lg font-chinese"

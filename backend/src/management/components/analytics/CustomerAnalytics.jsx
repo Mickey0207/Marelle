@@ -194,7 +194,7 @@ const CustomerAnalytics = () => {
   const renderOverviewTab = () => (
     <>
       {/* 核心指標 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div className="grid grid-cols-4 gap-6 mb-8">
         {Object.entries(mockCustomerMetrics).map(([key, metric]) => (
           <div key={key} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-3">
@@ -226,7 +226,7 @@ const CustomerAnalytics = () => {
       </div>
 
       {/* 客戶分佈圖表 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
             <UserGroupIcon className="h-5 w-5 mr-2 text-[#cc824d]" />
@@ -285,7 +285,7 @@ const CustomerAnalytics = () => {
           RFM 客戶分群分析
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-3 gap-6">
           {mockRFMSegments.map((segment, index) => (
             <div key={index} className={`${segment.bgColor} border border-gray-200 rounded-xl p-6`}>
               <div className="flex items-center justify-between mb-4">
@@ -448,13 +448,13 @@ const CustomerAnalytics = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#fdf8f2' }}>
       <div className="w-full px-6">
         {/* 頁面標題和控制項 */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div className="mb-4 lg:mb-0">
+  <div className="flex flex-row items-center justify-between mb-8">
+          <div className="mb-0">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">客戶分析</h1>
             <p className="text-gray-600">深度了解客戶行為，提升客戶價值與忠誠度</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-row gap-4">
             <SearchableSelect
               options={segmentOptions.map(option => ({ 
                 value: option.value, 

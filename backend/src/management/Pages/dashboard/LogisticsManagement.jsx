@@ -160,7 +160,7 @@ const LogisticsManagement = () => {
       {/* 配送概覽 */}
       <div className="logistics-section mb-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">今日配送概覽</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+  <div className="grid grid-cols-4 gap-6">
           <div className={ADMIN_STYLES.glassCard}>
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -211,9 +211,9 @@ const LogisticsManagement = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+  <div className="grid grid-cols-3 gap-8">
         {/* 配送單列表 */}
-        <div className="logistics-section xl:col-span-2">
+  <div className="logistics-section col-span-2">
           <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">配送單管理</h2>
           <div className={ADMIN_STYLES.glassCard}>
             <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>

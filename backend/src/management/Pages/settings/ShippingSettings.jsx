@@ -99,7 +99,7 @@ const ShippingSettings = () => {
             <div className="space-y-4">
               {settings.shippingMethods.map(method => (
                 <div key={method.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                  <div className="grid grid-cols-4 gap-4 items-center">
                     <div>
                       <label className="block text-sm font-medium mb-1 font-chinese">方式名稱</label>
                       <input
@@ -159,7 +159,7 @@ const ShippingSettings = () => {
             <div className="space-y-4">
               {settings.zones.map(zone => (
                 <div key={zone.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1 font-chinese">區域名稱</label>
                       <input
@@ -199,7 +199,7 @@ const ShippingSettings = () => {
           <div className="bg-white/40 backdrop-blur-sm rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4 font-chinese">包裝設定</h3>
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-medium mb-3 font-chinese">標準包裝箱</h4>
                   <div className="grid grid-cols-2 gap-3">

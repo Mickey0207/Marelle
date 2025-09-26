@@ -120,7 +120,7 @@ const AdminOverview = () => {
       {/* 快速概覽卡片 */}
       <div className="dashboard-section mb-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">今日概覽</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div className="grid grid-cols-4 gap-6">
           <div className={ADMIN_STYLES.glassCard}>
             <div className="flex items-center justify-between">
               <div>
@@ -175,9 +175,9 @@ const AdminOverview = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div className="grid grid-cols-3 gap-8">
         {/* 最近訂單 */}
-        <div className="dashboard-section lg:col-span-2">
+  <div className="dashboard-section col-span-2">
           <div className={ADMIN_STYLES.glassCard}>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900 font-chinese">最近訂單</h3>

@@ -286,8 +286,8 @@ const EditProduct = () => {
 
         {/* 標題與進度 */}
         <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-2">
-            <div className="lg:w-auto">
+          <div className="flex items-center gap-8">
+            <div className="w-auto">
               <h1 className="text-3xl font-bold text-gray-900 font-chinese">編輯商品</h1>
               <p className="text-gray-600 font-chinese mt-1">SKU：<span className="font-mono">{productData.baseSKU}</span></p>
               <div className="mt-2">
@@ -296,7 +296,7 @@ const EditProduct = () => {
                 </div>
               </div>
             </div>
-            <div className="lg:ml-8 lg:flex-1">
+            <div className="flex-1">
               <ProgressIndicator
                 steps={steps}
                 currentStep={currentStep}
@@ -401,7 +401,7 @@ const EditProduct = () => {
               <div className="space-y-6">
                 <h3 className={ADMIN_STYLES.sectionTitle}>定價設定</h3>
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4"><p className="text-sm text-amber-800">💡 <strong>注意：</strong>有多個變體時，基礎價會與變體差額相加，最終價格顯示在變體面板。</p></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">銷售價格 <span className="text-red-500">*</span></label>
                     <div className="relative">

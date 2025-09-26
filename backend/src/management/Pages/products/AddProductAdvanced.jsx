@@ -497,9 +497,9 @@ const AddProductAdvanced = () => {
 
         {/* 頁面標題和進度指示器 */}
         <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-2">
+          <div className="flex items-center gap-8">
             {/* 左側標題 */}
-            <div className="lg:w-auto">
+            <div className="w-auto">
               <h1 className="text-3xl font-bold text-gray-900 font-chinese">新增產品</h1>
               <p className="text-gray-600 font-chinese mt-1">
                 創建新的產品並設定詳細資訊
@@ -513,7 +513,7 @@ const AddProductAdvanced = () => {
             </div>
             
             {/* 右側進度指示器 */}
-            <div className="lg:ml-8 lg:flex-1">
+            <div className="flex-1">
               <ProgressIndicator
                 steps={steps}
                 currentStep={currentStep}
@@ -698,7 +698,7 @@ const AddProductAdvanced = () => {
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       銷售價格 <span className="text-red-500">*</span>

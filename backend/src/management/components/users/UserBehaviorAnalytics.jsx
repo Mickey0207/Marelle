@@ -176,7 +176,7 @@ const UserBehaviorAnalytics = () => {
           <FilterIcon className="w-5 h-5 text-gray-600" />
           <h3 className="text-lg font-semibold text-gray-900">篩選條件</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">事件類型</label>
             <select
@@ -256,7 +256,7 @@ const UserBehaviorAnalytics = () => {
         {activeTab === 'overview' && (
           <>
             {/* 關鍵指標 */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-4 gap-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -373,7 +373,7 @@ const UserBehaviorAnalytics = () => {
             className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg"
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-6">類別互動分析</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6">
               {/* 類別點擊排行 */}
               <div>
                 <h4 className="text-md font-medium text-gray-700 mb-4">點擊次數排行</h4>
@@ -430,7 +430,7 @@ const UserBehaviorAnalytics = () => {
             className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg"
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-6">行為模式分析</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6">
               {/* 最近事件流 */}
               <div>
                 <h4 className="text-md font-medium text-gray-700 mb-4">最近用戶行為</h4>
@@ -527,7 +527,7 @@ const UserBehaviorAnalytics = () => {
             {/* 活動高峰時段 */}
             <div className="mt-8">
               <h4 className="text-md font-medium text-gray-700 mb-4">活動高峰時段</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 {[
                   { name: '晨間高峰', time: '08:00-10:00', value: analytics.hourlyActivity?.slice(8, 11).reduce((a, b) => a + b, 0) || 0 },
                   { name: '午間高峰', time: '12:00-14:00', value: analytics.hourlyActivity?.slice(12, 15).reduce((a, b) => a + b, 0) || 0 },

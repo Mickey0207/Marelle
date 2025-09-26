@@ -76,7 +76,7 @@ const SalesAnalytics = () => {
       {/* 銷售趨勢 */}
       <div className="analytics-section mb-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">銷售趨勢</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div className="grid grid-cols-4 gap-6">
           {analyticsData.salesTrends.map((trend, index) => (
             <div key={index} className={ADMIN_STYLES.glassCard}>
               <div className="flex items-center justify-between mb-4">
@@ -97,7 +97,7 @@ const SalesAnalytics = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div className="grid grid-cols-2 gap-8">
         {/* 熱銷類別 */}
         <div className="analytics-section">
           <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">熱銷類別</h2>

@@ -201,7 +201,7 @@ const Inventory = () => {
       {previewItem && (
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/30" onClick={() => setPreviewItem(null)} />
-          <div className="absolute right-0 top-0 h-full w-full sm:w-[460px] bg-white shadow-2xl p-6 overflow-y-auto">
+          <div className="absolute right-0 top-0 h-full w-[460px] bg-white shadow-2xl p-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold font-chinese">庫存詳情</h3>
               <button className="text-gray-500 hover:text-gray-700" onClick={() => setPreviewItem(null)}>✕</button>
@@ -330,7 +330,7 @@ const Inventory = () => {
               <h3 className="text-lg font-bold font-chinese">QR Code</h3>
               <button className="text-gray-500 hover:text-gray-700" onClick={() => setQrItem(null)}>✕</button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6">
               <div className="flex items-start justify-center">
                 <QRCodeGenerator
                   autoGenerate

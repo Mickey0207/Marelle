@@ -126,7 +126,7 @@ const OrderDetails = () => {
   const StatusIcon = currentStatus.icon;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+  <div className="max-w-4xl mx-auto p-6">
       {/* 頁面標題 */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
@@ -168,7 +168,7 @@ const OrderDetails = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
           <div>
             <h3 className="text-sm font-medium text-gray-500 mb-2">客戶資訊</h3>
             <div className="space-y-1">

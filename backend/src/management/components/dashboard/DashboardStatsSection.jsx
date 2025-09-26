@@ -220,7 +220,7 @@ export const DashboardStatsSection = ({
 
             {/* 統計卡片 */}
             {isExpanded && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 {(statsData[category] || config.stats).map((stat, index) => (
                   <div key={index} className={`stats-card ${ADMIN_STYLES.glassCard} p-4`}>
                     <div className="flex items-center justify-between mb-2">

@@ -115,7 +115,7 @@ const SharingManager = () => {
         
         <div className={ADMIN_STYLES.contentCard + " mb-6"}>
           <h2 className="text-xl font-semibold mb-4">選擇優惠券</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {coupons.map(coupon => (
               <div
                 key={coupon.id}
@@ -140,7 +140,7 @@ const SharingManager = () => {
           <div className={ADMIN_STYLES.contentCard + " mb-6"}>
             <h2 className="text-xl font-semibold mb-4">分享設定 - {selectedCoupon.code}</h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-medium mb-4">基本設定</h3>
                 

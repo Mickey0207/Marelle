@@ -206,7 +206,7 @@ const OperationalAnalytics = () => {
   const renderOverviewTab = () => (
     <>
       {/* 核心指標 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div className="grid grid-cols-4 gap-6 mb-8">
         {Object.entries(mockOperationalMetrics).map(([key, metric]) => (
           <div key={key} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-3">
@@ -231,7 +231,7 @@ const OperationalAnalytics = () => {
       </div>
 
       {/* 關鍵警示和洞察 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
             <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-[#cc824d]" />
@@ -354,7 +354,7 @@ const OperationalAnalytics = () => {
           物流配送分析
         </h3>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
           <div className="space-y-4">
             {mockLogisticsData.map((region, index) => (
               <div key={index} className="p-4 bg-gray-50 rounded-lg">
@@ -418,7 +418,7 @@ const OperationalAnalytics = () => {
           詳細成本分析
         </h3>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900">成本趨勢分析</h4>
             <div className="h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
@@ -460,7 +460,7 @@ const OperationalAnalytics = () => {
           關鍵績效指標 (KPI)
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-3 gap-6">
           {mockPerformanceKPIs.map((kpi, index) => (
             <div key={index} className="p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center justify-between mb-3">
@@ -502,13 +502,13 @@ const OperationalAnalytics = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#fdf8f2' }}>
       <div className="w-full px-6">
         {/* 頁面標題和控制項 */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div className="mb-4 lg:mb-0">
+  <div className="flex flex-row items-center justify-between mb-8">
+          <div className="mb-0">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">營運分析</h1>
             <p className="text-gray-600">監控營運效率，優化供應鏈與物流管理</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-row gap-4">
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}

@@ -101,7 +101,7 @@ const ImageUpload = ({ images = [], onChange, maxImages = 10 }) => {
     <div className="space-y-4">
       {/* 圖片預覽區域 */}
       {images.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+  <div className="grid grid-cols-5 gap-4">
           {images.map((image, index) => (
             <div
               key={image.id}

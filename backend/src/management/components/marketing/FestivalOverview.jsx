@@ -118,7 +118,7 @@ const FestivalOverview = () => {
           <p className="text-gray-600">管理所有節慶活動、促銷設定與效果分析</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+  <div className="grid grid-cols-2 gap-8 mb-8">
           {/* 進行中的節慶 */}
           <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -247,7 +247,7 @@ const FestivalOverview = () => {
         {/* 快速操作 */}
         <div className="mt-8 bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
           <h2 className="text-lg font-bold text-gray-900 mb-4">快速操作</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <button className="flex items-center justify-center px-4 py-3 bg-[#cc824d] text-white rounded-lg hover:bg-[#b8734a] transition-colors">
               <CalendarIcon className="h-5 w-5 mr-2" />
               新建節慶

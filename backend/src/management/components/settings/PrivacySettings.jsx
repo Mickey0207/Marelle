@@ -128,7 +128,7 @@ const PrivacySettings = () => {
       </div>
 
       {/* 總覽統計 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+  <div className="grid grid-cols-4 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -237,7 +237,7 @@ const PrivacySettings = () => {
               className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Cookie 同意分類統計</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-4">
                   {Object.entries(privacyData?.cookieConsent.categoryConsents || {}).map(([category, rate]) => {
                     const categoryNames = {
@@ -330,7 +330,7 @@ const PrivacySettings = () => {
               </div>
 
               {/* 請求類型統計 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-3 gap-4 mb-6">
                 {Object.entries(privacyData?.dataRequests.requestTypes || {}).map(([type, count]) => {
                   const typeNames = {
                     dataExport: '數據導出',
@@ -408,7 +408,7 @@ const PrivacySettings = () => {
               className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg"
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">GDPR 合規狀態</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center space-x-3">

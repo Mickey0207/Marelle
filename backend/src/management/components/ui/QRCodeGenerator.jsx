@@ -221,7 +221,7 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated, autoGenerate = fals
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6">
             {/* QR Code 圖片 */}
             <div className="text-center">
               <img 
@@ -270,7 +270,7 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated, autoGenerate = fals
               )}
 
               {typeof generatedQR.data.salePrice !== 'undefined' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 font-chinese">售價</label>
                     <p className="text-sm text-gray-900">{generatedQR.data.salePrice != null ? `NT$${Number(generatedQR.data.salePrice).toLocaleString()}` : '-'}</p>

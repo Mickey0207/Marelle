@@ -122,9 +122,9 @@ const RealTimeMonitoringDashboard = () => {
         <SystemHealthOverview systemHealth={anomaly_monitoring.system_health} />
 
         {/* 即時營運指標 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+  <div className="grid grid-cols-3 gap-6 mb-8">
           {/* 即時指標卡片 */}
-          <div className="lg:col-span-2">
+          <div className="col-span-2">
             <RealTimeMetricsGrid metrics={real_time_metrics} />
           </div>
           
@@ -140,7 +140,7 @@ const RealTimeMonitoringDashboard = () => {
         </div>
 
         {/* 詳細監控區域 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <div className="grid grid-cols-2 gap-6 mb-8">
           {/* 異常監控 */}
           <AnomalyMonitoringPanel anomalies={anomalies} />
           
@@ -149,7 +149,7 @@ const RealTimeMonitoringDashboard = () => {
         </div>
 
         {/* 趨勢問題和建議 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
           {/* 趨勢問題 */}
           <TrendingIssuesPanel issues={alert_system.trending_issues} />
           
@@ -209,7 +209,7 @@ const SystemHealthOverview = ({ systemHealth }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+  <div className="grid grid-cols-4 gap-6">
         <div className="text-center">
           <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-2 mx-auto">
             <ServerIcon className="h-6 w-6 text-blue-600" />
@@ -323,7 +323,7 @@ const RealTimeMetricsGrid = ({ metrics }) => {
         <ChartBarIcon className="h-5 w-5 text-gray-500" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+  <div className="grid grid-cols-3 gap-4">
         {metricCards.map((card, index) => (
           <motion.div
             key={card.title}
@@ -810,7 +810,7 @@ const AlertDetailModal = ({ alert, isOpen, onClose, onAcknowledge, onResolve }) 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">警報訊息</label>
               <p className="text-sm text-gray-900">{alert.message}</p>

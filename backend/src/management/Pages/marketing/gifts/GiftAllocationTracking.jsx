@@ -147,7 +147,7 @@ const GiftAllocationTracking = () => {
       </div>
 
       {/* 統計卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div className="grid grid-cols-4 gap-6 mb-8">
         <div className="allocation-card bg-white/60 backdrop-blur-md rounded-lg border border-white/20 p-6">
           <div className="flex items-center">
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -199,9 +199,9 @@ const GiftAllocationTracking = () => {
 
       {/* 搜尋和篩選 */}
       <div className={`${ADMIN_STYLES.glassCard} p-6 mb-6`}>
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="flex gap-4 items-center justify-between">
           <div className="flex flex-1 gap-4">
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 max-w-xl">
               <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -230,7 +230,7 @@ const GiftAllocationTracking = () => {
       </div>
 
       {/* 配送記錄列表 */}
-      <div className="space-y-4">
+  <div className="space-y-4">
         {filteredAllocations.map((allocation) => (
           <div key={allocation.id} className={`allocation-card ${ADMIN_STYLES.glassCard}`}>
             <div className="p-6">
@@ -255,7 +255,7 @@ const GiftAllocationTracking = () => {
                 {getStatusBadge(allocation.status)}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-3 gap-6">
                 {/* 基本信息 */}
                 <div className="space-y-3">
                   <h4 className="font-medium text-gray-900">基本信息</h4>

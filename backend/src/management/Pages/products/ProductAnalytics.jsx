@@ -297,7 +297,7 @@ const ProductAnalytics = () => {
   return (
     <div className="space-y-6">
       {/* 標題與篩選器 */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+  <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-amber-800 mb-2">商品分析</h1>
           <p className="text-amber-600">深入了解商品效能與銷售趨勢</p>
@@ -322,7 +322,7 @@ const ProductAnalytics = () => {
       </div>
 
       {/* 總覽統計卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div className="grid grid-cols-4 gap-6">
         <div className="bg-white/20 backdrop-blur-md rounded-lg p-6 border border-white/30">
           <div className="flex items-center justify-between">
             <div>
@@ -365,9 +365,9 @@ const ProductAnalytics = () => {
       </div>
 
       {/* 主要內容區域 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-3 gap-6">
         {/* 商品效能表格 - 占2列 */}
-        <div className="lg:col-span-2">
+  <div className="col-span-2">
           {renderPerformanceTable()}
         </div>
 

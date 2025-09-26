@@ -31,11 +31,11 @@ export const  ADMIN_STYLES = {
   // 頁面容器
   pageContainer: 'min-h-screen bg-[#fdf8f2]',
   // 內容容器（調整為更寬、更自適應，避免超大螢幕左右留白過多）
-  contentContainer: 'p-6 space-y-6',
-  contentContainerWide: 'w-full max-w-[1800px] 2xl:max-w-[2100px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8',
-  contentContainerStandard: 'w-full max-w-[1600px] 2xl:max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8',
+  contentContainer: 'p-8 space-y-6',
+  contentContainerWide: 'w-full max-w-[1800px] mx-auto px-8 py-8',
+  contentContainerStandard: 'w-full max-w-[1600px] mx-auto px-8 py-8',
   // 全幅容器：不限制 max-width，適合寬表格/圖表
-  contentContainerFluid: 'w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8',
+  contentContainerFluid: 'w-full mx-auto px-8 py-8',
   
   // 頁面標題
   pageTitle: 'text-3xl font-bold text-gray-900 font-chinese mb-2',
@@ -75,9 +75,9 @@ export const  ADMIN_STYLES = {
   select: 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent font-chinese',
   
   // 網格佈局
-  gridCols2: 'grid grid-cols-1 md:grid-cols-2 gap-6',
-  gridCols3: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6',
-  gridCols4: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6',
+  gridCols2: 'grid grid-cols-2 gap-6',
+  gridCols3: 'grid grid-cols-3 gap-6',
+  gridCols4: 'grid grid-cols-4 gap-6',
   
   // 分隔符
   divider: 'border-t border-gray-200 my-6',
@@ -93,7 +93,8 @@ export const  ADMIN_STYLES = {
 // 3. 響應式間距配置
 export const ADMIN_SPACING = {
   // 頁面內邊距
-  pagePadding: 'px-4 sm:px-6 lg:px-8',
+  // 桌面版固定內邊距（移除響應式 sm/lg 設定）
+  pagePadding: 'px-8',
   
   // 組件間距
   sectionSpacing: 'space-y-6',

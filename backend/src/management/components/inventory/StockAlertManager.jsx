@@ -250,7 +250,7 @@ const StockAlertManager = ({
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 font-chinese">庫存警告設定</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
           {/* 閾值設定 */}
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900 font-chinese">警告閾值</h4>

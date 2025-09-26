@@ -436,7 +436,7 @@ const PromotionSettings = () => {
                         
                         {/* 促銷規則詳情 */}
                         <div className="mt-3 pt-3 border-t border-gray-200">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="grid grid-cols-4 gap-4 text-sm">
                             {promotion.type === 'discount' && (
                               <>
                                 <div>
@@ -459,7 +459,7 @@ const PromotionSettings = () => {
                                   <span className="text-gray-500">最低金額:</span>
                                   <div className="font-medium">NT${promotion.rules.minAmount?.toLocaleString()}</div>
                                 </div>
-                                <div className="md:col-span-3">
+                                <div className="col-span-3">
                                   <span className="text-gray-500">贈品:</span>
                                   <div className="font-medium">{promotion.rules.giftItems?.join(', ')}</div>
                                 </div>
@@ -543,7 +543,7 @@ const PromotionSettings = () => {
                       
                       {/* 優惠券詳情 */}
                       <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-4 gap-4 text-sm">
                           <div>
                             <span className="text-gray-500">最低金額:</span>
                             <div className="font-medium">NT${coupon.minAmount?.toLocaleString()}</div>

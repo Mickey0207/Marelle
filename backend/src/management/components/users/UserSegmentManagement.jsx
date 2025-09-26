@@ -154,7 +154,7 @@ const UserSegmentManagement = () => {
       </div>
 
       {/* 分群概覽 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-3 gap-6">
         {segments.map((segment, index) => (
           <motion.div
             key={segment.segmentId}
@@ -277,7 +277,7 @@ const UserSegmentManagement = () => {
             {activeTab === 'overview' && (
               <div className="space-y-6">
                 {/* 關鍵指標 */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-4 gap-6">
                   <div className="bg-white/50 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -329,7 +329,7 @@ const UserSegmentManagement = () => {
 
                 {/* 人口統計和設備偏好 */}
                 {segmentDetails && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-6">
                     <div className="bg-white/50 rounded-lg p-4">
                       <h4 className="text-md font-medium text-gray-900 mb-4">年齡分佈</h4>
                       <div className="space-y-3">

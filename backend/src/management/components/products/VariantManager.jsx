@@ -152,7 +152,7 @@ const VariantManager = ({ hasVariants, variants, onChange }) => {
         )}
 
         {/* 添加新選項 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               選項名稱 (如：顏色、尺寸)
@@ -212,9 +212,9 @@ const VariantManager = ({ hasVariants, variants, onChange }) => {
             `}</style>
             {variants.map(variant => (
               <div key={variant.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                   {/* 變體名稱和 SKU */}
-                  <div className="md:col-span-2 lg:col-span-1">
+                  <div className="col-span-1">
                     <div className="font-medium text-gray-900 mb-1">
                       {variant.name}
                     </div>
@@ -310,7 +310,7 @@ const VariantManager = ({ hasVariants, variants, onChange }) => {
           {/* 批量操作 */}
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
             <h5 className="text-sm font-medium text-gray-900 mb-3">批量設定</h5>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   統一價格

@@ -10,7 +10,7 @@ const HomeAddressList = ({ addresses, memberId, refreshAfter, dataManager }) => 
   return (
     <div className="space-y-3">
       {list.map(addr => (
-        <div key={addr.id} className="glass rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between">
+  <div key={addr.id} className="glass rounded-xl p-4 flex flex-row items-center justify-between">
           <div className="text-sm">
             <div className="font-chinese font-semibold">
               {addr.contactName}（{addr.phone}）
@@ -18,7 +18,7 @@ const HomeAddressList = ({ addresses, memberId, refreshAfter, dataManager }) => 
             </div>
             <div className="text-gray-600">{addr.postalCode} {addr.city}{addr.district}{addr.streetAddress}</div>
           </div>
-          <div className="flex gap-2 mt-3 md:mt-0">
+          <div className="flex gap-2 mt-0">
             {!addr.isDefault && (
               <button
                 className="px-3 py-1 text-xs bg-blue-600 text-white rounded"

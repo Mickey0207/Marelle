@@ -83,7 +83,7 @@ const StackingRulesManager = () => {
         
         <div className={ADMIN_STYLES.contentCard + " mb-6"}>
           <h2 className="text-xl font-semibold mb-4">選擇優惠券</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {coupons.map(coupon => (
               <div
                 key={coupon.id}
@@ -109,7 +109,7 @@ const StackingRulesManager = () => {
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200/50 mb-6">
             <h2 className="text-xl font-semibold mb-4">疊加規則設定 - {selectedCoupon.code}</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6">
               <div>
                 <label className="flex items-center mb-4">
                   <input

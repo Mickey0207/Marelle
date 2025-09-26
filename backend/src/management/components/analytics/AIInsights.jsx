@@ -343,7 +343,7 @@ const AIInsights = () => {
               
               <p className="text-gray-700 mb-4">{insight.description}</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-3 gap-4 mb-4">
                 <div className="p-3 bg-gray-50 rounded-lg">
                   <span className="text-sm text-gray-600">預期影響</span>
                   <p className="font-medium text-gray-900">{insight.impact}</p>
@@ -439,7 +439,7 @@ const AIInsights = () => {
 
   const renderPredictionsTab = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
         {mockPredictions.map((prediction, index) => (
           <div key={index} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -485,7 +485,7 @@ const AIInsights = () => {
 
   const renderRecommendationsTab = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
         {mockRecommendations.map((rec, index) => (
           <div key={index} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -527,7 +527,7 @@ const AIInsights = () => {
 
   const renderRisksTab = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-3 gap-6">
         {mockRisks.map((risk, index) => (
           <div key={index} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -588,8 +588,8 @@ const AIInsights = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#fdf8f2' }}>
       <div className="w-full px-6">
         {/* 頁面標題和控制項 */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div className="mb-4 lg:mb-0">
+  <div className="flex flex-row items-center justify-between mb-8">
+          <div className="mb-0">
             <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center">
               <SparklesIcon className="h-8 w-8 mr-3 text-[#cc824d]" />
               AI 智能洞察
@@ -597,7 +597,7 @@ const AIInsights = () => {
             <p className="text-gray-600">運用人工智能分析商業數據，提供智能洞察與預測建議</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-row gap-4">
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}

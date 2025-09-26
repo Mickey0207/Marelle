@@ -123,13 +123,13 @@ const SalesAnalytics = () => {
     <div className="min-h-screen" style={{ backgroundColor: '#fdf8f2' }}>
       <div className="w-full px-6">
         {/* 頁面標題和控制項 */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-          <div className="mb-4 lg:mb-0">
+  <div className="flex flex-row items-center justify-between mb-8">
+          <div className="mb-0">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">銷售分析</h1>
             <p className="text-gray-600">深度分析銷售數據，洞察商業趨勢與機會</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-row gap-4">
             {/* 時間範圍選擇 */}
             <SearchableSelect
               options={periodOptions.map(option => ({ 
@@ -163,7 +163,7 @@ const SalesAnalytics = () => {
         </div>
 
         {/* 核心指標卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+  <div className="grid grid-cols-6 gap-6 mb-8">
           {Object.entries(mockSalesMetrics).map(([key, metric]) => (
             <div key={key} className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-3">
@@ -192,7 +192,7 @@ const SalesAnalytics = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <div className="grid grid-cols-2 gap-6 mb-8">
           {/* 銷售趨勢圖表 */}
           <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
@@ -267,7 +267,7 @@ const SalesAnalytics = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
           {/* 熱銷商品排行 */}
           <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">

@@ -13,7 +13,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
 
   return (
     <div className="space-y-3">
-      <div className="grid md:grid-cols-2 gap-3">
+  <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs text-gray-600 mb-1">取件人</label>
           <input
@@ -34,7 +34,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-3">
+  <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-xs text-gray-600 mb-1">超商</label>
           <SearchableSelect
@@ -44,7 +44,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
             placeholder="選擇品牌"
           />
         </div>
-        <div className="md:col-span-2">
+  <div className="col-span-2">
           <label className="block text-xs text-gray-600 mb-1">門市名稱</label>
           <input
             value={newAddress.storeName || ''}
@@ -55,7 +55,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-3">
+  <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-xs text-gray-600 mb-1">門市代號</label>
           <input
@@ -65,7 +65,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
             placeholder="e.g., 123456"
           />
         </div>
-        <div className="md:col-span-2">
+  <div className="col-span-2">
           <label className="block text-xs text-gray-600 mb-1">門市地址</label>
           <input
             value={newAddress.storeAddress || ''}

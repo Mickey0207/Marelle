@@ -367,7 +367,7 @@ const PaymentSettings = () => {
         )}
 
         {/* 支付方式狀態 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  <div className="grid grid-cols-3 gap-6 mb-8">
           {paymentMethods.map((method) => {
             const IconComponent = method.icon;
             return (

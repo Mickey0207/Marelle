@@ -70,7 +70,7 @@ const PaymentSettings = () => {
           {/* 付款方式 */}
           <div className="bg-white/40 backdrop-blur-sm rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4 font-chinese">付款方式</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium font-chinese">信用卡</label>
                 <input

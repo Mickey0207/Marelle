@@ -172,7 +172,7 @@ const SupplierList = () => {
   return (
     <div className="bg-[#fdf8f2] min-h-screen p-6">
       {/* 標題 + 主動作 */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+  <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 font-chinese">供應商管理</h1>
           <p className="text-gray-600 mt-2">管理所有供應商信息與合作關係</p>
@@ -189,8 +189,8 @@ const SupplierList = () => {
 
       {/* 篩選列 */}
       <div className={`${ADMIN_STYLES.glassCard} mb-6`}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          <div className="md:col-span-1">
+        <div className="grid grid-cols-3 gap-4 items-center">
+          <div className="col-span-1">
             <div className="relative">
               <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
@@ -295,7 +295,7 @@ const SupplierList = () => {
       >
         {selectedSupplier && (
           <div className="p-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="text-sm text-gray-500">供應商名稱</div>
                 <div className="font-medium">{selectedSupplier.companyName}</div>
@@ -341,7 +341,7 @@ const SupplierList = () => {
       >
         {selectedSupplier && (
           <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-gray-700 mb-1">狀態</label>
                 <SearchableSelect
@@ -370,7 +370,7 @@ const SupplierList = () => {
                   ]}
                 />
               </div>
-              <div className="md:col-span-2">
+              <div className="col-span-2">
                 <label className="block text-sm text-gray-700 mb-1">網站</label>
                 <input
                   type="text"
@@ -397,8 +397,8 @@ const SupplierList = () => {
         title="新增供應商"
       >
         <div className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
               <label className="block text-sm text-gray-700 mb-1">供應商名稱</label>
               <input
                 type="text"

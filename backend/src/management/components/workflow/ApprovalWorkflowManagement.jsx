@@ -279,7 +279,7 @@ const ApprovalWorkflowManagement = () => {
 
           {/* 篩選區域 */}
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               {/* 工作流程類型 */}
               <select
                 value={filters.workflow_type}
@@ -385,7 +385,7 @@ const ApprovalStatsCards = ({ instances }) => {
   };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+  <div className="grid grid-cols-5 gap-4 mb-6">
       <div className="bg-white/70 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-lg">
         <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
         <div className="text-sm text-gray-600">總申請</div>
@@ -445,7 +445,7 @@ const ApprovalInstanceCard = ({ instance, workflow, index, onApprove, onReject, 
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-3 gap-4 mb-4">
             <div>
               <label className="text-sm font-medium text-gray-600">實體類型</label>
               <p className="text-sm text-gray-900">{instance.entity_type}</p>
@@ -736,7 +736,7 @@ const ApprovalDetailModal = ({ instance, workflow, isOpen, onClose, onApprove, o
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="grid grid-cols-2 gap-6">
           {/* 左側 - 基本資訊 */}
           <div className="space-y-6">
             <div>

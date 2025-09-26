@@ -11,7 +11,7 @@ const OrderRefundDetailTabs = ({ detail }) => {
   return (
     <div className="space-y-5">
       {/* 摘要列 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+  <div className="grid grid-cols-4 gap-3">
         <div className="glass rounded-lg p-3">
           <div className="text-xs text-gray-500">{isOrder ? '訂單編號' : '退款編號'}</div>
           <div className="font-mono text-sm mt-1">{isOrder ? data.orderNo : data.refundNo}</div>
@@ -45,25 +45,25 @@ const OrderRefundDetailTabs = ({ detail }) => {
 
       {tab === 'items' && (
         <div className="text-sm">
-          <div className="hidden md:grid md:grid-cols-12 gap-2 text-xs text-gray-500 px-2 mb-1">
-            <div className="md:col-span-6">商品</div>
-            <div className="md:col-span-2 text-right">單價</div>
-            <div className="md:col-span-2 text-right">數量</div>
-            <div className="md:col-span-2 text-right">小計</div>
+          <div className="grid grid-cols-12 gap-2 text-xs text-gray-500 px-2 mb-1">
+            <div className="col-span-6">商品</div>
+            <div className="col-span-2 text-right">單價</div>
+            <div className="col-span-2 text-right">數量</div>
+            <div className="col-span-2 text-right">小計</div>
           </div>
           <div className="space-y-2">
             {(data.items || []).map((it, idx) => (
               <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-white/60 rounded px-2 py-3">
-                <div className="col-span-12 md:col-span-6 flex items-center gap-3">
+                <div className="col-span-6 flex items-center gap-3">
                   {it.image && <img src={it.image} alt="" className="w-10 h-10 rounded object-cover" />}
                   <div>
                     <div className="font-medium">{it.name}</div>
                     <div className="text-xs text-gray-500">{it.sku || ''}</div>
                   </div>
                 </div>
-                <div className="col-span-4 md:col-span-2 text-right">{money(it.price)}</div>
-                <div className="col-span-4 md:col-span-2 text-right">x {it.qty}</div>
-                <div className="col-span-4 md:col-span-2 text-right font-semibold">{money((it.price || 0) * (it.qty || 0))}</div>
+        <div className="col-span-2 text-right">{money(it.price)}</div>
+        <div className="col-span-2 text-right">x {it.qty}</div>
+        <div className="col-span-2 text-right font-semibold">{money((it.price || 0) * (it.qty || 0))}</div>
               </div>
             ))}
           </div>
@@ -71,7 +71,7 @@ const OrderRefundDetailTabs = ({ detail }) => {
       )}
 
       {tab === 'shipping' && (
-        <div className="text-sm grid md:grid-cols-2 gap-4">
+  <div className="text-sm grid grid-cols-2 gap-4">
           {isOrder ? (
             <>
               <div className="glass rounded-lg p-3">
@@ -127,14 +127,14 @@ const OrderRefundDetailTabs = ({ detail }) => {
             <div>{data.payment?.method || '—'}（{data.payment?.status || '—'}）</div>
           </div>
           {isOrder ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               <div className="glass rounded-lg p-3"><div className="text-xs text-gray-500">小計</div><div className="font-medium mt-1">{money(data.totals?.subtotal)}</div></div>
               <div className="glass rounded-lg p-3"><div className="text-xs text-gray-500">折扣</div><div className="font-medium mt-1">{money(data.totals?.discount)}</div></div>
               <div className="glass rounded-lg p-3"><div className="text-xs text-gray-500">運費</div><div className="font-medium mt-1">{money(data.totals?.shipping)}</div></div>
               <div className="glass rounded-lg p-3"><div className="text-xs text-gray-500">應付金額</div><div className="font-semibold mt-1">{money(data.totals?.grandTotal)}</div></div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="glass rounded-lg p-3"><div className="text-xs text-gray-500">退貨商品金額</div><div className="font-medium mt-1">{money(data.amounts?.subtotal)}</div></div>
               <div className="glass rounded-lg p-3"><div className="text-xs text-gray-500">退運費</div><div className="font-medium mt-1">{money(data.amounts?.shippingRefund)}</div></div>
               <div className="glass rounded-lg p-3"><div className="text-xs text-gray-500">退款總額</div><div className="font-semibold text-red-600 mt-1">{money(data.amounts?.totalRefund)}</div></div>
@@ -144,7 +144,7 @@ const OrderRefundDetailTabs = ({ detail }) => {
       )}
 
       {tab === 'invoice' && (
-        <div className="text-sm grid md:grid-cols-2 gap-3">
+  <div className="text-sm grid grid-cols-2 gap-3">
           {isOrder ? (
             <>
               <div className="glass rounded-lg p-3"><div className="text-xs text-gray-500">發票類型</div><div className="mt-1">{data.invoice?.type || '—'}</div></div>

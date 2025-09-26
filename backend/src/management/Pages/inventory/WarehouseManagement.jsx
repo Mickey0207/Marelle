@@ -80,7 +80,7 @@ const WarehouseManagement = () => {
         {editingId && (
           <div className="glass rounded-2xl p-6 mb-6">
             <h3 className="text-lg font-bold mb-4 font-chinese">{editingId === 'NEW' ? '新增倉庫' : '編輯倉庫'}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs text-gray-500 mb-1 font-chinese">名稱</label>
                 <input className="w-full border rounded px-3 py-2" value={draft.name} onChange={(e)=> setDraft(d => ({...d, name: e.target.value}))} />

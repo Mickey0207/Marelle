@@ -224,7 +224,7 @@ const RealTimeActivityMonitor = () => {
       </div>
 
       {/* 實時指標 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+  <div className="grid grid-cols-4 gap-6">
         <motion.div
           key={realTimeData?.currentActiveUsers}
           initial={{ scale: 0.95 }}
@@ -293,9 +293,9 @@ const RealTimeActivityMonitor = () => {
       </div>
 
       {/* 主要內容區域 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-3 gap-6">
         {/* 活動流 */}
-        <div className="lg:col-span-2">
+  <div className="col-span-2">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -455,7 +455,7 @@ const RealTimeActivityMonitor = () => {
         className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">類別活動熱度</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+  <div className="grid grid-cols-5 gap-4">
           {realTimeData?.topCategories?.map((category, index) => (
             <motion.div
               key={category.categoryId}

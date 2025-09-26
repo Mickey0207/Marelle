@@ -72,7 +72,7 @@ const FinanceReports = () => {
       {/* 財務概覽 */}
       <div className="finance-section mb-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">財務概覽</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div className="grid grid-cols-4 gap-6">
           {financialSummary.map((item, index) => (
             <div key={index} className={ADMIN_STYLES.glassCard}>
               <div className="flex items-center justify-between mb-4">
@@ -97,7 +97,7 @@ const FinanceReports = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div className="grid grid-cols-2 gap-8">
         {/* 收入結構 */}
         <div className="finance-section">
           <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">收入結構分析</h2>
@@ -201,7 +201,7 @@ const FinanceReports = () => {
       {/* 快速報表 */}
       <div className="finance-section mt-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">快速報表</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div className="grid grid-cols-4 gap-4">
           {[
             { icon: DocumentTextIcon, label: '損益表', color: 'bg-blue-500' },
             { icon: ChartPieIcon, label: '資產負債表', color: 'bg-green-500' },
