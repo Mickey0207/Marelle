@@ -16,6 +16,7 @@ import { buildInventoryFromProducts, getInventoryFilters } from "../../../lib/da
 import { PRODUCT_CATEGORIES, getAllChildCategoryIds, getCategoryBreadcrumb } from "../../../lib/data/products/categoryDataManager";
 import CategoryCascader from "../../components/ui/CategoryCascader";
 import QRCodeGenerator from "../../components/ui/QRCodeGenerator";
+import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
 
 const Inventory = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState('全部');

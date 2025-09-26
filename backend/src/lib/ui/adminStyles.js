@@ -27,7 +27,7 @@ export const ADMIN_COLORS = {
 };
 
 // 2. 統一的 CSS 類名配置
-export const ADMIN_STYLES = {
+export const  ADMIN_STYLES = {
   // 頁面容器
   pageContainer: 'min-h-screen bg-[#fdf8f2]',
   // 內容容器（調整為更寬、更自適應，避免超大螢幕左右留白過多）

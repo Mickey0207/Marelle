@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { BuildingStorefrontIcon, PlusIcon, TrashIcon, PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { loadWarehouses, saveWarehouses, DEFAULT_WAREHOUSES_DATA } from '../../../lib/data/inventory/warehousesMock';
+import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
 
 const newWarehouseTemplate = {
   id: '',

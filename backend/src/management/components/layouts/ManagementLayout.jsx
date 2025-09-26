@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthComponents';
 import TabNavigation from '../ui/TabNavigation';
@@ -18,7 +18,6 @@ import {
   BellIcon,
   ShoppingCartIcon,
   MapPinIcon,
-  CalculatorIcon,
   DocumentTextIcon,
   ShieldCheckIcon
 } from '@heroicons/react/24/outline';
@@ -29,6 +28,24 @@ const ManagementLayout = () => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  const sidebarRef = useRef(null);
+
+  // 以滑鼠位置偵測是否離開側邊欄，離開即自動收合（僅桌面版生效）
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      // 僅在桌面版啟用（Tailwind lg: ≥1024px）
+      if (window.innerWidth < 1024) return;
+      const el = sidebarRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (!inside && sidebarHovered) {
+        setSidebarHovered(false);
+      }
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [sidebarHovered]);
 
   // 根據當前路徑獲取頁籤配置
   const currentTabs = getTabsForPath(location.pathname);
@@ -46,9 +63,8 @@ const ManagementLayout = () => {
     { name: '物流管理', href: '/logistics', icon: MapPinIcon },
     { name: '行銷管理', href: '/marketing', icon: ChartBarIcon },
     { name: '會員管理', href: '/members', icon: UsersIcon },
-    
     { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon },
-    { name: '會計管理', href: '/accounting', icon: CalculatorIcon },
+    { name: '表單審批', href: '/fromsigning', icon: DocumentTextIcon },
     { name: '通知管理', href: '/notifications', icon: BellIcon },
     { name: '管理員管理', href: '/admin', icon: ShieldCheckIcon },
     { name: '數據分析', href: '/analytics', icon: ChartBarIcon },
@@ -64,19 +80,29 @@ const ManagementLayout = () => {
 
   return (
     <div className={`${ADMIN_STYLES.pageContainer} flex`}>
-      {/* Mobile sidebar overlay */}
+      {/* Overlays with glass effect */}
+      {/* Mobile: glass overlay, click to close */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden bg-white/30 backdrop-blur-md transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+      {/* Desktop: non-blocking glass overlay while sidebar expanded */}
+      {sidebarHovered && (
+        <div
+          className="hidden lg:block fixed inset-0 z-40 bg-white/20 backdrop-blur-sm pointer-events-none transition-opacity duration-300"
         ></div>
       )}
 
       {/* Sidebar */}
       <div 
-        className={`fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out lg:relative ${
+        className={`fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out will-change-transform ${
           sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64'
-        } lg:translate-x-0 ${sidebarHovered ? 'lg:w-64' : 'lg:w-16'}`}
+        } lg:translate-x-0 ${sidebarHovered ? 'lg:w-64' : 'lg:w-16'} ${
+          sidebarOpen || sidebarHovered ? 'shadow-xl' : 'shadow-sm'
+        }`}
+        ref={sidebarRef}
         onMouseEnter={() => setSidebarHovered(true)}
         onMouseLeave={() => setSidebarHovered(false)}
       >
@@ -135,32 +161,12 @@ const ManagementLayout = () => {
             ))}
           </nav>
 
-          {/* Footer */}
-          <div className="p-3 border-t border-gray-200">
-            <button
-              onClick={handleLogout}
-              className="flex items-center w-full px-3 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all duration-200 font-serif group"
-              title={!(sidebarHovered || sidebarOpen) ? '登出' : ''}
-            >
-              <ArrowRightOnRectangleIcon className="w-5 h-5 flex-shrink-0" />
-              <span className={`ml-3 transition-opacity duration-300 whitespace-nowrap ${
-                sidebarHovered || sidebarOpen ? 'opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
-              }`}>
-                登出
-              </span>
-              {/* Tooltip for collapsed state */}
-              {!(sidebarHovered || sidebarOpen) && (
-                <div className="hidden lg:block absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                  登出
-                </div>
-              )}
-            </button>
-          </div>
+          {/* Footer removed per request: side logout button deleted */}
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+  <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${sidebarHovered ? 'lg:ml-64' : 'lg:ml-16'}`}>
         {/* Top bar with tabs */}
         <header className="bg-[#fdf8f2] border-b border-gray-200 sticky top-0 z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">

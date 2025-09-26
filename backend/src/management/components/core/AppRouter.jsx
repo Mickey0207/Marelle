@@ -53,12 +53,8 @@ import MailHtmlMessage from '../../Pages/notifications/MailHtmlMessage';
 import SmsMessage from '../../Pages/notifications/SmsMessage';
 import WebNotification from '../../Pages/notifications/WebNotification';
 
-// Accounting 模組
-import AccountingOverview from '../../Pages/accounting/AccountingOverview';
-import ChartOfAccounts from '../../Pages/accounting/ChartOfAccounts';
-import JournalEntries from '../../Pages/accounting/JournalEntries';
-import FinancialReports from '../../Pages/accounting/FinancialReports';
-import BankReconciliation from '../../Pages/accounting/BankReconciliation';
+// Accounting 模組（改為表單審批入口）
+import FormApprovals from '../../Pages/fromsigning/FormApprovals';
 
 // Analytics 模組
 import AdminAnalyticsOverview from '../../Pages/analytics/AnalyticsOverview';
@@ -79,8 +75,8 @@ import ShippingSettings from '../../Pages/settings/ShippingSettings';
 // Admin 模組
 import AdminManagement from '../../Pages/admin/AdminManagement';
 
-// Marketing 模組 Pages - 動態載入以進行 code splitting
-const MarketingOverviewPage = lazy(() => import('../../Pages/marketing/MarketingMange'));
+// Marketing 模組 Pages
+import MarketingOverviewPage from '../../Pages/marketing/MarketingMange';
 const CouponManagement = lazy(() => import('../../Pages/marketing/coupons/CouponManagementContainer'));
 const FestivalManagement = lazy(() => import('../../Pages/marketing/festivals/FestivalManagement'));
 const GiftManagement = lazy(() => import('../../Pages/marketing/gifts/GiftManagement'));
@@ -162,50 +158,18 @@ const AppRouter = () => {
               <Route path="notifications/web" element={<WebNotification />} />
 
               {/* Marketing 模組路由（整合入口 + 子頁） */}
-              <Route
-                path="marketing"
-                element={
-                  <Suspense fallback={<div className="p-6 text-gray-600">載入行銷管理中...</div>}>
-                    <MarketingOverviewPage />
-                  </Suspense>
-                }
-              >
+              <Route path="marketing" element={<MarketingOverviewPage />}>
                 <Route index element={<Navigate to="coupons" replace />} />
-                <Route
-                  path="coupons"
-                  element={
-                    <Suspense fallback={<div className="p-6 text-gray-600">載入優惠券...</div>}>
-                      <CouponManagement />
-                    </Suspense>
-                  }
-                />
-                <Route
-                  path="festivals"
-                  element={
-                    <Suspense fallback={<div className="p-6 text-gray-600">載入節慶管理...</div>}>
-                      <FestivalManagement />
-                    </Suspense>
-                  }
-                />
-                <Route
-                  path="gifts"
-                  element={
-                    <Suspense fallback={<div className="p-6 text-gray-600">載入贈品管理...</div>}>
-                      <GiftManagement />
-                    </Suspense>
-                  }
-                />
+                <Route path="coupons" element={<CouponManagement />} />
+                <Route path="festivals" element={<FestivalManagement />} />
+                <Route path="gifts" element={<GiftManagement />} />
               </Route>
 
               {/* Festivals 模組路由（整合後導向行銷管理） */}
               <Route path="festivals/manage" element={<Navigate to="/marketing" replace />} />
 
-              {/* Accounting 模組路由 */}
-              <Route path="accounting" element={<AccountingOverview />} />
-              <Route path="accounting/chart-of-accounts" element={<ChartOfAccounts />} />
-              <Route path="accounting/journal-entries" element={<JournalEntries />} />
-              <Route path="accounting/financial-reports" element={<FinancialReports />} />
-              <Route path="accounting/bank-reconciliation" element={<BankReconciliation />} />
+              {/* 表單審批 模組路由 */}
+              <Route path="fromsigning" element={<FormApprovals />} />
 
               {/* Analytics 模組路由 */}
               <Route path="analytics" element={<AdminAnalyticsOverview />} />
@@ -229,11 +193,6 @@ const AppRouter = () => {
               {/* Inventory 模組路由 (獨立模組) */}
               <Route path="inventory" element={<Inventory />} />
               <Route path="inventory/warehouses" element={<WarehouseManagement />} />
-              {/* 暫時註解掉，因為還沒有對應的頁面 */}
-              {/* <Route path="inventory/list" element={<Inventory />} />
-              <Route path="inventory/adjustments" element={<Inventory />} />
-              <Route path="inventory/alerts" element={<Inventory />} />
-              <Route path="inventory/reports" element={<Inventory />} /> */}
             </Route>
           </Routes>
         </AppStateProvider>

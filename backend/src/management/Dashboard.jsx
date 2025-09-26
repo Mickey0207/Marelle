@@ -21,7 +21,6 @@ import {
   ShoppingCartIcon,
   TicketIcon,
   MapPinIcon,
-  CalculatorIcon,
   DocumentTextIcon,
   CreditCardIcon,
   CalendarDaysIcon,
@@ -74,8 +73,7 @@ import TabNavigation from './components/ui/TabNavigation';
 // Import tab configurations
 import { getTabsForPath } from '../lib/data/ui/tabsConfig';
 
-// Import accounting system components
-import AccountingManagementContainer from './Pages/accounting/AccountingOverview';
+// 表單審批：統一入口於 /fromsigning（舊會計模組已移除）
 
 // Import festival management components (moved from marketing to festivals domain)
 import FestivalOverview from './components/festivals/FestivalOverview';
@@ -137,7 +135,7 @@ const AdminDashboard = () => {
     { name: '會員管理', href: '/members', icon: UsersIcon },
     { name: '贈品管理', href: '/gifts', icon: GiftIcon },
     { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon },
-    { name: '會計管理', href: '/accounting', icon: CalculatorIcon },
+  { name: '表單審批', href: '/fromsigning', icon: DocumentTextIcon },
     { name: '用戶追蹤', href: '/user-tracking', icon: ChartBarIcon },
     { name: '通知管理', href: '/notifications', icon: BellIcon },
     { name: '管理員管理', href: '/admin', icon: ShieldCheckIcon },

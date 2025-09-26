@@ -88,14 +88,9 @@ const notificationsTabs = [
   { label: '網站通知', path: '/notifications/web' }
 ];
 
-// Accounting 模組 tabs
-const accountingTabs = [
-  { label: '會計概覽', path: '/accounting' },
-  { label: '會計管理', path: '/accounting/management' },
-  { label: '會計科目', path: '/accounting/chart-of-accounts' },
-  { label: '日記帳分錄', path: '/accounting/journal-entries' },
-  { label: '財務報告', path: '/accounting/financial-reports' },
-  { label: '銀行對帳', path: '/accounting/bank-reconciliation' }
+// 表單審批 模組 tabs（單一路徑）
+const fromsigningTabs = [
+  { label: '表單簽核', path: '/fromsigning' },
 ];
 
 // Analytics 模組 tabs
@@ -213,9 +208,9 @@ export const getTabsForPath = (currentPath) => {
     return notificationsTabs;
   }
   
-  // Accounting 模組
-  if (cleanPath.startsWith('/accounting')) {
-    return accountingTabs;
+  // 表單審批 模組
+  if (cleanPath.startsWith('/fromsigning')) {
+    return fromsigningTabs;
   }
   
   // Analytics 模組
@@ -263,7 +258,7 @@ export default {
   logisticsTabs,
   couponsTabs,
   notificationsTabs,
-  accountingTabs,
+  fromsigningTabs,
   analyticsTabs,
   settingsTabs,
   documentsTabs,
