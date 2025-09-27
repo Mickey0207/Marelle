@@ -138,14 +138,14 @@ const festivalsTabs = [
   { label: '管理', path: '/festivals/manage' },
 ];
 
-// User Tracking 模組 tabs - 已移除，因為user-tracking目錄為空
-// const userTrackingTabs = [
-//   { label: '用戶追蹤概覽', path: '/admin/user-tracking' },
-//   { label: '行為分析', path: '/admin/user-tracking/behavior' },
-//   { label: '活動監控', path: '/admin/user-tracking/activity' },
-//   { label: '用戶分群', path: '/admin/user-tracking/segments' },
-//   { label: '隱私設定', path: '/admin/user-tracking/privacy' }
-// ];
+// User Tracking 模組 tabs
+const userTrackingTabs = [
+  { label: '事件流', path: '/user-tracking/events' },
+  { label: '會話', path: '/user-tracking/sessions' },
+  { label: '分群', path: '/user-tracking/segments' },
+  { label: '漏斗', path: '/user-tracking/funnels' },
+  { label: '留存', path: '/user-tracking/retention' },
+];
 
 // Inventory 模組 tabs
 const inventoryTabs = [
@@ -242,6 +242,11 @@ export const getTabsForPath = (currentPath) => {
   if (cleanPath.startsWith('/inventory')) {
     return inventoryTabs;
   }
+
+  // User Tracking 模組
+  if (cleanPath.startsWith('/user-tracking')) {
+    return userTrackingTabs;
+  }
   
   return [];
 };
@@ -265,6 +270,6 @@ export default {
   adminTabs,
   marketingTabs,
   festivalsTabs,
-  // userTrackingTabs, // 已移除
+  userTrackingTabs,
   inventoryTabs
 };

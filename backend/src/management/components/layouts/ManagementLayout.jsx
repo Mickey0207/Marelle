@@ -86,7 +86,8 @@ const ManagementLayout = () => {
     { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon },
     { name: '表單審批', href: '/fromsigning', icon: DocumentTextIcon },
     { name: '通知管理', href: '/notifications', icon: BellIcon },
-    { name: '管理員管理', href: '/admin', icon: ShieldCheckIcon },
+  { name: '管理員管理', href: '/admin', icon: ShieldCheckIcon },
+  { name: '用戶追蹤', href: '/user-tracking', icon: ChartBarIcon },
     { name: '數據分析', href: '/analytics', icon: ChartBarIcon },
     { name: '系統設定', href: '/settings', icon: Cog6ToothIcon },
   ];

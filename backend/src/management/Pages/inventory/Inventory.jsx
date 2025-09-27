@@ -28,21 +28,44 @@ const Inventory = () => {
   const [rows, setRows] = useState(() => buildInventoryFromProducts('*'));
   const { warehouses } = useMemo(() => getInventoryFilters(rows), [rows]);
 
-  // 篩選數據
-  const filteredData = useMemo(() => {
-    let filtered = rows.filter(item => {
+  // 聚合為父表（商品層級）
+  const productRows = useMemo(() => {
+    // 先依篩選條件過濾 SKU 列
+    const filteredSkus = rows.filter(item => {
       const matchWarehouse = selectedWarehouse === '全部' || item.warehouse === selectedWarehouse;
-      // 類別過濾：若選到某個節點，包含其所有子分類
       let matchCategory = true;
       if (selectedCategory) {
         const allowed = new Set([selectedCategory, ...getAllChildCategoryIds(PRODUCT_CATEGORIES, selectedCategory)]);
         matchCategory = item.categoryId ? allowed.has(item.categoryId) : false;
       }
-      
       return matchWarehouse && matchCategory;
     });
 
-    return filtered;
+    // 以 productId/baseSKU 做父層分組，彙總顯示
+    const map = new Map();
+    for (const r of filteredSkus) {
+      const key = r.productId ?? r.baseSKU ?? r.name;
+      if (!map.has(key)) {
+        map.set(key, {
+          productKey: key,
+          productId: r.productId,
+          baseSKU: r.baseSKU,
+          name: r.name,
+          category: r.category,
+          categoryId: r.categoryId,
+          imageUrl: r.productImageUrl || r.imageUrl,
+          totalCurrentStock: 0,
+          totalValue: 0,
+          skuCount: 0,
+          sample: r, // 取樣本帶其他欄位
+        });
+      }
+      const agg = map.get(key);
+      agg.totalCurrentStock += Number(r.currentStock || 0);
+      agg.totalValue += Number(r.totalValue || 0);
+      agg.skuCount += 1;
+    }
+    return Array.from(map.values());
   }, [selectedWarehouse, selectedCategory, rows]);
 
   const getStatusBadge = (item) => {
@@ -62,22 +85,30 @@ const Inventory = () => {
   // 定義表格處理
   const columns = [
     {
-      key: 'sku',
-      label: 'SKU',
-      sortable: true,
-      render: (value) => <span className="font-mono text-sm">{value}</span>
+      key: 'imageUrl',
+      label: '圖片',
+      sortable: false,
+      render: (value, item) => (
+        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+          {value ? (
+            <img src={value} alt={item.name} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[10px] text-gray-400">無圖</span>
+          )}
+        </div>
+      )
     },
     {
       key: 'name',
       label: '商品名稱',
       sortable: true,
-      render: (value) => <span className="font-chinese">{value}</span>
+      render: (value, item) => <span className="font-chinese font-medium">{item.name}</span>
     },
     {
-      key: 'spec',
-      label: '規格',
+      key: 'baseSKU',
+      label: '主 SKU',
       sortable: true,
-      render: (value) => <span className="font-chinese text-sm text-gray-600">{value || '-'}</span>
+      render: (value) => <span className="font-mono text-sm">{value}</span>
     },
     {
       key: 'category',
@@ -86,61 +117,103 @@ const Inventory = () => {
       render: (value) => <span className="font-chinese">{value}</span>
     },
     {
-      key: 'currentStock',
-      label: '庫存量',
+      key: 'totalCurrentStock',
+      label: '總庫存量',
       sortable: true,
-      render: (value, item) => (
-        <span className={`font-bold ${value < 0 ? 'text-purple-600' : value < item.safeStock ? 'text-red-600' : 'text-green-600'}`}>
-          {value}
-        </span>
-      )
+      render: (value) => <span className={`font-bold ${value < 0 ? 'text-purple-600' : 'text-green-600'}`}>{value}</span>
     },
     {
-      key: 'safeStock',
-      label: '安全庫存',
+      key: 'skuCount',
+      label: 'SKU 數',
       sortable: true
-    },
-    {
-      key: 'qrcode',
-      label: 'QR Code',
-      sortable: false,
-      render: (_, item) => (
-        <button className="px-2 py-1 text-xs border rounded hover:bg-gray-50 flex items-center space-x-1" onClick={() => setQrItem(item)}>
-          <QrCodeIcon className="w-4 h-4 text-gray-600" />
-          <span>顯示</span>
-        </button>
-      )
-    },
-    {
-      key: 'allowNegative',
-      label: '允許預購',
-      sortable: false,
-      render: (value) => (
-        value ? (
-          <span className="inline-flex items-center px-2 py-0.5 text-xs font-bold bg-purple-100 text-purple-700 rounded font-chinese">允許</span>
-        ) : (
-          <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded font-chinese">禁止</span>
-        )
-      )
-    },
-    {
-      key: 'status',
-      label: '狀態',
-      sortable: false,
-      render: (value, item) => getStatusBadge(item)
     },
     {
       key: 'actions',
       label: '操作',
       sortable: false,
-      render: (value, item) => (
-        <div className="flex space-x-2">
-          <button className="p-1 text-gray-700 hover:bg-gray-100 rounded flex items-center" title="檢視" onClick={() => setPreviewItem(item)}>
+      render: (_v, item) => (
+        <div className="flex items-center gap-2">
+          <button className="p-1 text-gray-700 hover:bg-gray-100 rounded flex items-center" title="檢視明細" onClick={() => setPreviewItem(item.sample)}>
             <EyeIcon className="w-4 h-4" />
           </button>
         </div>
       )
+    },
+  ];
+
+  // 子表：將同一產品下所有 SKU 彙總（跨倉庫加總），並顯示關鍵欄位
+  const getSubRows = (parent) => {
+    const related = rows.filter(r => (r.productId ?? r.baseSKU ?? r.name) === parent.productKey);
+    // 以 SKU 聚合
+    const skuMap = new Map();
+    for (const r of related) {
+      const key = r.sku;
+      if (!skuMap.has(key)) {
+        skuMap.set(key, {
+          sku: r.sku,
+          spec: r.spec,
+          currentStock: 0,
+          safeStock: r.safeStock,
+          avgCost: r.avgCost,
+          totalValue: 0,
+          barcode: r.barcode,
+          imageUrl: r.variantImageUrl || r.productImageUrl || r.imageUrl,
+          status: r.status,
+          // 供 QR 視窗使用的補充欄位
+          id: r.sku,
+          name: parent.name,
+          category: parent.category,
+          warehouse: '彙總',
+        });
+      }
+      const agg = skuMap.get(key);
+      agg.currentStock += Number(r.currentStock || 0);
+      agg.totalValue += Number(r.totalValue || 0);
+      // 以較緊的 safeStock
+      if (typeof r.safeStock === 'number' && (typeof agg.safeStock !== 'number' || r.safeStock < agg.safeStock)) {
+        agg.safeStock = r.safeStock;
+      }
+      // 若任一倉庫為低庫存，整體標為低；若全部正常則正常；若有負數標預售
+      if (r.currentStock < 0) agg.status = 'presale';
+      else if (r.currentStock < r.safeStock && agg.status !== 'presale') agg.status = 'low';
     }
+    return Array.from(skuMap.values());
+  };
+
+  const subColumns = [
+    {
+      key: 'imageUrl',
+      label: '圖片',
+      sortable: false,
+      render: (value, item) => (
+        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+          {value ? (
+            <img src={value} alt={item.sku} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-[10px] text-gray-400">無圖</span>
+          )}
+        </div>
+      )
+    },
+    { key: 'sku', label: 'SKU', sortable: true, render: (v) => <span className="font-mono text-xs text-gray-800">{v}</span> },
+    { key: 'spec', label: '規格', sortable: true, render: (v) => <span className="text-sm text-gray-700 font-chinese">{v || '-'}</span> },
+    { key: 'currentStock', label: '庫存量(總)', sortable: true, render: (v, r) => (
+      <span className={`font-bold ${v < 0 ? 'text-purple-600' : v < (r.safeStock ?? 0) ? 'text-red-600' : 'text-green-600'}`}>{v}</span>
+    ) },
+    { key: 'safeStock', label: '安全庫存', sortable: true },
+    { key: 'avgCost', label: '平均成本', sortable: true },
+    { key: 'totalValue', label: '庫存價值(總)', sortable: true },
+    { key: 'barcode', label: '條碼', sortable: true, render: (v, r) => (
+      <button
+        className="px-2 py-1 text-xs border rounded hover:bg-gray-50 flex items-center space-x-1"
+        title="顯示 QR"
+        onClick={() => setQrItem(r)}
+      >
+        <QrCodeIcon className="w-4 h-4" />
+        <span>{v ? '顯示' : '產生'}</span>
+      </button>
+    ) },
+    { key: 'status', label: '狀態', sortable: true, render: (_v, r) => getStatusBadge(r) },
   ];
 
   return (
@@ -183,18 +256,28 @@ const Inventory = () => {
           )}
 
           <div className="text-sm text-gray-500 font-chinese">
-            共{filteredData.length} 項商品
+            共{productRows.length} 項商品
           </div>
         </div>
       </div>
 
       {/* 主要庫存表格 */}
       <StandardTable
-        data={filteredData}
+        data={productRows}
         columns={columns}
-        title="庫存清單"
+        title="庫存清單（按商品彙總）"
         emptyMessage="沒有找到符合條件的庫存資料"
         exportFileName="庫存清單"
+        enableRowExpansion
+        getSubRows={getSubRows}
+        subColumns={subColumns}
+        renderSubtableHeader={(row) => (
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">{row.name} 的 SKU 彙總（跨倉庫）</div>
+            <div className="text-xs text-gray-500">共 {getSubRows(row).length} 項 SKU</div>
+          </div>
+        )}
+        subtableClassName="rounded-lg"
       />
 
       {/* 右側抽屜：庫存詳情與即時編輯 */}

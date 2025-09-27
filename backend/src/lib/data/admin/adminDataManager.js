@@ -336,3 +336,4 @@ class AdminDataManager {
 
 // 創建全局實例
 export const adminDataManager = new AdminDataManager();
+export default adminDataManager;

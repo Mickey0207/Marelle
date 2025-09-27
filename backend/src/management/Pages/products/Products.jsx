@@ -237,6 +237,27 @@ const AdminProducts = () => {
   // 子表格欄位（SKU 列表）
   const subColumns = [
     {
+      key: 'image',
+      label: '圖片',
+      sortable: false,
+      render: (_v, child, _idx, product) => {
+        const variantImages = child?.config?.variantImages || [];
+        const variantCover = (variantImages[0]?.url || variantImages[0]) || null;
+        const productCover = product?.images?.[0]?.url || product?.image || null;
+        const cover = variantCover || productCover || '/placeholder-image.jpg';
+        const alt = child?.sku ? `${child.sku} 縮圖` : (product?.name ? `${product.name} 縮圖` : 'SKU 縮圖');
+        return (
+          <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+            {cover ? (
+              <img src={cover} alt={alt} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[10px] text-gray-400">無圖</span>
+            )}
+          </div>
+        );
+      }
+    },
+    {
       key: 'sku',
       label: 'SKU',
       sortable: true,

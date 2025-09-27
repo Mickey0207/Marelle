@@ -84,11 +84,11 @@ const GiftManagement = lazy(() => import('../../Pages/marketing/gifts/GiftManage
 // Festival 模組 Pages（整合進行銷管理後，舊路由將導向 marketing）
 
 // User Tracking 模組 - 暫時移除，因為user-tracking目錄為空
-// import UserTrackingOverview from '../../management/components/users/UserTrackingOverview';
-// import UserBehaviorAnalytics from '../../management/components/users/UserBehaviorAnalytics';
-// import RealTimeActivityMonitor from '../../management/components/dashboard/RealTimeActivityMonitor';
-// import UserSegmentManagement from '../../management/components/users/UserSegmentManagement';
-// import PrivacySettings from '../../management/components/settings/PrivacySettings';
+import EventsPage from '../../Pages/user-tracking/Events';
+import SessionsPage from '../../Pages/user-tracking/Sessions';
+import SegmentsPage from '../../Pages/user-tracking/Segments';
+import FunnelsPage from '../../Pages/user-tracking/Funnels';
+import RetentionPage from '../../Pages/user-tracking/Retention';
 
 const AppRouter = () => {
   return (
@@ -193,6 +193,14 @@ const AppRouter = () => {
               {/* Inventory 模組路由 (獨立模組) */}
               <Route path="inventory" element={<Inventory />} />
               <Route path="inventory/warehouses" element={<WarehouseManagement />} />
+
+              {/* User Tracking 模組路由 */}
+              <Route path="user-tracking" element={<Navigate to="/user-tracking/events" replace />} />
+              <Route path="user-tracking/events" element={<EventsPage />} />
+              <Route path="user-tracking/sessions" element={<SessionsPage />} />
+              <Route path="user-tracking/segments" element={<SegmentsPage />} />
+              <Route path="user-tracking/funnels" element={<FunnelsPage />} />
+              <Route path="user-tracking/retention" element={<RetentionPage />} />
             </Route>
           </Routes>
         </AppStateProvider>

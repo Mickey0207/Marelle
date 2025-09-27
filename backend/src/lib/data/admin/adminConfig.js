@@ -1,4 +1,5 @@
 // 管理員系統數據模型和配置
+// 管理員系統數據模型和配置
 export const ADMIN_PERMISSIONS = {
   // 14個模組的權限矩陣 (56個權限點)
   product: { create: '新增商品', read: '查看商品', update: '編輯商品', delete: '刪除商品' },

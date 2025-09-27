@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 import {
   QrCodeIcon,
   ArrowDownTrayIcon,
@@ -18,7 +19,8 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated, autoGenerate = fals
 
   // 生成 QR Code 數據
   const generateQRData = () => {
-    const baseUrl = window.location.origin;
+    // 手機掃描必須能連到的公開網址：優先使用環境變數 VITE_PUBLIC_BASE_URL，否則退回當前來源
+    const baseUrl = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
     const productName = product?.name?.['zh-TW'] || product?.name || '';
     const variantPath = Array.isArray(sku?.variantPath) ? sku.variantPath : [];
     const variantInfo = variantPath.map((v, i) => {
@@ -47,38 +49,20 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated, autoGenerate = fals
     };
   };
 
-  // 模擬 QR Code 生成 (實際專案中會調用 QR Code 庫)
-  const generateQRCodeImage = (data) => {
-    // 這裡模擬 QR Code 生成
-    const qrData = encodeURIComponent(JSON.stringify(data));
-    
-    // 使用 SVG 創建簡單的 QR Code 樣式 (實際會使用 qrcode 庫)
-    const qrSvg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-        <rect width="200" height="200" fill="white"/>
-        <rect x="20" y="20" width="20" height="20" fill="black"/>
-        <rect x="60" y="20" width="20" height="20" fill="black"/>
-        <rect x="100" y="20" width="20" height="20" fill="black"/>
-        <rect x="140" y="20" width="20" height="20" fill="black"/>
-        <rect x="20" y="60" width="20" height="20" fill="black"/>
-        <rect x="100" y="60" width="20" height="20" fill="black"/>
-        <rect x="160" y="60" width="20" height="20" fill="black"/>
-        <rect x="20" y="100" width="20" height="20" fill="black"/>
-        <rect x="60" y="100" width="20" height="20" fill="black"/>
-        <rect x="140" y="100" width="20" height="20" fill="black"/>
-        <rect x="20" y="140" width="20" height="20" fill="black"/>
-        <rect x="60" y="140" width="20" height="20" fill="black"/>
-        <rect x="100" y="140" width="20" height="20" fill="black"/>
-        <rect x="160" y="140" width="20" height="20" fill="black"/>
-        <rect x="40" y="160" width="60" height="20" fill="black"/>
-        <rect x="120" y="160" width="60" height="20" fill="black"/>
-        <text x="100" y="190" font-family="Arial" font-size="8" text-anchor="middle" fill="black">
-          ${data.type.toUpperCase()}
-        </text>
-      </svg>
-    `;
-    
-    return `data:image/svg+xml;base64,${btoa(qrSvg)}`;
+  // 使用 qrcode 套件生成真正可掃描的 QR Code DataURL
+  const generateQRCodeImage = async (data) => {
+    // 優先只編碼 URL，掃描器更容易直接開啟連結；若無 URL 則退回 JSON 字串
+    const value = data?.url || JSON.stringify(data);
+    const opts = {
+      errorCorrectionLevel: 'M', // 足夠的容錯等級
+      margin: 2,
+      scale: 6, // 解析度
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    };
+    return await QRCode.toDataURL(value, opts);
   };
 
   // 生成 QR Code
@@ -94,7 +78,7 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated, autoGenerate = fals
       // 模擬異步生成過程
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const qrImageUrl = generateQRCodeImage(qrData);
+  const qrImageUrl = await generateQRCodeImage(qrData);
       
       const qrResult = {
         id: Date.now(),

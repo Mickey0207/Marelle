@@ -76,11 +76,16 @@ export const buildInventoryFromProducts = (warehouses = '*') => {
         const barcode = v.config?.barcode || `${p.baseSKU}-${sku}`.toUpperCase();
 
         const splitMap = splitQuantityByWarehouses(quantity, warehouseList);
+        const productImageUrl = (Array.isArray(p.images) && p.images[0]?.url) ? p.images[0].url : (p.image || '');
+        const variantImages = v?.config?.variantImages || [];
+        const variantImageUrl = (variantImages[0]?.url || variantImages[0]) || '';
         for (const wh of warehouseList) {
           const qty = Number(splitMap[wh] ?? 0);
           const status = qty < 0 ? 'presale' : (qty < safeStock ? 'low' : 'normal');
           const totalValue = Math.round(qty * avgCost);
           rows.push({
+            productId: p.id,
+            baseSKU: p.baseSKU,
             id: `${p.baseSKU}-${sku}-${wh}`,
             sku,
             name,
@@ -96,6 +101,10 @@ export const buildInventoryFromProducts = (warehouses = '*') => {
             allowNegative,
             lastUpdated: new Date().toISOString().slice(0,10),
             status,
+            // 縮圖（優先使用變體圖，其次產品圖）
+            productImageUrl,
+            variantImageUrl,
+            imageUrl: variantImageUrl || productImageUrl,
           });
         }
       }
@@ -108,11 +117,14 @@ export const buildInventoryFromProducts = (warehouses = '*') => {
       const barcode = `${sku}-0001`.toUpperCase();
 
       const splitMap = splitQuantityByWarehouses(quantity, warehouseList);
+      const productImageUrl = (Array.isArray(p.images) && p.images[0]?.url) ? p.images[0].url : (p.image || '');
       for (const wh of warehouseList) {
         const qty = Number(splitMap[wh] ?? 0);
         const status = qty < 0 ? 'presale' : (qty < safeStock ? 'low' : 'normal');
         const totalValue = Math.round(qty * avgCost);
         rows.push({
+          productId: p.id,
+          baseSKU: p.baseSKU,
           id: `${sku}-${wh}`,
           sku,
           name,
@@ -128,6 +140,9 @@ export const buildInventoryFromProducts = (warehouses = '*') => {
           allowNegative: false,
           lastUpdated: new Date().toISOString().slice(0,10),
           status,
+          productImageUrl,
+          variantImageUrl: '',
+          imageUrl: productImageUrl,
         });
       }
     }
