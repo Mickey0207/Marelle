@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from "../../../../lib/ui/adminStyles";
 import StandardTable from '../../../components/ui/StandardTable.jsx';
+import IconActionButton from '../../../components/ui/IconActionButton.jsx';
 import giftDataManager from "../../../../lib/data/marketing/gifts/giftDataManager";
 
 const GiftStatus = {
@@ -125,20 +126,8 @@ const GiftManagement = () => {
     { key: 'value', label: '價值', render: (v) => <span className="text-[#cc824d]">{v}</span> },
     { key: 'actions', label: '操作', render: (_, row) => (
       <div className="flex items-center space-x-2">
-        <button
-          onClick={() => setSelectedGift(row)}
-          className="p-2 text-gray-400 hover:text-[#cc824d] transition-colors"
-          title="編輯"
-        >
-          <PencilIcon className="w-4 h-4" />
-        </button>
-        <button
-          onClick={() => handleDeleteGift(row.id)}
-          className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-          title="刪除"
-        >
-          <TrashIcon className="w-4 h-4" />
-        </button>
+        <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" onClick={() => setSelectedGift(row)} />
+        <IconActionButton Icon={TrashIcon} label="刪除" variant="red" onClick={() => handleDeleteGift(row.id)} />
       </div>
     ) },
   ]), [setSelectedGift]);

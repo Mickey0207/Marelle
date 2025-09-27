@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import StandardTable from '../../components/ui/StandardTable';
 import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
 import { FunnelIcon, EyeIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import IconActionButton from '../../components/ui/IconActionButton.jsx';
 
 // 簡易模擬：統一表單審批入口
 // 未來可由不同模組提交表單到此處，由管理員審核
@@ -71,9 +72,9 @@ const FormApprovals = () => {
       sortable: false,
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <button className="p-2 text-gray-400 hover:text-blue-600" title="檢視"><EyeIcon className="w-4 h-4"/></button>
-          <button className="p-2 text-gray-400 hover:text-green-600" title="通過"><CheckIcon className="w-4 h-4"/></button>
-          <button className="p-2 text-gray-400 hover:text-red-600" title="退回"><XMarkIcon className="w-4 h-4"/></button>
+          <IconActionButton Icon={EyeIcon} label="檢視" variant="blue" />
+          <IconActionButton Icon={CheckIcon} label="通過" variant="green" />
+          <IconActionButton Icon={XMarkIcon} label="退回" variant="red" />
         </div>
       )
     },

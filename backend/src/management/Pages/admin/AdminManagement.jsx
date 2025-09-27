@@ -6,6 +6,7 @@ import { ADMIN_STYLES } from '../../../lib/ui/adminStyles';
 import StandardTable from '../../components/ui/StandardTable';
 import GlassModal from '../../components/ui/GlassModal';
 import SearchableSelect from '../../components/ui/SearchableSelect';
+import IconActionButton from '../../components/ui/IconActionButton.jsx';
 import { MODULE_OPTIONS, ROLE_PRESETS } from '../../../lib/data/admin/modules';
 import { initialAdmins as INITIAL_ADMINS } from '../../../lib/data/admin/admins';
 
@@ -97,17 +98,9 @@ const AdminManagement = () => {
       key: 'actions', label: '操作', sortable: false,
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <button className="p-1 text-blue-600 hover:bg-blue-100 rounded" title="編輯"
-            onClick={() => { setCurrent(row); setShowEdit(true); }}>
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button className="p-1 text-amber-600 hover:bg-amber-100 rounded" title="權限設定"
-            onClick={() => { setCurrent(row); setShowPerms(true); }}>
-            <AdjustmentsHorizontalIcon className="w-4 h-4" />
-          </button>
-          <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" title="重設密碼">
-            <KeyIcon className="w-4 h-4" />
-          </button>
+          <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" onClick={() => { setCurrent(row); setShowEdit(true); }} />
+          <IconActionButton Icon={AdjustmentsHorizontalIcon} label="權限設定" variant="blue" onClick={() => { setCurrent(row); setShowPerms(true); }} />
+          <IconActionButton Icon={KeyIcon} label="重設密碼" variant="gray" />
         </div>
       )
     }

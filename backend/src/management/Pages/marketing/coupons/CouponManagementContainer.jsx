@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { ADMIN_STYLES } from '../../../../lib/ui/adminStyles';
 import StandardTable from '../../../components/ui/StandardTable.jsx';
 import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import IconActionButton from '../../../components/ui/IconActionButton.jsx';
 import couponDataManager from '../../../../lib/data/marketing/coupons/couponDataManager';
 
 const CouponManagementContainer = () => {
@@ -56,15 +57,9 @@ const CouponManagementContainer = () => {
     { key: 'validTo', label: '有效期限' },
     { key: 'actions', label: '操作', render: () => (
       <div className="flex items-center justify-start space-x-2">
-        <button className="p-2 text-gray-400 hover:text-[#cc824d] transition-colors" title="查看">
-          <EyeIcon className="w-4 h-4" />
-        </button>
-        <button className="p-2 text-gray-400 hover:text-[#cc824d] transition-colors" title="編輯">
-          <PencilIcon className="w-4 h-4" />
-        </button>
-        <button className="p-2 text-gray-400 hover:text-red-600 transition-colors" title="刪除">
-          <TrashIcon className="w-4 h-4" />
-        </button>
+        <IconActionButton Icon={EyeIcon} label="查看" variant="blue" />
+        <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" />
+        <IconActionButton Icon={TrashIcon} label="刪除" variant="red" />
       </div>
     ) }
   ]), []);

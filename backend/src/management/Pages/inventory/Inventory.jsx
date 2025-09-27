@@ -17,6 +17,7 @@ import { PRODUCT_CATEGORIES, getAllChildCategoryIds, getCategoryBreadcrumb } fro
 import CategoryCascader from "../../components/ui/CategoryCascader";
 import QRCodeGenerator from "../../components/ui/QRCodeGenerator";
 import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
+import IconActionButton from "../../components/ui/IconActionButton";
 
 const Inventory = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState('全部');
@@ -133,9 +134,7 @@ const Inventory = () => {
       sortable: false,
       render: (_v, item) => (
         <div className="flex items-center gap-2">
-          <button className="p-1 text-gray-700 hover:bg-gray-100 rounded flex items-center" title="檢視明細" onClick={() => setPreviewItem(item.sample)}>
-            <EyeIcon className="w-4 h-4" />
-          </button>
+          <IconActionButton Icon={EyeIcon} label="檢視明細" variant="gray" onClick={() => setPreviewItem(item.sample)} />
         </div>
       )
     },

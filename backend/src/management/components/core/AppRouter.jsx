@@ -25,7 +25,7 @@ import WarehouseManagement from '../../Pages/inventory/WarehouseManagement';
 // Orders 模組
 import OrderList from '../../Pages/orders/OrderList';
 import OrderDetails from '../../Pages/orders/OrderDetails';
-import OrderForm from '../../Pages/orders/OrderForm';
+// 移除新增訂單頁（OrderForm）
 
 // Members 模組
 import MemberManagement from '../../Pages/members/MemberManagement';
@@ -45,6 +45,12 @@ import LogisticsTracking from '../../Pages/logistics/LogisticsTracking';
 // Coupons 模組
 
 // Notifications 模組頁面
+import NotificationCenter from '../../Pages/notification-center/NotificationCenter';
+import OrdersInbox from '../../Pages/notification-center/OrdersInbox';
+import ECPayPayments from '../../Pages/notification-center/ECPayPayments';
+import ECPaySubscriptions from '../../Pages/notification-center/ECPaySubscriptions';
+import ECPayCodes from '../../Pages/notification-center/ECPayCodes';
+import ECPayCardlessInstallments from '../../Pages/notification-center/ECPayCardlessInstallments';
 import NotificationHistory from '../../Pages/notifications/NotificationHistory';
 import LineTextMessage from '../../Pages/notifications/LineTextMessage';
 import LineFlexMessage from '../../Pages/notifications/LineFlexMessage';
@@ -123,8 +129,9 @@ const AppRouter = () => {
 
               {/* Orders 模組路由 */}
               <Route path="orders" element={<OrderList />} />
+              <Route path="orders/management" element={<OrderList />} />
               <Route path="orders/details/:id" element={<OrderDetails />} />
-              <Route path="orders/new" element={<OrderForm />} />
+              {/* 新增訂單頁已移除 */}
 
               {/* Members 模組路由 */}
               <Route path="members" element={<MemberManagement />} />
@@ -148,7 +155,7 @@ const AppRouter = () => {
               <Route path="coupons/sharing" element={<Navigate to="/marketing" replace />} />
               <Route path="coupons/stacking-rules" element={<Navigate to="/marketing" replace />} />
 
-              {/* Notifications 模組路由 */}
+              {/* Notifications 模組（對外發送）路由 */}
               <Route path="notifications" element={<NotificationHistory />} />
               <Route path="notifications/line-text" element={<LineTextMessage />} />
               <Route path="notifications/line-flex" element={<LineFlexMessage />} />
@@ -156,6 +163,14 @@ const AppRouter = () => {
               <Route path="notifications/mail-html" element={<MailHtmlMessage />} />
               <Route path="notifications/sms" element={<SmsMessage />} />
               <Route path="notifications/web" element={<WebNotification />} />
+
+              {/* Notification Center（對內接收）獨立模組路由，不在側邊欄顯示 */}
+              <Route path="notification-center" element={<NotificationCenter />} />
+              <Route path="notification-center/orders" element={<OrdersInbox />} />
+              <Route path="notification-center/ecpay/payments" element={<ECPayPayments />} />
+              <Route path="notification-center/ecpay/subscriptions" element={<ECPaySubscriptions />} />
+              <Route path="notification-center/ecpay/codes" element={<ECPayCodes />} />
+              <Route path="notification-center/ecpay/cardless-installments" element={<ECPayCardlessInstallments />} />
 
               {/* Marketing 模組路由（整合入口 + 子頁） */}
               <Route path="marketing" element={<MarketingOverviewPage />}>

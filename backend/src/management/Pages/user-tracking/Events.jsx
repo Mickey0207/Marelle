@@ -5,6 +5,7 @@ import SearchableSelect from '../../components/ui/SearchableSelect';
 import GlassModal from '../../components/ui/GlassModal';
 import { getEvents, EVENT_LABELS } from '../../../lib/data/user-tracking/dataManager';
 import { EyeIcon } from '@heroicons/react/24/outline';
+import IconActionButton from '../../components/ui/IconActionButton';
 import { SimpleColumn } from '../../components/ui/Charts';
 import { EVENT_TYPES, SOURCES as SOURCE_OPTIONS, DEVICES as DEVICE_OPTIONS } from '../../../data/user-tracking/mockEvents';
 
@@ -32,9 +33,7 @@ const EventsPage = () => {
     { key: 'path', label: '路徑/商品', sortable: true, render: (_v, r) => r.path || r.productId || '-' },
     { key: 'value', label: '金額', sortable: true, render: v => v != null ? `NT$${Number(v).toLocaleString()}` : '-' },
     { key: 'actions', label: '操作', render: (_v, r) => (
-      <button className="p-1 text-gray-700 hover:bg-gray-100 rounded flex items-center" title="詳情" onClick={() => setDetail(r)}>
-        <EyeIcon className="w-4 h-4" />
-      </button>
+      <IconActionButton Icon={EyeIcon} label="詳情" variant="blue" onClick={() => setDetail(r)} />
     ) }
   ];
 

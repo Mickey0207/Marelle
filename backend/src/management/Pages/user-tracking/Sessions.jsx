@@ -5,6 +5,7 @@ import SearchableSelect from '../../components/ui/SearchableSelect';
 import GlassModal from '../../components/ui/GlassModal';
 import { SimpleColumn } from '../../components/ui/Charts';
 import { EyeIcon } from '@heroicons/react/24/outline';
+import IconActionButton from '../../components/ui/IconActionButton';
 import { getSessions, getEvents } from '../../../lib/data/user-tracking/dataManager';
 import { SOURCES as SOURCE_OPTIONS, DEVICES as DEVICE_OPTIONS } from '../../../data/user-tracking/mockEvents';
 
@@ -31,9 +32,7 @@ const SessionsPage = () => {
     { key: 'pageCount', label: '頁數', sortable: true },
     { key: 'eventCount', label: '事件數', sortable: true },
     { key: 'actions', label: '操作', render: (_v, r) => (
-      <button className="p-1 text-gray-700 hover:bg-gray-100 rounded flex items-center" title="時間軸" onClick={() => setTimeline(r)}>
-        <EyeIcon className="w-4 h-4" />
-      </button>
+      <IconActionButton Icon={EyeIcon} label="時間軸" variant="blue" onClick={() => setTimeline(r)} />
     ) }
   ];
 

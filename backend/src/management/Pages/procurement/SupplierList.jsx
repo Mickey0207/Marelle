@@ -12,6 +12,7 @@ import { ADMIN_STYLES } from '../../../lib/ui/adminStyles.js';
 import StandardTable from '../../components/ui/StandardTable.jsx';
 import GlassModal from '../../components/ui/GlassModal.jsx';
 import SearchableSelect from '../../components/ui/SearchableSelect.jsx';
+import IconActionButton from '../../components/ui/IconActionButton.jsx';
 import supplierDataManager, { SupplierStatus, SupplierGrade } from '../../../lib/data/procurement/supplierDataManager.js';
 
 const SupplierList = () => {
@@ -258,30 +259,9 @@ const SupplierList = () => {
           { key: 'createdAt', label: '建立時間', sortable: true },
           { key: 'actions', label: '操作', sortable: false, render: (_val, row) => (
             <div className="flex items-center space-x-2">
-              <button
-                className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
-                title="檢視"
-                aria-label="檢視"
-                onClick={() => openView(row)}
-              >
-                <EyeIcon className="w-4 h-4" />
-              </button>
-              <button
-                className="p-2 text-gray-400 hover:text-amber-600 transition-colors"
-                title="編輯"
-                aria-label="編輯"
-                onClick={() => openEdit(row)}
-              >
-                <PencilIcon className="w-4 h-4" />
-              </button>
-              <button
-                className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                title="刪除"
-                aria-label="刪除"
-                onClick={() => handleDeleteSupplier(row.id)}
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
+              <IconActionButton Icon={EyeIcon} label="檢視" variant="blue" onClick={() => openView(row)} />
+              <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" onClick={() => openEdit(row)} />
+              <IconActionButton Icon={TrashIcon} label="刪除" variant="red" onClick={() => handleDeleteSupplier(row.id)} />
             </div>
           ) },
         ]}

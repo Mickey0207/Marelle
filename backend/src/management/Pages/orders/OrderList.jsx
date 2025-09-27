@@ -1,17 +1,10 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
-import {
-  FunnelIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  PrinterIcon,
-  ArrowDownTrayIcon,
-  PlusIcon
-} from '@heroicons/react/24/outline';
+import { FunnelIcon, EyeIcon, PencilIcon, TrashIcon, PrinterIcon, ArrowDownTrayIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from "../../../lib/ui/adminStyles";
 import SearchableSelect from "../../components/ui/SearchableSelect";
-// import { orderDataManager } from "../data/orderDataManager";
+import orderDataManager from "../../../lib/data/orders/orderDataManager";
+import IconActionButton from "../../components/ui/IconActionButton";
 
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
@@ -53,10 +46,9 @@ const OrderList = () => {
   const loadOrders = async () => {
     setLoading(true);
     try {
-      const result = await orderDataManager.getOrders();
-      if (result.success) {
-        setOrders(result.data);
-      }
+      // orderDataManager 不提供 getOrders，使用 getAllOrders 直接取得陣列
+      const data = await orderDataManager.getAllOrders();
+      setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
@@ -66,10 +58,17 @@ const OrderList = () => {
 
   const loadStatistics = async () => {
     try {
-      const result = await orderDataManager.getOrderStatistics();
-      if (result.success) {
-        setStatistics(result.data);
-      }
+      // getOrderStatistics 回傳為物件而非 { success, data }
+      const stats = await orderDataManager.getOrderStatistics();
+      const sd = stats?.statusDistribution || {};
+      setStatistics({
+        total: stats?.totalOrders || 0,
+        pending: sd.pending || 0,
+        processing: sd.processing || 0,
+        shipped: sd.shipped || 0,
+        delivered: sd.delivered || 0,
+        cancelled: sd.cancelled || 0
+      });
     } catch (error) {
       console.error('Error loading statistics:', error);
     }
@@ -208,7 +207,7 @@ const OrderList = () => {
       {/* 訂單表格 */}
       <div className={`${ADMIN_STYLES.glassCard} overflow-hidden`}>
         <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-          <style jsx>{`
+          <style>{`
             div::-webkit-scrollbar {
               display: none;
             }
@@ -278,22 +277,11 @@ const OrderList = () => {
                     <div className="text-sm text-gray-900">{order.createdAt}</div>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <div className="flex justify-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900 transition-colors">
-                        <EyeIcon className="w-4 h-4" />
-                      </button>
-                      <button className="text-yellow-600 hover:text-yellow-900 transition-colors">
-                        <PencilIcon className="w-4 h-4" />
-                      </button>
-                      <button className="text-green-600 hover:text-green-900 transition-colors">
-                        <PrinterIcon className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteOrder(order.id)}
-                        className="text-red-600 hover:text-red-900 transition-colors"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
+                    <div className="flex justify-center space-x-1">
+                      <IconActionButton Icon={EyeIcon} label="檢視詳情" variant="blue" />
+                      <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" />
+                      <IconActionButton Icon={PrinterIcon} label="列印" variant="green" />
+                      <IconActionButton Icon={TrashIcon} label="刪除" variant="red" onClick={() => handleDeleteOrder(order.id)} />
                     </div>
                   </td>
                 </tr>

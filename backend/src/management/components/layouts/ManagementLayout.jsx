@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthComponents';
 import TabNavigation from '../ui/TabNavigation';
 import { getTabsForPath } from '../../../lib/data/ui/tabsConfig';
 import { ADMIN_STYLES, ADMIN_COLORS } from '../../../lib/ui/adminStyles';
+import notificationDataManager from '../../../lib/data/notifications/notificationDataManager';
 import {
   HomeIcon,
   ShoppingBagIcon,
@@ -27,6 +28,7 @@ const ManagementLayout = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
   const sidebarRef = useRef(null);
   // Hover intent control to avoid accidental expansions
   const collapseTimerRef = useRef(null);
@@ -70,6 +72,17 @@ const ManagementLayout = () => {
   // 根據當前路徑獲取頁籤配置
   const currentTabs = getTabsForPath(location.pathname);
 
+  // 計算待處理通知數（例如：failed 或 pending）
+  useEffect(() => {
+    try {
+      const all = notificationDataManager.getNotifications?.() || [];
+      const count = all.filter(n => n.status === 'failed' || n.status === 'pending').length;
+      setNotifCount(count);
+    } catch (e) {
+      setNotifCount(0);
+    }
+  }, []);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -81,11 +94,12 @@ const ManagementLayout = () => {
     { name: '庫存管理', href: '/inventory', icon: CubeIcon },
     { name: '訂單管理', href: '/orders', icon: ClipboardDocumentListIcon },
     { name: '物流管理', href: '/logistics', icon: MapPinIcon },
+    { name: '通知管理', href: '/notifications', icon: BellIcon },
     { name: '行銷管理', href: '/marketing', icon: ChartBarIcon },
     { name: '會員管理', href: '/members', icon: UsersIcon },
     { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon },
     { name: '表單審批', href: '/fromsigning', icon: DocumentTextIcon },
-    { name: '通知管理', href: '/notifications', icon: BellIcon },
+    // 通知中心從頂部鈴鐺進入，不在側邊欄顯示
   { name: '管理員管理', href: '/admin', icon: ShieldCheckIcon },
   { name: '用戶追蹤', href: '/user-tracking', icon: ChartBarIcon },
     { name: '數據分析', href: '/analytics', icon: ChartBarIcon },
@@ -197,10 +211,18 @@ const ManagementLayout = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* 通知按鈕 */}
-              <button className="p-2 rounded-lg text-[#2d1e0f] hover:bg-[#f7ede3] hover:text-[#cc824d] transition-colors duration-200 relative">
+              {/* 通知按鈕：導向 Notification Center（對內接收），不顯示於側邊欄 */}
+              <button
+                onClick={() => navigate('/notification-center')}
+                className="p-2 rounded-lg text-[#2d1e0f] hover:bg-[#f7ede3] hover:text-[#cc824d] transition-colors duration-200 relative"
+                title="通知中心"
+              >
                 <BellIcon className="w-5 h-5" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-[#cc824d] rounded-full"></span>
+                {notifCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-600 text-white text-[10px] leading-[18px] rounded-full text-center">
+                    {notifCount}
+                  </span>
+                )}
               </button>
 
               {/* 登出按鈕 */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
+import IconActionButton from '../../../components/ui/IconActionButton.jsx';
 import festivalDataManager from '../../../../lib/data/marketing/festivals/festivalDataManager.js';
 import GlassModal from '../../../components/ui/GlassModal.jsx';
 import StandardTable from '../../../components/ui/StandardTable.jsx';
@@ -342,26 +343,9 @@ const FestivalManagement = () => {
               sortable: false,
               render: (_, festival) => (
                 <div className="flex space-x-2 text-sm font-medium">
-                  <button
-                    onClick={() => openEditModal(festival)}
-                    className="text-[#cc824d] hover:text-[#b8734a] p-1 rounded"
-                    title="編輯"
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                    className="text-blue-600 hover:text-blue-800 p-1 rounded"
-                    title="查看詳情"
-                  >
-                    <EyeIcon className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => openDeleteModal(festival)}
-                    className="text-red-600 hover:text-red-800 p-1 rounded"
-                    title="刪除"
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                  </button>
+                  <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" onClick={() => openEditModal(festival)} />
+                  <IconActionButton Icon={EyeIcon} label="查看詳情" variant="blue" />
+                  <IconActionButton Icon={TrashIcon} label="刪除" variant="red" onClick={() => openDeleteModal(festival)} />
                 </div>
               )
             }

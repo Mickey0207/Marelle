@@ -22,7 +22,7 @@ const productsTabs = [
 const ordersTabs = [
   { label: '訂單列表', path: '/orders' },
   { label: '訂單管理', path: '/orders/management' },
-  { label: '新增訂單', path: '/orders/new' }
+  // 新增訂單分頁已移除
 ];
 
 // Members 模組 tabs
@@ -77,7 +77,7 @@ const marketingTabs = [
   { label: '贈品管理', path: '/marketing/gifts' },
 ];
 
-// Notifications 模組 tabs
+// Notifications 模組 tabs（對外發送）
 const notificationsTabs = [
   { label: '通知歷史', path: '/notifications' },
   { label: 'Line 一般訊息', path: '/notifications/line-text' },
@@ -86,6 +86,16 @@ const notificationsTabs = [
   { label: 'Mail html', path: '/notifications/mail-html' },
   { label: 'SMS', path: '/notifications/sms' },
   { label: '網站通知', path: '/notifications/web' }
+];
+
+// Notification Center 模組 tabs（對內接收，從頂部鈴鐺進入，不放側邊欄）
+const notificationCenterTabs = [
+  { label: '全部', path: '/notification-center' },
+  { label: '訂單通知', path: '/notification-center/orders' },
+  { label: '綠界付款', path: '/notification-center/ecpay/payments' },
+  { label: '綠界定期定額', path: '/notification-center/ecpay/subscriptions' },
+  { label: '綠界取號', path: '/notification-center/ecpay/codes' },
+  { label: '綠界無卡分期申請', path: '/notification-center/ecpay/cardless-installments' },
 ];
 
 // 表單審批 模組 tabs（單一路徑）
@@ -208,6 +218,11 @@ export const getTabsForPath = (currentPath) => {
     return notificationsTabs;
   }
   
+  // Notification Center 模組（對內接收）
+  if (cleanPath.startsWith('/notification-center')) {
+    return notificationCenterTabs;
+  }
+  
   // 表單審批 模組
   if (cleanPath.startsWith('/fromsigning')) {
     return fromsigningTabs;
@@ -271,5 +286,6 @@ export default {
   marketingTabs,
   festivalsTabs,
   userTrackingTabs,
-  inventoryTabs
+  inventoryTabs,
+  notificationCenterTabs,
 };

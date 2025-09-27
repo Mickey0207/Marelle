@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   BellIcon, 
   CheckCircleIcon,
@@ -13,12 +14,17 @@ import {
 import { gsap } from 'gsap';
 import notificationDataManager from '../../../lib/data/notifications/notificationDataManager';
 import StandardTable from '../../components/ui/StandardTable';
+import IconActionButton from '../../components/ui/IconActionButton.jsx';
 
 const NotificationHistory = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const initialStatus = ['all','delivered','failed','pending','sent'].includes(params.get('status')) ? params.get('status') : 'all';
   const [filters, setFilters] = useState({
-    status: 'all',
+    status: initialStatus,
     type: 'all',
     dateRange: 'all',
     searchQuery: ''
@@ -38,6 +44,22 @@ const NotificationHistory = () => {
       { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" }
     );
   }, [filters]);
+
+  // 當使用者在 UI 切換狀態時，同步更新網址查詢參數（保持可分享）
+  useEffect(() => {
+    const next = new URLSearchParams(location.search);
+    if (filters.status && filters.status !== 'all') {
+      next.set('status', filters.status);
+    } else {
+      next.delete('status');
+    }
+    const nextSearch = next.toString();
+    const currentSearch = location.search.startsWith('?') ? location.search.slice(1) : location.search;
+    if (nextSearch !== currentSearch) {
+      navigate({ pathname: location.pathname, search: nextSearch ? `?${nextSearch}` : '' }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.status]);
 
   const loadNotifications = async () => {
     setLoading(true);
@@ -278,25 +300,11 @@ const NotificationHistory = () => {
       sortable: false,
       render: (_, row) => (
         <div className="flex items-center gap-1">
-          <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors" title="檢視">
-            <EyeIcon className="w-4 h-4" />
-          </button>
+          <IconActionButton Icon={EyeIcon} label="檢視" variant="gray" />
           {row.status === 'failed' && (
-            <button
-              onClick={() => handleRetryFailed(row.id)}
-              className="p-1 text-blue-400 hover:text-blue-600 transition-colors"
-              title="重新發送"
-            >
-              <ExclamationTriangleIcon className="w-4 h-4" />
-            </button>
+            <IconActionButton Icon={ExclamationTriangleIcon} label="重新發送" variant="blue" onClick={() => handleRetryFailed(row.id)} />
           )}
-          <button
-            onClick={() => handleDeleteSingle(row.id)}
-            className="p-1 text-red-400 hover:text-red-600 transition-colors"
-            title="刪除"
-          >
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <IconActionButton Icon={TrashIcon} label="刪除" variant="red" onClick={() => handleDeleteSingle(row.id)} />
         </div>
       )
     }

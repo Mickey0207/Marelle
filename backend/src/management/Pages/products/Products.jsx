@@ -14,6 +14,7 @@ import {
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
+import IconActionButton from "../../components/ui/IconActionButton.jsx";
 // 改用擴充後的模擬商品資料（包含新增/編輯頁完整欄位）
 import { mockProducts, formatPrice } from "../../../lib/data/products/mockProductData";
 import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../../../lib/ui/adminStyles";
@@ -217,18 +218,11 @@ const AdminProducts = () => {
       sortable: false,
       render: (_, product) => (
         <div className="flex items-center space-x-2">
-          <button className="p-2 text-gray-400 hover:text-blue-500 transition-colors" onClick={() => openQuickView(product)}>
-            <EyeIcon className="w-4 h-4" />
-          </button>
-          <Link
-            to={`/products/edit/${product?.baseSKU}`}
-            className="p-2 text-gray-400 hover:text-green-500 transition-colors"
-          >
-            <PencilIcon className="w-4 h-4" />
+          <IconActionButton Icon={EyeIcon} label="預覽" variant="blue" onClick={() => openQuickView(product)} />
+          <Link to={`/products/edit/${product?.baseSKU}`} className="inline-flex">
+            <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" />
           </Link>
-          <button className="p-2 text-gray-400 hover:text-red-500 transition-colors">
-            <TrashIcon className="w-4 h-4" />
-          </button>
+          <IconActionButton Icon={TrashIcon} label="刪除" variant="red" />
         </div>
       )
     }
@@ -319,15 +313,7 @@ const AdminProducts = () => {
       label: '操作',
       sortable: false,
       render: (_v, child, _idx, product) => (
-        <button
-          type="button"
-          onClick={() => openSkuManager(product, child)}
-          className="p-2 text-gray-400 hover:text-[#cc824d] transition-colors"
-          aria-label="管理 SKU"
-          title="管理 SKU"
-        >
-          <Cog6ToothIcon className="w-4 h-4" />
-        </button>
+        <IconActionButton Icon={Cog6ToothIcon} label="管理 SKU" variant="gray" onClick={() => openSkuManager(product, child)} />
       )
     },
   ];
