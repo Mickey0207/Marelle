@@ -123,3 +123,8 @@ npm run logistics:history
 ---
 
 若需要，我可以再依你的 `package.json` 實際 scripts 幫你加上專屬的一鍵指令區塊。
+
+
+全部
+
+npm run dev:all:studio

@@ -1,5 +1,5 @@
 name = "marelle-workers"
-main = "CloudflareWorkers/src/worker.js"
+main = "apps/worker/src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 

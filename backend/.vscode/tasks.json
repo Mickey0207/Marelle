@@ -1,0 +1,50 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Dev: Open All (external)",
+			"type": "shell",
+			"command": "Start-Process powershell -ArgumentList '-NoProfile','-NoExit','-Command','npm run workers:dev'; Start-Process powershell -ArgumentList '-NoProfile','-NoExit','-Command','npm run dev'; Start-Process powershell -ArgumentList '-NoProfile','-NoExit','-Command','npm run db:studio'",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Workers: Dev (integrated)",
+			"type": "shell",
+			"command": "npm run workers:dev",
+			"isBackground": true,
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "Web: Dev (integrated)",
+			"type": "shell",
+			"command": "npm run dev",
+			"isBackground": true,
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "DB: Studio (integrated)",
+			"type": "shell",
+			"command": "npm run db:studio",
+			"isBackground": true,
+			"presentation": { "reveal": "always", "panel": "new" },
+			"problemMatcher": []
+		},
+		{
+			"label": "Dev: Open All (integrated)",
+			"type": "shell",
+			"command": "echo Starting Workers, Web and Drizzle Studio...",
+			"dependsOn": [
+				"Workers: Dev (integrated)",
+				"Web: Dev (integrated)",
+				"DB: Studio (integrated)"
+			],
+			"dependsOrder": "parallel",
+			"isBackground": true,
+			"group": "build",
+			"problemMatcher": []
+		}
+	]
+}
