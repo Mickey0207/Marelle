@@ -15,7 +15,8 @@ import StandardTable from "../../components/ui/StandardTable";
 import { buildInventoryFromProducts, getInventoryFilters } from "../../../../external_mock/inventory/inventoryDataManager";
 import { PRODUCT_CATEGORIES, getAllChildCategoryIds, getCategoryBreadcrumb } from "../../../../external_mock/products/categoryDataManager";
 import CategoryCascader from "../../components/ui/CategoryCascader";
-import QRCodeGenerator from "../../components/ui/QRCodeGenerator";
+import QRCodeGenerator, { QRCodePreviewModal } from "../../components/ui/QRCodeGenerator";
+import GlassModal from "../../components/ui/GlassModal";
 import { ADMIN_STYLES } from "../../Style/adminStyles";
 import IconActionButton from "../../components/ui/IconActionButton";
 
@@ -403,42 +404,27 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* QR Code 小視窗 */}
-      {qrItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setQrItem(null)} />
-          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold font-chinese">QR Code</h3>
-              <button className="text-gray-500 hover:text-gray-700" onClick={() => setQrItem(null)}>✕</button>
-            </div>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="flex items-start justify-center">
-                <QRCodeGenerator
-                  autoGenerate
-                  compact
-                  product={{ id: qrItem.sku, name: qrItem.name, slug: qrItem.sku, price: qrItem.totalValue, comparePrice: null, costPrice: qrItem.avgCost }}
-                  sku={{ id: qrItem.id, sku: qrItem.sku, price: null, comparePrice: null, costPrice: qrItem.avgCost, variantPath: (qrItem.spec && qrItem.spec !== '-') ? qrItem.spec.split(' / ').map(s=>({ level: '規格', option: s })) : [] }}
-                />
-              </div>
-              <div className="text-sm space-y-2">
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">商品名稱</span><span className="font-chinese text-gray-900 max-w-[60%] truncate text-right">{qrItem.name}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">SKU</span><span className="font-mono">{qrItem.sku}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">規格</span><span className="font-chinese text-gray-900 max-w-[60%] truncate text-right">{qrItem.spec || '-'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">分類</span><span className="font-chinese">{qrItem.category}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">倉庫</span><span className="font-chinese">{qrItem.warehouse}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">庫存量</span><span className="font-bold">{qrItem.currentStock}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">安全庫存</span><span>{qrItem.safeStock}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">平均成本</span><span>NT$ {Number(qrItem.avgCost).toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">庫存價值</span><span>NT$ {Number(qrItem.totalValue).toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">條碼</span><span className="font-mono text-xs">{qrItem.barcode}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">允許預購</span><span className="font-chinese">{qrItem.allowNegative ? '允許' : '禁止'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500 font-chinese">更新日期</span><span className="text-gray-600">{qrItem.lastUpdated}</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <QRCodePreviewModal
+        isOpen={!!qrItem}
+        onClose={() => setQrItem(null)}
+        title={qrItem ? `QR 預覽 - ${qrItem.sku}` : 'QR 預覽'}
+        product={{ id: qrItem?.sku, name: qrItem?.name, slug: qrItem?.sku, price: qrItem?.totalValue, comparePrice: null, costPrice: qrItem?.avgCost, categories: [qrItem?.category].filter(Boolean) }}
+        sku={{ id: qrItem?.id, sku: qrItem?.sku, price: null, comparePrice: null, costPrice: qrItem?.avgCost, variantPath: (qrItem?.spec && qrItem?.spec !== '-') ? qrItem.spec.split(' / ').map(s=>({ level: '規格', option: s })) : [] }}
+        details={qrItem ? [
+          { label: '商品名稱', value: qrItem.name },
+          { label: 'SKU', value: qrItem.sku, mono: true },
+          { label: '規格', value: qrItem.spec || '-' },
+          { label: '分類', value: qrItem.category },
+          { label: '倉庫', value: qrItem.warehouse },
+          { label: '庫存量', value: qrItem.currentStock },
+          { label: '安全庫存', value: qrItem.safeStock },
+          { label: '平均成本', value: `NT$ ${Number(qrItem.avgCost).toLocaleString()}` },
+          { label: '庫存價值', value: `NT$ ${Number(qrItem.totalValue).toLocaleString()}` },
+          { label: '條碼', value: qrItem.barcode, mono: true },
+          { label: '允許預購', value: qrItem.allowNegative ? '允許' : '禁止' },
+          { label: '更新日期', value: qrItem.lastUpdated },
+        ] : undefined}
+      />
     </div>
   </div>
   );

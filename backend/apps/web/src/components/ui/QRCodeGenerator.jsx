@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
 import {
   QrCodeIcon,
@@ -8,6 +8,7 @@ import {
   LinkIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
+import GlassModal from './GlassModal';
 
 // 單一模式：將「商品連結 + SKU 資訊 + 圖片」合併成一個 QR payload
 // product: { name, slug, categories?, images? }
@@ -292,3 +293,127 @@ const QRCodeGenerator = ({ product, sku = null, onGenerated, autoGenerate = fals
 };
 
 export default QRCodeGenerator;
+
+// 統一的 QR 預覽玻璃態彈窗（左 QR、右資訊）
+// props:
+// - isOpen: 是否開啟
+// - onClose: 關閉回呼
+// - product, sku: 與 QRCodeGenerator 相同資料結構
+// - details: 可選，右側顯示的自訂欄位陣列 [{ label, value, mono }]
+// - title: 可選，自訂標題
+// - size: 可選，彈窗寬度（預設 max-w-2xl）
+// - autoGenerate: 預設 true，掛載即生成
+export const QRCodePreviewModal = ({
+  isOpen,
+  onClose,
+  product,
+  sku,
+  details,
+  title,
+  size = 'max-w-2xl',
+  autoGenerate = true,
+  headerClass,
+}) => {
+  const [result, setResult] = useState(null); // { imageUrl, data, ... }
+  const [busy, setBusy] = useState(false);
+
+  // 觸發生成：掛載隱形的 QRCodeGenerator（compact+autoGenerate）
+  const hiddenGenerator = useMemo(() => (
+    isOpen ? (
+      <div className="sr-only" aria-hidden>
+        <QRCodeGenerator
+          compact
+          autoGenerate={autoGenerate}
+          product={product}
+          sku={sku}
+          onGenerated={(qr) => {
+            setResult(qr);
+            setBusy(false);
+          }}
+        />
+      </div>
+    ) : null
+  ), [isOpen, autoGenerate, product, sku]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setBusy(true);
+      setResult(null);
+    }
+  }, [isOpen]);
+
+  // 預設右側資料（若無自訂 details）
+  const defaultDetails = useMemo(() => {
+    const variantPath = Array.isArray(sku?.variantPath) ? sku.variantPath : [];
+    const formatPath = (path) => path.map((v, i) => {
+      const level = v?.levelName?.['zh-TW'] || v?.level || `層級${i + 1}`;
+      const option = v?.optionName?.['zh-TW'] || v?.option || '選項';
+      return `${level}: ${option}`;
+    }).join(' / ');
+    return [
+      { label: '商品名稱', value: (product?.name?.['zh-TW'] || product?.name || '-') },
+      { label: 'SKU', value: (sku?.sku || sku?.fullSKU || '-'), mono: true },
+      { label: '規格', value: variantPath.length ? formatPath(variantPath) : '-' },
+      { label: '分類', value: (Array.isArray(product?.categories) ? product.categories.map(c => c?.name || c).join('、') : '-') },
+      { label: '售價', value: (sku?.salePrice ?? product?.price) != null ? `NT$ ${Number(sku?.salePrice ?? product?.price).toLocaleString()}` : '-' },
+      { label: '原價', value: (sku?.comparePrice ?? product?.comparePrice) != null ? `NT$ ${Number(sku?.comparePrice ?? product?.comparePrice).toLocaleString()}` : '-' },
+      { label: '成本價', value: (sku?.costPrice ?? product?.costPrice) != null ? `NT$ ${Number(sku?.costPrice ?? product?.costPrice).toLocaleString()}` : '-' },
+    ];
+  }, [product, sku]);
+
+  const lines = details && Array.isArray(details) ? details : defaultDetails;
+
+  return (
+    <GlassModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title || `QR 預覽 - ${sku?.sku || sku?.fullSKU || ''}`}
+      size={size}
+      {...(headerClass ? { headerClass } : {})}
+    >
+      <div className="p-6">
+        <div className="grid grid-cols-2 gap-6">
+          <div className="flex items-start justify-center min-h-[18rem]">
+            {result?.imageUrl ? (
+              <img
+                src={result.imageUrl}
+                alt="Generated QR Code"
+                className="w-64 h-64 mx-auto border rounded-lg shadow-md bg-white"
+              />
+            ) : (
+              <div className="py-10 text-center text-sm text-gray-500">{busy ? '生成中…' : '準備中…'}</div>
+            )}
+          </div>
+          <div className="text-sm space-y-2">
+            {lines.map((row, idx) => (
+              <div key={idx} className="flex justify-between gap-3">
+                <span className="text-gray-600 font-chinese">{row.label}</span>
+                <span className={`${row.mono ? 'font-mono' : 'font-chinese'} text-gray-900 max-w-[60%] truncate text-right`} title={String(row.value || '')}>{row.value || '-'}</span>
+              </div>
+            ))}
+            {result?.data?.url && (
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  onClick={() => navigator.clipboard.writeText(result.data.url)}
+                  className="px-3 py-2 border border-[#cc824d] text-[#cc824d] rounded hover:bg-[#cc824d] hover:text-white transition-colors text-sm font-chinese"
+                >複製連結</button>
+                <button
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = result.imageUrl;
+                    link.download = `qr-${sku?.sku || 'product'}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="px-3 py-2 bg-[#cc824d] text-white rounded hover:bg-[#b3723f] transition-colors text-sm font-chinese"
+                >下載</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      {hiddenGenerator}
+    </GlassModal>
+  );
+};

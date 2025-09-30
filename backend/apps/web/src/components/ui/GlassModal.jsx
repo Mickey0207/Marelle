@@ -54,7 +54,7 @@ const GlassModal = ({
         )}
         
         {/* 內容區域 */}
-        <div className={`relative overflow-y-auto overflow-x-visible ${contentMaxHeight}`}>
+        <div className={`relative overflow-y-auto overflow-x-visible ${contentMaxHeight} bg-transparent` }>
           {children}
         </div>
 

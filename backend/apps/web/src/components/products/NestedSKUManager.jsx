@@ -11,10 +11,11 @@ import {
   CheckCircleIcon,
   PencilIcon,
   ArrowRightIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  QrCodeIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from '../../Style/adminStyles';
-import QRCodeGenerator from '../../components/ui/QRCodeGenerator';
+import { QRCodePreviewModal } from '../../components/ui/QRCodeGenerator';
 import ImageUpload from './ImageUpload';
 
 const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [], singleVariant = false, variantSelected = null }) => {
@@ -1038,20 +1039,19 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle, basePrice = 0, 
               className={`${ADMIN_STYLES.input} text-sm`}
               placeholder="條碼"
             />
-            {/* QR Code 預覽與下載（含指定內容） */}
-            <div className="mt-3">
-              <QRCodeGenerator
-                product={{ name: productName, categories: productCategories }}
-                sku={{
-                  sku: sku.fullSKU,
-                  salePrice: finalSale,
-                  comparePrice: finalCompare,
-                  costPrice: finalCost,
-                  variantPath: pathInfo.map((p, idx) => ({ level: p.level, option: p.option })),
-                  images: Array.isArray(sku.config.variantImages) ? sku.config.variantImages : []
-                }}
-              />
-            </div>
+            {/* 小按鈕觸發玻璃態 QR 預覽彈窗 */}
+            <QRPreviewButton
+              label="預覽 QR"
+              product={{ name: productName, categories: productCategories, slug: baseSKU || sku.fullSKU, price: finalSale, comparePrice: finalCompare, costPrice: finalCost }}
+              sku={{
+                sku: sku.fullSKU,
+                salePrice: finalSale,
+                comparePrice: finalCompare,
+                costPrice: finalCost,
+                variantPath: pathInfo.map((p) => ({ level: p.level, option: p.option })),
+                images: Array.isArray(sku.config.variantImages) ? sku.config.variantImages : []
+              }}
+            />
           </div>
         </div>
       </div>
@@ -1185,3 +1185,27 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle, basePrice = 0, 
 };
 
 export default NestedSKUManager;
+
+// 內部小元件：小按鈕觸發 QR 預覽
+const QRPreviewButton = ({ label = '預覽 QR', product, sku }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center px-2.5 py-1.5 text-xs border border-[#cc824d] text-[#cc824d] rounded hover:bg-[#cc824d] hover:text-white transition-colors"
+      >
+        <QrCodeIcon className="w-4 h-4 mr-1" /> {label}
+      </button>
+      <QRCodePreviewModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title={`QR 預覽 - ${sku?.sku || ''}`}
+        product={product}
+        sku={sku}
+        size="max-w-2xl"
+      />
+    </div>
+  );
+};

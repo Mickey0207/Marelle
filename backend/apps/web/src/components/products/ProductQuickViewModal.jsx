@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import GlassModal from '../../components/ui/GlassModal';
 import TabNavigation from '../../components/ui/TabNavigation';
 import { ADMIN_STYLES } from '../../Style/adminStyles';
-import QRCodeGenerator from '../../components/ui/QRCodeGenerator';
+import { QRCodePreviewModal } from '../../components/ui/QRCodeGenerator';
 
 // 輕量的欄位顯示工具
 const Field = ({ label, children }) => (
@@ -70,7 +70,14 @@ const formatVariantPath = (path) => {
 
 const ProductQuickViewModal = ({ open, onClose, product }) => {
   const [activeKey, setActiveKey] = useState('basic');
-  const [qrVariantIndex, setQrVariantIndex] = useState(null);
+  // QR 預覽玻璃態彈窗（統一元件）
+  const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
+  const [qrSkuPayload, setQrSkuPayload] = useState(null); // { sku, salePrice, comparePrice, costPrice, variantPath, images }
+
+  const handleOpenQrPreview = (payload) => {
+    setQrSkuPayload(payload);
+    setQrPreviewOpen(true);
+  };
 
   const tabs = useMemo(() => ([
     { key: 'basic', label: '基本資訊' },
@@ -165,8 +172,15 @@ const ProductQuickViewModal = ({ open, onClose, product }) => {
                                   <div className="text-sm font-mono text-[#cc824d] truncate" title={fullSKU}>{fullSKU}</div>
                                   <button
                                     className="text-xs px-2 py-1 rounded border text-[#cc824d] border-[#cc824d] hover:bg-[#cc824d] hover:text-white transition-colors"
-                                    onClick={() => setQrVariantIndex(qrVariantIndex === idx ? null : idx)}
-                                  >{qrVariantIndex === idx ? '收合 QR' : '生成 QR'}</button>
+                                    onClick={() => handleOpenQrPreview({
+                                      sku: fullSKU,
+                                      salePrice,
+                                      comparePrice,
+                                      costPrice,
+                                      variantPath,
+                                      images: variantImages
+                                    })}
+                                  >生成 QR</button>
                                 </div>
                                 {variantPath && (
                                   <div className="text-xs text-gray-600 mt-1 truncate">路徑：{formatVariantPath(variantPath)}</div>
@@ -183,21 +197,7 @@ const ProductQuickViewModal = ({ open, onClose, product }) => {
                                 })()}
                               </div>
                             </div>
-                            {qrVariantIndex === idx && (
-                              <div className="mt-3">
-                                <QRCodeGenerator
-                                  product={{ name: product?.name, categories: product?.categories, images: product?.images }}
-                                  sku={{
-                                    sku: fullSKU,
-                                    salePrice,
-                                    comparePrice,
-                                    costPrice,
-                                    variantPath,
-                                    images: variantImages
-                                  }}
-                                />
-                              </div>
-                            )}
+                            {/* 已改為點擊按鈕直接開啟預覽彈窗，不再渲染內嵌區塊 */}
                           </div>
                         );
                       })}
@@ -247,6 +247,16 @@ const ProductQuickViewModal = ({ open, onClose, product }) => {
           </div>
         )}
       </div>
+      {/* 迷你彈窗：QR 預覽 */}
+      <QRCodePreviewModal
+        isOpen={qrPreviewOpen}
+        onClose={() => setQrPreviewOpen(false)}
+        title={`QR 預覽 - ${qrSkuPayload?.sku || ''}`}
+        product={{ name: product?.name, categories: product?.categories, slug: product?.slug, price: product?.price, comparePrice: product?.comparePrice, costPrice: product?.costPrice }}
+        sku={qrSkuPayload}
+        // 使用 GlassModal 預設的品牌色標題列
+      />
+
     </GlassModal>
   );
 };

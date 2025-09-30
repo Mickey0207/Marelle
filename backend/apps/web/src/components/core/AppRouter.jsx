@@ -1,9 +1,10 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useMemo } from 'react';
+import { createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, ProtectedRoute } from '../auth/AuthComponents';
 import { AppStateProvider } from './AppStateContext';
-import ManagementLayout from '../layouts/ManagementLayout';
-import AdminLogin from '../../Pages/auth/AdminLogin';
+import LoadingSpinner from '../ui/LoadingSpinner';
+const ManagementLayout = lazy(() => import('../layouts/ManagementLayout'));
+const AdminLogin = lazy(() => import('../../Pages/auth/AdminLogin'));
 
 // Management 模組頁面 - Dashboard
 const AdminOverview = lazy(() => import('../../Pages/dashboard/Overview'));
@@ -11,16 +12,16 @@ const SalesAnalytics = lazy(() => import('../../Pages/dashboard/SalesAnalytics')
 const OperationsManagement = lazy(() => import('../../Pages/dashboard/OperationsManagement'));
 const FinanceReports = lazy(() => import('../../Pages/dashboard/FinanceReports'));
 const LogisticsManagement = lazy(() => import('../../Pages/dashboard/LogisticsManagement'));
-import TaskManagement from '../workflow/TaskManagement';
-import ApprovalWorkflowManagement from '../workflow/ApprovalWorkflowManagement';
-import RealTimeMonitoringDashboard from '../dashboard/RealTimeMonitoringDashboard';
+const TaskManagement = lazy(() => import('../workflow/TaskManagement'));
+const ApprovalWorkflowManagement = lazy(() => import('../workflow/ApprovalWorkflowManagement'));
+const RealTimeMonitoringDashboard = lazy(() => import('../dashboard/RealTimeMonitoringDashboard'));
 
 // Products 模組
 const AdminProducts = lazy(() => import('../../Pages/products/Products'));
 const AddProductAdvanced = lazy(() => import('../../Pages/products/AddProductAdvanced'));
 const EditProduct = lazy(() => import('../../Pages/products/EditProduct'));
-import Inventory from '../../Pages/inventory/Inventory';
-import WarehouseManagement from '../../Pages/inventory/WarehouseManagement';
+const Inventory = lazy(() => import('../../Pages/inventory/Inventory'));
+const WarehouseManagement = lazy(() => import('../../Pages/inventory/WarehouseManagement'));
 
 // Orders 模組
 const OrderList = lazy(() => import('../../Pages/orders/OrderList'));
@@ -60,15 +61,15 @@ const SmsMessage = lazy(() => import('../../Pages/notifications/SmsMessage'));
 const WebNotification = lazy(() => import('../../Pages/notifications/WebNotification'));
 
 // Accounting 模組（改為表單審批入口）
-import FormApprovals from '../../Pages/fromsigning/FormApprovals';
+const FormApprovals = lazy(() => import('../../Pages/fromsigning/FormApprovals'));
 
 // Analytics 模組
 const AdminAnalyticsOverview = lazy(() => import('../../Pages/analytics/AnalyticsOverview'));
 const SalesAnalyticsPage = lazy(() => import('../../Pages/analytics/SalesAnalytics'));
 const CustomerAnalytics = lazy(() => import('../../Pages/analytics/CustomerAnalytics'));
 const ProductAnalytics = lazy(() => import('../../Pages/analytics/ProductAnalytics'));
-import OperationalAnalytics from '../analytics/OperationalAnalytics';
-import AIInsights from '../analytics/AIInsights';
+const OperationalAnalytics = lazy(() => import('../analytics/OperationalAnalytics'));
+const AIInsights = lazy(() => import('../analytics/AIInsights'));
 
 // Settings 模組
 const SystemSettingsOverview = lazy(() => import('../settings/SystemSettingsOverview'));
@@ -82,7 +83,7 @@ const ShippingSettings = lazy(() => import('../../Pages/settings/ShippingSetting
 const AdminManagement = lazy(() => import('../../Pages/admin/AdminManagement'));
 
 // Marketing 模組 Pages
-import MarketingOverviewPage from '../../Pages/marketing/MarketingMange';
+const MarketingOverviewPage = lazy(() => import('../../Pages/marketing/MarketingMange'));
 const CouponManagement = lazy(() => import('../../Pages/marketing/coupons/CouponManagementContainer'));
 const FestivalManagement = lazy(() => import('../../Pages/marketing/festivals/FestivalManagement'));
 const GiftManagement = lazy(() => import('../../Pages/marketing/gifts/GiftManagement'));
@@ -97,132 +98,144 @@ const FunnelsPage = lazy(() => import('../../Pages/user-tracking/Funnels'));
 const RetentionPage = lazy(() => import('../../Pages/user-tracking/Retention'));
 
 const AppRouter = () => {
-  return (
-    <Router>
-      <AuthProvider>
-        <AppStateProvider>
-          <Routes>
-            <Route path="/login" element={<AdminLogin />} />
-            <Route 
-              path="/*" 
-              element={
-                <ProtectedRoute>
-                  <Suspense fallback={<div className="p-4">載入中...</div>}>
-                    <ManagementLayout />
-                  </Suspense>
-                </ProtectedRoute>
-              }
-            >
-              {/* Dashboard 模組路由 */}
-              <Route path="" element={<Navigate to="dashboard/overview" replace />} />
-              <Route path="dashboard/overview" element={<AdminOverview />} />
-              <Route path="dashboard/sales-analytics" element={<SalesAnalytics />} />
-              <Route path="dashboard/operations" element={<OperationsManagement />} />
-              <Route path="dashboard/finance" element={<FinanceReports />} />
-              <Route path="dashboard/logistics" element={<LogisticsManagement />} />
-              <Route path="dashboard/tasks" element={<TaskManagement />} />
-              <Route path="dashboard/approvals" element={<ApprovalWorkflowManagement />} />
-              <Route path="dashboard/realtime" element={<RealTimeMonitoringDashboard />} />
+  const router = useMemo(() =>
+    createBrowserRouter(
+      createRoutesFromElements(
+        <>
+          <Route path="/login" element={<AdminLogin />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<LoadingSpinner message="頁面載入中..." /> }>
+                  <ManagementLayout />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          >
+            {/* Dashboard 模組路由 */}
+            <Route index element={<Navigate to="dashboard/overview" replace />} />
+            <Route path="dashboard/overview" element={<AdminOverview />} />
+            <Route path="dashboard/sales-analytics" element={<SalesAnalytics />} />
+            <Route path="dashboard/operations" element={<OperationsManagement />} />
+            <Route path="dashboard/finance" element={<FinanceReports />} />
+            <Route path="dashboard/logistics" element={<LogisticsManagement />} />
+            <Route path="dashboard/tasks" element={<TaskManagement />} />
+            <Route path="dashboard/approvals" element={<ApprovalWorkflowManagement />} />
+            <Route path="dashboard/realtime" element={<RealTimeMonitoringDashboard />} />
 
-              {/* Products 模組路由 */}
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="products/add" element={<AddProductAdvanced />} />
-              <Route path="products/edit/:sku" element={<EditProduct />} />
+            {/* Products 模組路由 */}
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="products/add" element={<AddProductAdvanced />} />
+            <Route path="products/edit/:sku" element={<EditProduct />} />
 
-              {/* Orders 模組路由 */}
-              <Route path="orders" element={<OrderList />} />
-              <Route path="orders/management" element={<OrderList />} />
-              <Route path="orders/details/:id" element={<OrderDetails />} />
-              {/* 新增訂單頁已移除 */}
+            {/* Orders 模組路由 */}
+            <Route path="orders" element={<OrderList />} />
+            <Route path="orders/management" element={<OrderList />} />
+            <Route path="orders/details/:id" element={<OrderDetails />} />
+            {/* 新增訂單頁已移除 */}
 
-              {/* Members 模組路由 */}
-              <Route path="members" element={<MemberManagement />} />
+            {/* Members 模組路由 */}
+            <Route path="members" element={<MemberManagement />} />
 
-              {/* Gifts 模組路由（整合後導向行銷管理） */}
-              <Route path="gifts" element={<Navigate to="/marketing" replace />} />
+            {/* Gifts 模組路由（整合後導向行銷管理） */}
+            <Route path="gifts" element={<Navigate to="/marketing" replace />} />
 
-              {/* Suppliers 模組路由（集中於採購模組的子頁 /procurement/suppliers） */}
-              <Route path="suppliers" element={<SupplierList />} />
+            {/* Suppliers 模組路由（集中於採購模組的子頁 /procurement/suppliers） */}
+            <Route path="suppliers" element={<SupplierList />} />
 
-              {/* Procurement 模組路由 */}
-              <Route path="procurement" element={<ProcurementOverview />} />
-              <Route path="procurement/suppliers" element={<SupplierList />} />
+            {/* Procurement 模組路由 */}
+            <Route path="procurement" element={<ProcurementOverview />} />
+            <Route path="procurement/suppliers" element={<SupplierList />} />
 
-              {/* Logistics 模組路由 */}
-              <Route path="logistics" element={<LogisticsTracking />} />
-              {/* 移除 logistics/notifications 與 logistics/reverse-notifications */}
+            {/* Logistics 模組路由 */}
+            <Route path="logistics" element={<LogisticsTracking />} />
+            {/* 移除 logistics/notifications 與 logistics/reverse-notifications */}
 
-              {/* Coupons 模組路由（整合後導向行銷管理） */}
-              <Route path="coupons" element={<Navigate to="/marketing" replace />} />
-              <Route path="coupons/sharing" element={<Navigate to="/marketing" replace />} />
-              <Route path="coupons/stacking-rules" element={<Navigate to="/marketing" replace />} />
+            {/* Coupons 模組路由（整合後導向行銷管理） */}
+            <Route path="coupons" element={<Navigate to="/marketing" replace />} />
+            <Route path="coupons/sharing" element={<Navigate to="/marketing" replace />} />
+            <Route path="coupons/stacking-rules" element={<Navigate to="/marketing" replace />} />
 
-              {/* Notifications 模組（對外發送）路由 */}
-              <Route path="notifications" element={<NotificationHistory />} />
-              <Route path="notifications/line-text" element={<LineTextMessage />} />
-              <Route path="notifications/line-flex" element={<LineFlexMessage />} />
-              <Route path="notifications/mail-text" element={<MailTextMessage />} />
-              <Route path="notifications/mail-html" element={<MailHtmlMessage />} />
-              <Route path="notifications/sms" element={<SmsMessage />} />
-              <Route path="notifications/web" element={<WebNotification />} />
+            {/* Notifications 模組（對外發送）路由 */}
+            <Route path="notifications" element={<NotificationHistory />} />
+            <Route path="notifications/line-text" element={<LineTextMessage />} />
+            <Route path="notifications/line-flex" element={<LineFlexMessage />} />
+            <Route path="notifications/mail-text" element={<MailTextMessage />} />
+            <Route path="notifications/mail-html" element={<MailHtmlMessage />} />
+            <Route path="notifications/sms" element={<SmsMessage />} />
+            <Route path="notifications/web" element={<WebNotification />} />
 
-              {/* Notification Center（對內接收）獨立模組路由，不在側邊欄顯示 */}
-              <Route path="notification-center" element={<NotificationCenter />} />
-              <Route path="notification-center/orders" element={<OrdersInbox />} />
-              <Route path="notification-center/ecpay/payments" element={<ECPayPayments />} />
-              <Route path="notification-center/ecpay/subscriptions" element={<ECPaySubscriptions />} />
-              <Route path="notification-center/ecpay/codes" element={<ECPayCodes />} />
-              <Route path="notification-center/ecpay/cardless-installments" element={<ECPayCardlessInstallments />} />
+            {/* Notification Center（對內接收）獨立模組路由，不在側邊欄顯示 */}
+            <Route path="notification-center" element={<NotificationCenter />} />
+            <Route path="notification-center/orders" element={<OrdersInbox />} />
+            <Route path="notification-center/ecpay/payments" element={<ECPayPayments />} />
+            <Route path="notification-center/ecpay/subscriptions" element={<ECPaySubscriptions />} />
+            <Route path="notification-center/ecpay/codes" element={<ECPayCodes />} />
+            <Route path="notification-center/ecpay/cardless-installments" element={<ECPayCardlessInstallments />} />
 
-              {/* Marketing 模組路由（整合入口 + 子頁） */}
-              <Route path="marketing" element={<MarketingOverviewPage />}>
-                <Route index element={<Navigate to="coupons" replace />} />
-                <Route path="coupons" element={<CouponManagement />} />
-                <Route path="festivals" element={<FestivalManagement />} />
-                <Route path="gifts" element={<GiftManagement />} />
-              </Route>
-
-              {/* Festivals 模組路由（整合後導向行銷管理） */}
-              <Route path="festivals/manage" element={<Navigate to="/marketing" replace />} />
-
-              {/* 表單審批 模組路由 */}
-              <Route path="fromsigning" element={<FormApprovals />} />
-
-              {/* Analytics 模組路由 */}
-              <Route path="analytics" element={<AdminAnalyticsOverview />} />
-              <Route path="analytics/sales" element={<SalesAnalyticsPage />} />
-              <Route path="analytics/customers" element={<CustomerAnalytics />} />
-              <Route path="analytics/products" element={<ProductAnalytics />} />
-              <Route path="analytics/operations" element={<OperationalAnalytics />} />
-              <Route path="analytics/ai-insights" element={<AIInsights />} />
-
-              {/* Settings 模組路由 */}
-              <Route path="settings" element={<SystemSettingsOverview />} />
-              <Route path="settings/general" element={<GeneralSettings />} />
-              <Route path="settings/security" element={<SecuritySettings />} />
-              <Route path="settings/notifications" element={<NotificationSettings />} />
-              <Route path="settings/payment" element={<PaymentSettings />} />
-              <Route path="settings/shipping" element={<ShippingSettings />} />
-
-              {/* Admin 模組路由 */}
-              <Route path="admin" element={<AdminManagement />} />
-
-              {/* Inventory 模組路由 (獨立模組) */}
-              <Route path="inventory" element={<Inventory />} />
-              <Route path="inventory/warehouses" element={<WarehouseManagement />} />
-
-              {/* User Tracking 模組路由 */}
-              <Route path="user-tracking" element={<Navigate to="/user-tracking/events" replace />} />
-              <Route path="user-tracking/events" element={<EventsPage />} />
-              <Route path="user-tracking/sessions" element={<SessionsPage />} />
-              <Route path="user-tracking/segments" element={<SegmentsPage />} />
-              <Route path="user-tracking/funnels" element={<FunnelsPage />} />
-              <Route path="user-tracking/retention" element={<RetentionPage />} />
+            {/* Marketing 模組路由（整合入口 + 子頁） */}
+            <Route path="marketing" element={<MarketingOverviewPage />}>
+              <Route index element={<Navigate to="coupons" replace />} />
+              <Route path="coupons" element={<CouponManagement />} />
+              <Route path="festivals" element={<FestivalManagement />} />
+              <Route path="gifts" element={<GiftManagement />} />
             </Route>
-          </Routes>
-        </AppStateProvider>
-      </AuthProvider>
-    </Router>
+
+            {/* Festivals 模組路由（整合後導向行銷管理） */}
+            <Route path="festivals/manage" element={<Navigate to="/marketing" replace />} />
+
+            {/* 表單審批 模組路由 */}
+            <Route path="fromsigning" element={<FormApprovals />} />
+
+            {/* Analytics 模組路由 */}
+            <Route path="analytics" element={<AdminAnalyticsOverview />} />
+            <Route path="analytics/sales" element={<SalesAnalyticsPage />} />
+            <Route path="analytics/customers" element={<CustomerAnalytics />} />
+            <Route path="analytics/products" element={<ProductAnalytics />} />
+            <Route path="analytics/operations" element={<OperationalAnalytics />} />
+            <Route path="analytics/ai-insights" element={<AIInsights />} />
+
+            {/* Settings 模組路由 */}
+            <Route path="settings" element={<SystemSettingsOverview />} />
+            <Route path="settings/general" element={<GeneralSettings />} />
+            <Route path="settings/security" element={<SecuritySettings />} />
+            <Route path="settings/notifications" element={<NotificationSettings />} />
+            <Route path="settings/payment" element={<PaymentSettings />} />
+            <Route path="settings/shipping" element={<ShippingSettings />} />
+
+            {/* Admin 模組路由 */}
+            <Route path="admin" element={<AdminManagement />} />
+
+            {/* Inventory 模組路由 (獨立模組) */}
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="inventory/warehouses" element={<WarehouseManagement />} />
+
+            {/* User Tracking 模組路由 */}
+            <Route path="user-tracking" element={<Navigate to="/user-tracking/events" replace />} />
+            <Route path="user-tracking/events" element={<EventsPage />} />
+            <Route path="user-tracking/sessions" element={<SessionsPage />} />
+            <Route path="user-tracking/segments" element={<SegmentsPage />} />
+            <Route path="user-tracking/funnels" element={<FunnelsPage />} />
+            <Route path="user-tracking/retention" element={<RetentionPage />} />
+          </Route>
+        </>
+      ),
+      {
+        future: {
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        },
+      }
+    )
+  , []);
+
+  return (
+    <AuthProvider>
+      <AppStateProvider>
+        <RouterProvider router={router} fallbackElement={<LoadingSpinner fullPage />} />
+      </AppStateProvider>
+    </AuthProvider>
   );
 };
 

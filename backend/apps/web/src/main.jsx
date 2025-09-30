@@ -11,20 +11,14 @@ gsap.registerPlugin(ScrollTrigger)
 function App() {
   useEffect(() => {
     // 初始化頁面載入動畫
-    gsap.fromTo(
-      '.animate-on-load',
-      {
-        opacity: 0,
-        y: 30,
-      },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        stagger: 0.2,
-        ease: 'power2.out',
-      }
-    )
+    const targets = document.querySelectorAll('.animate-on-load')
+    if (targets.length > 0) {
+      gsap.fromTo(
+        targets,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, stagger: 0.2, ease: 'power2.out' }
+      )
+    }
   }, [])
 
   return (
