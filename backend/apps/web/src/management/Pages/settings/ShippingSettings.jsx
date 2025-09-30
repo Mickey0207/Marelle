@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ADMIN_STYLES } from '../../../adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 
 const ShippingSettings = () => {
   const [settings, setSettings] = useState({

@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import StandardTable from '../../components/ui/StandardTable';
-import { ADMIN_STYLES } from '../../../adminStyles.js';
+import { ADMIN_STYLES } from '../../Style/adminStyles.js';
 import { procurementDataManager } from '../../../lib/mocks/procurement/procurementDataManager.js';
 import supplierDataManager from '../../../lib/mocks/procurement/supplierDataManager.js';
 import GlassModal from '../../components/ui/GlassModal';

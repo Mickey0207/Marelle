@@ -6,7 +6,7 @@ import TabNavigation from '../../components/ui/TabNavigation';
 import GlassModal from '../../components/ui/GlassModal';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import { TruckIcon, EyeIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES, COMPONENT_DEFAULTS } from '../../../adminStyles';
+import { ADMIN_STYLES, COMPONENT_DEFAULTS } from '../../Style/adminStyles';
 
 // 將物流方式轉為中文（放在元件外避免初始化順序問題）
 function mapTypeToChinese(type, subType) {

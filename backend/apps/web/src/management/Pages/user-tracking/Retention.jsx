@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ADMIN_STYLES } from '../../../adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 import { getRetentionByWeek } from '../../../lib/mocks/user-tracking/dataManager';
 import { SimpleLine } from '../../components/ui/Charts';
 

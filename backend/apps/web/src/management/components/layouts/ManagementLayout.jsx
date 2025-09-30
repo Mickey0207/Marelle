@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthComponents';
 import TabNavigation from '../ui/TabNavigation';
 import { getTabsForPath } from '../../../lib/mocks/ui/tabsConfig';
-import { ADMIN_STYLES, ADMIN_COLORS } from '../../../adminStyles';
+import { ADMIN_STYLES, ADMIN_COLORS } from '../../Style/adminStyles';
 import notificationDataManager from '../../../lib/mocks/notifications/notificationDataManager';
 import {
   HomeIcon,

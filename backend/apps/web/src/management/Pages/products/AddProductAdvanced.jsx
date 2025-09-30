@@ -12,7 +12,7 @@ import {
   PlusIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from '../../../adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 import ImageUpload from '../../components/products/ImageUpload';
 import CategoryTreeSelector from '../../components/products/CategoryTreeSelector';
 import NestedSKUManager from '../../components/products/NestedSKUManager';

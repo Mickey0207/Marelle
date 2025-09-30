@@ -21,6 +21,11 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import systemSettingsDataManager from '../../../lib/mocks/settings/systemSettingsDataManager';
+import {
+  listDepartments, createDepartment, updateDepartment, deleteDepartment,
+  listRoles, createRole, updateRole, deleteRole,
+  listModules, createModule, updateModule, deleteModule
+} from '../../../lib/mocks/core/frontendApiMock'
 import SearchableSelect from "../ui/SearchableSelect";
 
 const SystemSettingsOverview = () => {
@@ -30,10 +35,39 @@ const SystemSettingsOverview = () => {
   const [quickSettings, setQuickSettings] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+  // 系統選項：部門/角色/模組（對接後端 Settings CRUD）
+  const [departments, setDepartments] = useState([])
+  const [roles, setRoles] = useState([])
+  const [modules, setModules] = useState([])
+  const [loadingOptions, setLoadingOptions] = useState(false)
+  const [newDept, setNewDept] = useState('')
+  const [newRole, setNewRole] = useState('')
+  const [newModule, setNewModule] = useState('')
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    // 載入部門/角色/模組選項
+    (async () => {
+      try {
+        setLoadingOptions(true)
+        const [d, r, m] = await Promise.all([
+          listDepartments(),
+          listRoles(),
+          listModules(),
+        ])
+        setDepartments(d || [])
+        setRoles(r || [])
+        setModules(m || [])
+      } catch (e) {
+        console.error('載入系統選項失敗', e)
+      } finally {
+        setLoadingOptions(false)
+      }
+    })()
+  }, [])
 
   useEffect(() => {
     if (searchTerm.trim()) {
@@ -309,6 +343,145 @@ const SystemSettingsOverview = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* 系統選項：部門 / 角色 / 模組 */}
+            <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Cog6ToothIcon className="h-5 w-5 mr-2 text-[#cc824d]" />
+                系統選項（部門 / 角色 / 模組）
+              </h3>
+              {loadingOptions ? (
+                <p className="text-sm text-gray-500">載入中...</p>
+              ) : (
+                <div className="grid grid-cols-3 gap-6">
+                  {/* 部門 */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">部門</h4>
+                      <div className="flex items-center gap-2">
+                        <input className="border border-gray-300 rounded px-2 py-1 text-sm" placeholder="新增部門"
+                               value={newDept} onChange={e=>setNewDept(e.target.value)} />
+                        <button className="text-white bg-amber-600 hover:bg-amber-700 text-sm px-3 py-1 rounded"
+                                onClick={async()=>{
+                                  if (!newDept.trim()) return
+                                  try {
+                                    const created = await createDepartment(newDept.trim())
+                                    setDepartments(prev=>[{ id: created.id, name: created.name }, ...prev])
+                                    setNewDept('')
+                                  } catch(e) { alert(e?.message || '新增失敗') }
+                                }}>新增</button>
+                      </div>
+                    </div>
+                    <ul className="space-y-2">
+                      {departments.map(d=> (
+                        <li key={d.id} className="flex items-center justify-between bg-gray-50 rounded px-3 py-2">
+                          <span className="text-sm text-gray-800">{d.name}</span>
+                          <div className="flex items-center gap-2">
+                            <button className="text-amber-700 hover:bg-amber-100 rounded px-2 py-1 text-sm"
+                                    onClick={async()=>{
+                                      const name = prompt('重新命名部門', d.name)
+                                      if (name && name !== d.name) {
+                                        try { await updateDepartment(d.id, name); setDepartments(prev=>prev.map(x=>x.id===d.id?{...x,name}:x)) }
+                                        catch(e){ alert(e?.message || '更新失敗') }
+                                      }
+                                    }}>重新命名</button>
+                            <button className="text-red-700 hover:bg-red-100 rounded px-2 py-1 text-sm"
+                                    onClick={async()=>{
+                                      if (!confirm(`確定刪除部門「${d.name}」？`)) return
+                                      try { await deleteDepartment(d.id); setDepartments(prev=>prev.filter(x=>x.id!==d.id)) }
+                                      catch(e){ alert(e?.message || '刪除失敗') }
+                                    }}>刪除</button>
+                          </div>
+                        </li>
+                      ))}
+                      {departments.length===0 && <li className="text-sm text-gray-500">尚無部門</li>}
+                    </ul>
+                  </div>
+
+                  {/* 角色 */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">角色</h4>
+                      <div className="flex items-center gap-2">
+                        <input className="border border-gray-300 rounded px-2 py-1 text-sm" placeholder="新增角色"
+                               value={newRole} onChange={e=>setNewRole(e.target.value)} />
+                        <button className="text-white bg-amber-600 hover:bg-amber-700 text-sm px-3 py-1 rounded"
+                                onClick={async()=>{
+                                  if (!newRole.trim()) return
+                                  try { const created = await createRole(newRole.trim()); setRoles(prev=>[{id:created.id,name:created.name},...prev]); setNewRole('') }
+                                  catch(e){ alert(e?.message||'新增失敗') }
+                                }}>新增</button>
+                      </div>
+                    </div>
+                    <ul className="space-y-2">
+                      {roles.map(r=> (
+                        <li key={r.id} className="flex items-center justify-between bg-gray-50 rounded px-3 py-2">
+                          <span className="text-sm text-gray-800">{r.name}</span>
+                          <div className="flex items-center gap-2">
+                            <button className="text-amber-700 hover:bg-amber-100 rounded px-2 py-1 text-sm"
+                                    onClick={async()=>{
+                                      const name = prompt('重新命名角色', r.name)
+                                      if (name && name !== r.name) {
+                                        try { await updateRole(r.id, name); setRoles(prev=>prev.map(x=>x.id===r.id?{...x,name}:x)) }
+                                        catch(e){ alert(e?.message || '更新失敗') }
+                                      }
+                                    }}>重新命名</button>
+                            <button className="text-red-700 hover:bg-red-100 rounded px-2 py-1 text-sm"
+                                    onClick={async()=>{
+                                      if (!confirm(`確定刪除角色「${r.name}」？`)) return
+                                      try { await deleteRole(r.id); setRoles(prev=>prev.filter(x=>x.id!==r.id)) }
+                                      catch(e){ alert(e?.message || '刪除失敗') }
+                                    }}>刪除</button>
+                          </div>
+                        </li>
+                      ))}
+                      {roles.length===0 && <li className="text-sm text-gray-500">尚無角色</li>}
+                    </ul>
+                  </div>
+
+                  {/* 模組 */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium text-gray-900">模組</h4>
+                      <div className="flex items-center gap-2">
+                        <input className="border border-gray-300 rounded px-2 py-1 text-sm" placeholder="新增模組"
+                               value={newModule} onChange={e=>setNewModule(e.target.value)} />
+                        <button className="text-white bg-amber-600 hover:bg-amber-700 text-sm px-3 py-1 rounded"
+                                onClick={async()=>{
+                                  if (!newModule.trim()) return
+                                  try { const created = await createModule(newModule.trim()); setModules(prev=>[{id:created.id,name:created.name},...prev]); setNewModule('') }
+                                  catch(e){ alert(e?.message||'新增失敗') }
+                                }}>新增</button>
+                      </div>
+                    </div>
+                    <ul className="space-y-2">
+                      {modules.map(m=> (
+                        <li key={m.id} className="flex items-center justify-between bg-gray-50 rounded px-3 py-2">
+                          <span className="text-sm text-gray-800">{m.name}</span>
+                          <div className="flex items-center gap-2">
+                            <button className="text-amber-700 hover:bg-amber-100 rounded px-2 py-1 text-sm"
+                                    onClick={async()=>{
+                                      const name = prompt('重新命名模組', m.name)
+                                      if (name && name !== m.name) {
+                                        try { await updateModule(m.id, name); setModules(prev=>prev.map(x=>x.id===m.id?{...x,name}:x)) }
+                                        catch(e){ alert(e?.message || '更新失敗') }
+                                      }
+                                    }}>重新命名</button>
+                            <button className="text-red-700 hover:bg-red-100 rounded px-2 py-1 text-sm"
+                                    onClick={async()=>{
+                                      if (!confirm(`確定刪除模組「${m.name}」？`)) return
+                                      try { await deleteModule(m.id); setModules(prev=>prev.filter(x=>x.id!==m.id)) }
+                                      catch(e){ alert(e?.message || '刪除失敗') }
+                                    }}>刪除</button>
+                          </div>
+                        </li>
+                      ))}
+                      {modules.length===0 && <li className="text-sm text-gray-500">尚無模組</li>}
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

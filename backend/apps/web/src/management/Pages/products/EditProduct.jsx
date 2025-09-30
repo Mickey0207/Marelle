@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockProducts } from "../../../lib/mocks/products/mockProductData";
-import { ADMIN_STYLES } from '../../../adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 import ImageUpload from '../../components/products/ImageUpload';
 import CategoryTreeSelector from '../../components/products/CategoryTreeSelector';
 import NestedSKUManager from '../../components/products/NestedSKUManager';

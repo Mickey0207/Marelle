@@ -6,80 +6,80 @@ import ManagementLayout from '../layouts/ManagementLayout';
 import AdminLogin from '../../Pages/auth/AdminLogin';
 
 // Management 模組頁面 - Dashboard
-import AdminOverview from '../../Pages/dashboard/Overview';
-import SalesAnalytics from '../../Pages/dashboard/SalesAnalytics';
-import OperationsManagement from '../../Pages/dashboard/OperationsManagement';
-import FinanceReports from '../../Pages/dashboard/FinanceReports';
-import LogisticsManagement from '../../Pages/dashboard/LogisticsManagement';
+const AdminOverview = lazy(() => import('../../Pages/dashboard/Overview'));
+const SalesAnalytics = lazy(() => import('../../Pages/dashboard/SalesAnalytics'));
+const OperationsManagement = lazy(() => import('../../Pages/dashboard/OperationsManagement'));
+const FinanceReports = lazy(() => import('../../Pages/dashboard/FinanceReports'));
+const LogisticsManagement = lazy(() => import('../../Pages/dashboard/LogisticsManagement'));
 import TaskManagement from '../workflow/TaskManagement';
 import ApprovalWorkflowManagement from '../workflow/ApprovalWorkflowManagement';
 import RealTimeMonitoringDashboard from '../dashboard/RealTimeMonitoringDashboard';
 
 // Products 模組
-import AdminProducts from '../../Pages/products/Products';
-import AddProductAdvanced from '../../Pages/products/AddProductAdvanced';
-import EditProduct from '../../Pages/products/EditProduct';
+const AdminProducts = lazy(() => import('../../Pages/products/Products'));
+const AddProductAdvanced = lazy(() => import('../../Pages/products/AddProductAdvanced'));
+const EditProduct = lazy(() => import('../../Pages/products/EditProduct'));
 import Inventory from '../../Pages/inventory/Inventory';
 import WarehouseManagement from '../../Pages/inventory/WarehouseManagement';
 
 // Orders 模組
-import OrderList from '../../Pages/orders/OrderList';
-import OrderDetails from '../../Pages/orders/OrderDetails';
+const OrderList = lazy(() => import('../../Pages/orders/OrderList'));
+const OrderDetails = lazy(() => import('../../Pages/orders/OrderDetails'));
 // 移除新增訂單頁（OrderForm）
 
 // Members 模組
-import MemberManagement from '../../Pages/members/MemberManagement';
+const MemberManagement = lazy(() => import('../../Pages/members/MemberManagement'));
 
 // Gifts 模組 （整合至 marketing，移除不存在頁面的匯入）
 
 // Suppliers 模組
-import SupplierList from '../../Pages/procurement/SupplierList';
+const SupplierList = lazy(() => import('../../Pages/procurement/SupplierList'));
 
 // Procurement 模組
-import ProcurementOverview from '../../Pages/procurement/ProcurementOverview';
+const ProcurementOverview = lazy(() => import('../../Pages/procurement/ProcurementOverview'));
 
 // Logistics 模組
-import LogisticsTracking from '../../Pages/logistics/LogisticsTracking';
+const LogisticsTracking = lazy(() => import('../../Pages/logistics/LogisticsTracking'));
 // 移除 Logistics 通知頁面（不再使用）
 
 // Coupons 模組
 
 // Notifications 模組頁面
-import NotificationCenter from '../../Pages/notification-center/NotificationCenter';
-import OrdersInbox from '../../Pages/notification-center/OrdersInbox';
-import ECPayPayments from '../../Pages/notification-center/ECPayPayments';
-import ECPaySubscriptions from '../../Pages/notification-center/ECPaySubscriptions';
-import ECPayCodes from '../../Pages/notification-center/ECPayCodes';
-import ECPayCardlessInstallments from '../../Pages/notification-center/ECPayCardlessInstallments';
-import NotificationHistory from '../../Pages/notifications/NotificationHistory';
-import LineTextMessage from '../../Pages/notifications/LineTextMessage';
-import LineFlexMessage from '../../Pages/notifications/LineFlexMessage';
-import MailTextMessage from '../../Pages/notifications/MailTextMessage';
-import MailHtmlMessage from '../../Pages/notifications/MailHtmlMessage';
-import SmsMessage from '../../Pages/notifications/SmsMessage';
-import WebNotification from '../../Pages/notifications/WebNotification';
+const NotificationCenter = lazy(() => import('../../Pages/notification-center/NotificationCenter'));
+const OrdersInbox = lazy(() => import('../../Pages/notification-center/OrdersInbox'));
+const ECPayPayments = lazy(() => import('../../Pages/notification-center/ECPayPayments'));
+const ECPaySubscriptions = lazy(() => import('../../Pages/notification-center/ECPaySubscriptions'));
+const ECPayCodes = lazy(() => import('../../Pages/notification-center/ECPayCodes'));
+const ECPayCardlessInstallments = lazy(() => import('../../Pages/notification-center/ECPayCardlessInstallments'));
+const NotificationHistory = lazy(() => import('../../Pages/notifications/NotificationHistory'));
+const LineTextMessage = lazy(() => import('../../Pages/notifications/LineTextMessage'));
+const LineFlexMessage = lazy(() => import('../../Pages/notifications/LineFlexMessage'));
+const MailTextMessage = lazy(() => import('../../Pages/notifications/MailTextMessage'));
+const MailHtmlMessage = lazy(() => import('../../Pages/notifications/MailHtmlMessage'));
+const SmsMessage = lazy(() => import('../../Pages/notifications/SmsMessage'));
+const WebNotification = lazy(() => import('../../Pages/notifications/WebNotification'));
 
 // Accounting 模組（改為表單審批入口）
 import FormApprovals from '../../Pages/fromsigning/FormApprovals';
 
 // Analytics 模組
-import AdminAnalyticsOverview from '../../Pages/analytics/AnalyticsOverview';
-import SalesAnalyticsPage from '../../Pages/analytics/SalesAnalytics';
-import CustomerAnalytics from '../../Pages/analytics/CustomerAnalytics';
-import ProductAnalytics from '../../Pages/analytics/ProductAnalytics';
+const AdminAnalyticsOverview = lazy(() => import('../../Pages/analytics/AnalyticsOverview'));
+const SalesAnalyticsPage = lazy(() => import('../../Pages/analytics/SalesAnalytics'));
+const CustomerAnalytics = lazy(() => import('../../Pages/analytics/CustomerAnalytics'));
+const ProductAnalytics = lazy(() => import('../../Pages/analytics/ProductAnalytics'));
 import OperationalAnalytics from '../analytics/OperationalAnalytics';
 import AIInsights from '../analytics/AIInsights';
 
 // Settings 模組
-import SystemSettingsOverview from '../settings/SystemSettingsOverview';
-import GeneralSettings from '../../Pages/settings/GeneralSettings';
-import SecuritySettings from '../../Pages/settings/SecuritySettings';
-import NotificationSettings from '../../Pages/settings/NotificationSettings';
-import PaymentSettings from '../../Pages/settings/PaymentSettings';
-import ShippingSettings from '../../Pages/settings/ShippingSettings';
+const SystemSettingsOverview = lazy(() => import('../settings/SystemSettingsOverview'));
+const GeneralSettings = lazy(() => import('../../Pages/settings/GeneralSettings'));
+const SecuritySettings = lazy(() => import('../../Pages/settings/SecuritySettings'));
+const NotificationSettings = lazy(() => import('../../Pages/settings/NotificationSettings'));
+const PaymentSettings = lazy(() => import('../../Pages/settings/PaymentSettings'));
+const ShippingSettings = lazy(() => import('../../Pages/settings/ShippingSettings'));
 
 // Admin 模組
-import AdminManagement from '../../Pages/admin/AdminManagement';
+const AdminManagement = lazy(() => import('../../Pages/admin/AdminManagement'));
 
 // Marketing 模組 Pages
 import MarketingOverviewPage from '../../Pages/marketing/MarketingMange';
@@ -90,11 +90,11 @@ const GiftManagement = lazy(() => import('../../Pages/marketing/gifts/GiftManage
 // Festival 模組 Pages（整合進行銷管理後，舊路由將導向 marketing）
 
 // User Tracking 模組 - 暫時移除，因為user-tracking目錄為空
-import EventsPage from '../../Pages/user-tracking/Events';
-import SessionsPage from '../../Pages/user-tracking/Sessions';
-import SegmentsPage from '../../Pages/user-tracking/Segments';
-import FunnelsPage from '../../Pages/user-tracking/Funnels';
-import RetentionPage from '../../Pages/user-tracking/Retention';
+const EventsPage = lazy(() => import('../../Pages/user-tracking/Events'));
+const SessionsPage = lazy(() => import('../../Pages/user-tracking/Sessions'));
+const SegmentsPage = lazy(() => import('../../Pages/user-tracking/Segments'));
+const FunnelsPage = lazy(() => import('../../Pages/user-tracking/Funnels'));
+const RetentionPage = lazy(() => import('../../Pages/user-tracking/Retention'));
 
 const AppRouter = () => {
   return (
@@ -107,7 +107,9 @@ const AppRouter = () => {
               path="/*" 
               element={
                 <ProtectedRoute>
-                  <ManagementLayout />
+                  <Suspense fallback={<div className="p-4">載入中...</div>}>
+                    <ManagementLayout />
+                  </Suspense>
                 </ProtectedRoute>
               }
             >

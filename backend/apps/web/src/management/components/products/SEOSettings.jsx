@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from '../../../adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 
 const SEOSettings = ({ 
   productData, 

@@ -11,7 +11,7 @@ import {
   ArrowDownIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../../adminStyles";
+import { ADMIN_STYLES } from "../../Style/adminStyles";
 import { DashboardStatsSection, STATS_CATEGORIES } from "../../components/dashboard/DashboardStatsSection";
 // withPageTabs HOC 已移除，子頁籤導航統一在頂部管理
 

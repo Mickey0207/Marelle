@@ -20,7 +20,7 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const result = login(formData);
+  const result = await login(formData);
       
       if (result.success) {
         navigate('/');
@@ -106,8 +106,8 @@ const AdminLogin = () => {
         <div className="w-full max-w-md mx-auto mt-8 p-4 bg-[#f7f2e8] border border-[#e5ded6] rounded">
           <h4 className="text-sm font-bold text-[#2d1e0f] mb-2 font-serif">預設管理員帳號</h4>
           <div className="text-xs text-[#666] space-y-1 font-serif">
-            <p>帳號：admin@marelle.com</p>
-            <p>密碼：Admin123!</p>
+            <p>帳號：admin@example.com</p>
+            <p>密碼：admin12345678</p>
             <p className="text-[#cc824d] mt-2">建議首次登入後立即修改密碼</p>
           </div>
         </div>

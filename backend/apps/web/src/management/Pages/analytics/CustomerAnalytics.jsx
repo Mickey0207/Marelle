@@ -1,5 +1,5 @@
 import React from 'react';
-import { ADMIN_STYLES } from '../../../adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 
 const CustomerAnalytics = () => {
   return (

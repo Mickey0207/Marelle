@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import SearchableSelect from '../../components/ui/SearchableSelect';
-import { ADMIN_STYLES } from '../../../adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 
 const GeneralSettings = () => {
   const [settings, setSettings] = useState({

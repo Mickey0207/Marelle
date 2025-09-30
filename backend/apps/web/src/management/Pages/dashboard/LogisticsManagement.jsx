@@ -10,7 +10,7 @@ import {
   EyeIcon,
   PrinterIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../../adminStyles";
+import { ADMIN_STYLES } from "../../Style/adminStyles";
 import { DashboardStatsSection, STATS_CATEGORIES } from "../../components/dashboard/DashboardStatsSection";
 
 const LogisticsManagement = () => {

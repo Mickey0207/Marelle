@@ -2,13 +2,12 @@
 import { 
   UsersIcon, PlusIcon, PencilIcon, KeyIcon, TrashIcon, CheckCircleIcon, XCircleIcon, AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from '../../../adminStyles.js';
+import { ADMIN_STYLES } from '../../Style/adminStyles.js';
 import StandardTable from '../../components/ui/StandardTable';
 import GlassModal from '../../components/ui/GlassModal';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import IconActionButton from '../../components/ui/IconActionButton.jsx';
-import { MODULE_OPTIONS, ROLE_PRESETS } from '../../../lib/mocks/admin/modules.js';
-import { initialAdmins as INITIAL_ADMINS } from '../../../lib/mocks/admin/admins.js';
+import { createAdmin as apiCreateAdmin, updateAdmin as apiUpdateAdmin, setAdminModules as apiSetAdminModules, listAdminsFull as apiListAdminsFull, listModules as apiListModules } from '../../../lib/mocks/core/frontendApiMock'
 
 // 模擬資料移至 /data：模組、角色預設與管理員清單
 
@@ -17,7 +16,47 @@ const badge = (text, cls) => (
 );
 
 const AdminManagement = () => {
-  const [admins, setAdmins] = useState(INITIAL_ADMINS);
+  const [admins, setAdmins] = useState([]);
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [moduleOptions, setModuleOptions] = useState([]) // [{ key, label }]
+
+  React.useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      setLoading(true)
+      try {
+        // 先載入模組清單
+        const mods = await apiListModules()
+        if (mounted) setModuleOptions((mods || []).map((m) => ({ key: m.name, label: m.name })))
+        const list = await apiListAdminsFull()
+        if (!mounted) return
+        // Map API shape to UI shape
+        const mapped = list.map((a) => ({
+          id: a.id,
+          username: a.email.split('@')[0],
+          name: a.display_name || a.email,
+          email: a.email,
+          role: a.roles?.[0] || 'Staff',
+          status: 'active',
+          lastLogin: '-',
+          modules: Array.isArray(a.modules) ? a.modules : [],
+        }))
+        setAdmins(mapped)
+      } catch (e) {
+        setError(e?.message || '載入管理員失敗')
+      } finally {
+        setLoading(false)
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
+  // 角色下拉（保留既有三個，並自動加入後端出現的新角色）
+  const roleOptions = useMemo(() => {
+    const base = new Set(['全部', 'Super Admin', 'Manager', 'Staff'])
+    admins.forEach(a => { if (a.role) base.add(a.role) })
+    return Array.from(base)
+  }, [admins])
   const [selectedIds, setSelectedIds] = useState([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('全部');
@@ -85,7 +124,7 @@ const AdminManagement = () => {
         return (
           <div className="flex items-center flex-wrap gap-1">
             {shown.map((k) => {
-              const m = MODULE_OPTIONS.find(x => x.key === k);
+              const m = moduleOptions.find(x => x.key === k);
               return <span key={k} className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded">{m?.label || k}</span>
             })}
             {extra > 0 && <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">+{extra}</span>}
@@ -107,7 +146,7 @@ const AdminManagement = () => {
   ];
 
   // 子表格：每位管理員的模組權限（可快速切換）
-  const getSubRows = (row) => MODULE_OPTIONS.map(m => ({ id: `${row.id}-${m.key}`, moduleKey: m.key, moduleLabel: m.label, granted: row.modules.includes(m.key) }));
+  const getSubRows = (row) => moduleOptions.map(m => ({ id: `${row.id}-${m.key}`, moduleKey: m.key, moduleLabel: m.label, granted: row.modules.includes(m.key) }));
 
   const subColumns = [
     { key: 'moduleLabel', label: '模組', sortable: true },
@@ -129,8 +168,8 @@ const AdminManagement = () => {
       <div className="text-sm text-gray-700 font-chinese">快速調整「{row.name}」的模組權限</div>
       <div className="flex items-center gap-2">
         <button className={ADMIN_STYLES.btnSecondary} onClick={() => setAllModules(row.id, [])}>清除</button>
-        <button className={ADMIN_STYLES.btnSecondary} onClick={() => setAllModules(row.id, MODULE_OPTIONS.map(m => m.key))}>全選</button>
-        <button className={ADMIN_STYLES.btnPrimary} onClick={() => setAllModules(row.id, ROLE_PRESETS[row.role] || [])}>依角色預設</button>
+        <button className={ADMIN_STYLES.btnSecondary} onClick={() => setAllModules(row.id, moduleOptions.map(m => m.key))}>全選</button>
+        <button className={ADMIN_STYLES.btnPrimary} onClick={() => setAllModules(row.id, rolePreset(row.role, moduleOptions.map(m => m.key)))}>依角色預設</button>
       </div>
     </div>
   );
@@ -143,22 +182,32 @@ const AdminManagement = () => {
   ];
 
   // 建立管理員表單狀態
-  const [createForm, setCreateForm] = useState({ username: '', name: '', email: '', password: '', role: 'Staff', modules: ROLE_PRESETS['Staff'] });
-  const handleCreate = () => {
+  const [createForm, setCreateForm] = useState({ username: '', name: '', email: '', password: '', role: 'Staff', modules: [] });
+  const handleCreate = async () => {
     if (!createForm.username || !createForm.email || !createForm.password) return;
-    const id = `u${Date.now()}`;
-    setAdmins(prev => [{
-      id,
-      username: createForm.username,
-      name: createForm.name || createForm.username,
-      email: createForm.email,
-      role: createForm.role,
-      status: 'active',
-      lastLogin: '-',
-      modules: [...new Set(createForm.modules)]
-    }, ...prev]);
-    setShowCreate(false);
-    setCreateForm({ username: '', name: '', email: '', password: '', role: 'Staff', modules: ROLE_PRESETS['Staff'] });
+    try {
+      // 呼叫後端建立 admin（以 email+password 為主；暫以 name 做 display_name）
+      const created = await apiCreateAdmin({ email: createForm.email, password: createForm.password, display_name: createForm.name || createForm.username })
+      const id = created?.id || `u${Date.now()}`
+      // 建立後同步套用勾選的模組
+      if (createForm.modules && createForm.modules.length > 0) {
+        try { await apiSetAdminModules(id, [...new Set(createForm.modules)]) } catch {}
+      }
+      setAdmins(prev => [{
+        id,
+        username: createForm.username,
+        name: createForm.name || createForm.username,
+        email: createForm.email,
+        role: createForm.role,
+        status: 'active',
+        lastLogin: '-',
+        modules: [...new Set(createForm.modules)]
+      }, ...prev])
+      setShowCreate(false)
+      setCreateForm({ username: '', name: '', email: '', password: '', role: 'Staff', modules: [] })
+    } catch (e) {
+      alert(e?.message || '建立管理員失敗')
+    }
   };
 
   // 編輯管理員
@@ -167,10 +216,17 @@ const AdminManagement = () => {
     setEditForm({ id: u.id, username: u.username, name: u.name, email: u.email, role: u.role, status: u.status });
     setShowEdit(true);
   };
-  const saveEdit = () => {
+  const saveEdit = async () => {
+    try {
+      // 後端目前支持 display_name/line_display_name/department_id
+      await apiUpdateAdmin(editForm.id, { display_name: editForm.name || editForm.username })
+    } catch (e) {
+      // 即便後端更新失敗，仍維持 UI 修改? 這裡選擇僅提示錯誤
+      alert(e?.message || '更新管理員失敗')
+      return
+    }
     setAdmins(prev => prev.map(u => u.id === editForm.id ? { ...u, username: editForm.username, name: editForm.name, email: editForm.email, role: editForm.role, status: editForm.status } : u));
-    // 角色變更時可選：同步套用預設模組
-    const preset = ROLE_PRESETS[editForm.role];
+    const preset = rolePreset(editForm.role, moduleOptions.map(m => m.key))
     if (preset) setAllModules(editForm.id, preset);
     setShowEdit(false);
   };
@@ -182,10 +238,15 @@ const AdminManagement = () => {
     setPermsDraft(u.modules);
     setShowPerms(true);
   };
-  const commitPerms = () => {
+  const commitPerms = async () => {
     if (!current) return;
-    setAllModules(current.id, permsDraft);
-    setShowPerms(false);
+    try {
+      await apiSetAdminModules(current.id, permsDraft)
+      setAllModules(current.id, permsDraft)
+      setShowPerms(false)
+    } catch (e) {
+      alert(e?.message || '儲存權限失敗')
+    }
   };
 
   return (
@@ -215,7 +276,7 @@ const AdminManagement = () => {
             <div>
               <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">角色</label>
               <SearchableSelect
-                options={['全部', 'Super Admin', 'Manager', 'Staff']}
+                options={roleOptions}
                 value={roleFilter}
                 onChange={(val) => setRoleFilter(val)}
                 placeholder="選擇角色"
@@ -274,9 +335,9 @@ const AdminManagement = () => {
               <div>
                 <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">角色</label>
                 <SearchableSelect
-                  options={['Super Admin','Manager','Staff']}
+                  options={roleOptions.filter(r => r !== '全部')}
                   value={createForm.role}
-                  onChange={(val) => setCreateForm(p => ({...p, role: val, modules: ROLE_PRESETS[val] || []}))}
+                  onChange={(val) => setCreateForm(p => ({...p, role: val, modules: rolePreset(val, moduleOptions.map(m => m.key))}))}
                   placeholder="選擇角色"
                 />
               </div>
@@ -287,12 +348,12 @@ const AdminManagement = () => {
                 <h3 className="text-lg font-bold font-chinese">模組權限</h3>
                 <div className="flex items-center gap-2">
                   <button className={ADMIN_STYLES.btnSecondary} onClick={() => setCreateForm(p => ({...p, modules: []}))}>清除</button>
-                  <button className={ADMIN_STYLES.btnSecondary} onClick={() => setCreateForm(p => ({...p, modules: MODULE_OPTIONS.map(m => m.key)}))}>全選</button>
-                  <button className={ADMIN_STYLES.btnPrimary} onClick={() => setCreateForm(p => ({...p, modules: ROLE_PRESETS[p.role] || []}))}>依角色預設</button>
+                  <button className={ADMIN_STYLES.btnSecondary} onClick={() => setCreateForm(p => ({...p, modules: moduleOptions.map(m => m.key)}))}>全選</button>
+                  <button className={ADMIN_STYLES.btnPrimary} onClick={() => setCreateForm(p => ({...p, modules: rolePreset(p.role, moduleOptions.map(m => m.key))}))}>依角色預設</button>
                 </div>
               </div>
               <div className="grid grid-cols-4 gap-2">
-                {MODULE_OPTIONS.map(m => {
+                {moduleOptions.map(m => {
                   const checked = createForm.modules.includes(m.key);
                   return (
                     <label key={m.key} className="flex items-center gap-2 text-sm">
@@ -336,7 +397,7 @@ const AdminManagement = () => {
               <div>
                 <label className="block text-sm font-bold text-gray-700 font-chinese mb-1">角色</label>
                 <SearchableSelect
-                  options={['Super Admin','Manager','Staff']}
+                  options={roleOptions.filter(r => r !== '全部')}
                   value={editForm.role}
                   onChange={(val) => setEditForm(p => ({...p, role: val}))}
                   placeholder="選擇角色"
@@ -368,12 +429,12 @@ const AdminManagement = () => {
                   <div className="text-sm text-gray-700">為 <span className="font-bold">{current.name}</span> 調整模組權限</div>
                   <div className="flex items-center gap-2">
                     <button className={ADMIN_STYLES.btnSecondary} onClick={() => setPermsDraft([])}>清除</button>
-                    <button className={ADMIN_STYLES.btnSecondary} onClick={() => setPermsDraft(MODULE_OPTIONS.map(m => m.key))}>全選</button>
-                    <button className={ADMIN_STYLES.btnPrimary} onClick={() => setPermsDraft(ROLE_PRESETS[current.role] || [])}>依角色預設</button>
+                    <button className={ADMIN_STYLES.btnSecondary} onClick={() => setPermsDraft(moduleOptions.map(m => m.key))}>全選</button>
+                    <button className={ADMIN_STYLES.btnPrimary} onClick={() => setPermsDraft(rolePreset(current.role, moduleOptions.map(m => m.key)))}>依角色預設</button>
                   </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                  {MODULE_OPTIONS.map(m => {
+                  {moduleOptions.map(m => {
                     const checked = permsDraft.includes(m.key);
                     return (
                       <label key={m.key} className="flex items-center gap-2 text-sm">
@@ -400,3 +461,11 @@ const AdminManagement = () => {
 };
 
 export default AdminManagement;
+
+// 角色預設：Super Admin/含 admin 字樣 → 全選；其它暫無預設（避免引入 mocks）
+function rolePreset(role, allKeys) {
+  if (!role) return []
+  const r = String(role).toLowerCase()
+  if (r.includes('super') || r.includes('admin')) return allKeys
+  return []
+}

@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
 import { Navigate } from 'react-router-dom';
-import { adminDataManager } from '../../../lib/mocks/admin/adminDataManager.js';
-import { hasPermission } from '../../../lib/mocks/admin/adminConfig.js';
-import { authManager } from '../../../lib/mocks/auth/authManager.js';
+import { login as apiLogin, me as apiMe, refreshAccessToken, clearAccessToken, getAdminModules } from '../../../lib/mocks/core/frontendApiMock'
 
 // 創建認證上下文
 const AuthContext = createContext();
@@ -14,15 +12,24 @@ export const AuthProvider = ({ children }) => {
   const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
-    // 檢查現有會話
-    const token = localStorage.getItem('marelle-admin-token');
-    if (token) {
-  const session = authManager.validateSession(token);
-      if (session) {
-        setCurrentUser(session);
-        setupSessionWarning(session);
-      } else {
-        localStorage.removeItem('marelle-admin-token');
+    // 嘗試使用 refresh cookie 自動取得 access token 並獲取使用者資訊
+    (async () => {
+      try {
+        const token = await refreshAccessToken()
+        if (token) {
+          const profile = await apiMe()
+          let modules = []
+          try { modules = await getAdminModules(profile.id) } catch {}
+          setCurrentUser({ id: profile.id, email: profile.email, permissions: modules })
+          setupSessionWarning({ lastActivity: new Date().toISOString() })
+          setupPeriodicRefresh()
+        }
+      } catch {}
+    })()
+    return () => {
+      if (window.__marelle_refresh_interval__) {
+        clearInterval(window.__marelle_refresh_interval__)
+        window.__marelle_refresh_interval__ = null
       }
     }
   }, []);
@@ -58,18 +65,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const handleExtendSession = () => {
-    const token = localStorage.getItem('marelle-admin-token');
-    if (token) {
-  authManager.updateSessionActivity(token);
-      setSessionWarning(false);
-      setCountdown(0);
-      
-      // 重新設定提醒
-  const session = authManager.validateSession(token);
-      if (session) {
-        setupSessionWarning(session);
-      }
-    }
+    // 這裡可以呼叫輕量 API 保持會話活躍，例如 /auth/me
+    setSessionWarning(false);
+    setCountdown(0);
   };
 
   const handleSessionExpired = () => {
@@ -77,30 +75,35 @@ export const AuthProvider = ({ children }) => {
     alert('會話已到期，請重新登入');
   };
 
-  const login = (credentials) => {
-  const result = authManager.authenticate(credentials.email, credentials.password);
-    if (result.success) {
-      localStorage.setItem('marelle-admin-token', result.sessionToken);
-      setCurrentUser(result.user);
-      setupSessionWarning(result.user);
-      return { success: true };
+  const login = async (credentials) => {
+    try {
+      await apiLogin(credentials.email, credentials.password)
+      const profile = await apiMe()
+      let modules = []
+      try { modules = await getAdminModules(profile.id) } catch {}
+      setCurrentUser({ id: profile.id, email: profile.email, permissions: modules })
+      setupSessionWarning({ lastActivity: new Date().toISOString() })
+      setupPeriodicRefresh()
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: e?.message || 'Login failed' }
     }
-    return result;
   };
 
   const logout = () => {
-    const token = localStorage.getItem('marelle-admin-token');
-    if (token) {
-  authManager.invalidateSession(token);
+    clearAccessToken()
+    setCurrentUser(null)
+    setSessionWarning(false)
+    setCountdown(0)
+    if (window.__marelle_refresh_interval__) {
+      clearInterval(window.__marelle_refresh_interval__)
+      window.__marelle_refresh_interval__ = null
     }
-    localStorage.removeItem('marelle-admin-token');
-    setCurrentUser(null);
-    setSessionWarning(false);
-    setCountdown(0);
   };
 
-  const checkPermission = (module, operation) => {
-    return currentUser ? hasPermission(currentUser.permissions, module, operation) : false;
+  const checkPermission = (module, _operation) => {
+    // 簡化為「具某模組即具備操作權」；後續可擴充至 action 細粒度
+    return currentUser ? (currentUser.permissions || []).includes(module) : false
   };
 
   const formatTime = (seconds) => {
@@ -263,56 +266,14 @@ export const PasswordStrengthIndicator = ({ password, showRequirements = true })
 };
 
 // 登入嘗試次數顯示組件
-export const LoginAttemptWarning = ({ email }) => {
-  const [user, setUser] = useState(null);
+export const LoginAttemptWarning = () => null
 
-  useEffect(() => {
-    if (email) {
-      const userData = adminDataManager.getUserByEmail(email);
-      setUser(userData);
-    }
-  }, [email]);
-
-  if (!user || user.failedLoginAttempts === 0) {
-    return null;
+// 內部：每 12 分鐘嘗試刷新一次 access token（後端 TTL 15 分鐘）
+function setupPeriodicRefresh() {
+  // 使用全域變數避免在 SSR 或重覆掛載時出錯
+  if (!window.__marelle_refresh_interval__) {
+    window.__marelle_refresh_interval__ = setInterval(async () => {
+      try { await refreshAccessToken() } catch {}
+    }, 12 * 60 * 1000)
   }
-
-  const remainingAttempts = 5 - user.failedLoginAttempts;
-  const isLocked = user.lockedUntil && new Date(user.lockedUntil) > new Date();
-
-  if (isLocked) {
-    return (
-      <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-        <div className="flex items-center">
-          <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-          </svg>
-          <div>
-            <p className="text-sm font-medium text-red-800 font-chinese">帳號已被鎖定</p>
-            <p className="text-xs text-red-600 font-chinese">
-              請聯繫管理員解鎖或等待24小時後自動解鎖
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-      <div className="flex items-center">
-        <svg className="w-5 h-5 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-        </svg>
-        <div>
-          <p className="text-sm font-medium text-yellow-800 font-chinese">
-            登入失敗 {user.failedLoginAttempts} 次
-          </p>
-          <p className="text-xs text-yellow-600 font-chinese">
-            還有 {remainingAttempts} 次機會，超過將被鎖定24小時
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
+}

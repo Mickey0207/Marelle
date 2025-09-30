@@ -17,7 +17,7 @@ import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import IconActionButton from "../../components/ui/IconActionButton.jsx";
 // 改用擴充後的模擬商品資料（包含新增/編輯頁完整欄位）
 import { mockProducts, formatPrice } from "../../../lib/mocks/products/mockProductData";
-import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../../../adminStyles.js";
+import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../../Style/adminStyles.js";
 // withPageTabs HOC 已移除，子頁籤導航統一在頂部管理
 
 const AdminProducts = () => {

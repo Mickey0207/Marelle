@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ADMIN_STYLES } from '../../../adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 import StandardTable from '../../components/ui/StandardTable';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import GlassModal from '../../components/ui/GlassModal';

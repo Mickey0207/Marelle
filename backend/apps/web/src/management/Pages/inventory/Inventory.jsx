@@ -16,7 +16,7 @@ import { buildInventoryFromProducts, getInventoryFilters } from "../../../lib/mo
 import { PRODUCT_CATEGORIES, getAllChildCategoryIds, getCategoryBreadcrumb } from "../../../lib/mocks/products/categoryDataManager";
 import CategoryCascader from "../../components/ui/CategoryCascader";
 import QRCodeGenerator from "../../components/ui/QRCodeGenerator";
-import { ADMIN_STYLES } from "../../../adminStyles";
+import { ADMIN_STYLES } from "../../Style/adminStyles";
 import IconActionButton from "../../components/ui/IconActionButton";
 
 const Inventory = () => {

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import StandardTable from '../../components/ui/StandardTable';
-import { ADMIN_STYLES } from '../../../adminStyles.js';
+import { ADMIN_STYLES } from '../../Style/adminStyles.js';
 import { FunnelIcon, EyeIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import IconActionButton from '../../components/ui/IconActionButton.jsx';
 

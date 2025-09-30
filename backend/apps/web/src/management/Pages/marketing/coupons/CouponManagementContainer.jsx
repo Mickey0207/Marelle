@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ADMIN_STYLES } from '../../../../adminStyles.js';
+import { ADMIN_STYLES } from '../../../Style/adminStyles.js';
 import StandardTable from '../../../components/ui/StandardTable.jsx';
 import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import IconActionButton from '../../../components/ui/IconActionButton.jsx';

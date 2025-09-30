@@ -33,6 +33,11 @@ const initialState = {
   
   // 錯誤狀態
   errors: {}
+  ,
+  // 登入狀態
+  auth: {
+    currentUser: null,
+  }
 };
 
 // Action 類型
@@ -176,6 +181,15 @@ const appReducer = (state, action) => {
         ...state,
         errors: {}
       };
+    
+    case 'SET_CURRENT_USER':
+      return {
+        ...state,
+        auth: {
+          ...state.auth,
+          currentUser: action.payload || null,
+        }
+      }
       
     default:
       return state;
@@ -311,6 +325,18 @@ export const AppStateProvider = ({ children }) => {
       dispatch({
         type: ACTION_TYPES.CLEAR_ALL_ERRORS
       });
+    },
+    setCurrentUser: (user) => dispatch({ type: 'SET_CURRENT_USER', payload: user }),
+    // 嘗試使用 refresh cookie 自動登入
+    async tryAutoLogin(api) {
+      try {
+        const profile = await api.me()
+        actions.setCurrentUser(profile)
+        return profile
+      } catch (_) {
+        // ignore
+        return null
+      }
     }
   };
 

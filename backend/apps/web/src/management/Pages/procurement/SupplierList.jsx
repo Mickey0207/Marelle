@@ -8,7 +8,7 @@ import {
   TrashIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from '../../../adminStyles.js';
+import { ADMIN_STYLES } from '../../Style/adminStyles.js';
 import StandardTable from '../../components/ui/StandardTable.jsx';
 import GlassModal from '../../components/ui/GlassModal.jsx';
 import SearchableSelect from '../../components/ui/SearchableSelect.jsx';

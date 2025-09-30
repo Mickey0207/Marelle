@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { FunnelIcon, EyeIcon, PencilIcon, TrashIcon, PrinterIcon, ArrowDownTrayIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES } from "../../../adminStyles";
+import { ADMIN_STYLES } from "../../Style/adminStyles";
 import SearchableSelect from "../../components/ui/SearchableSelect";
 import orderDataManager from "../../../lib/mocks/orders/orderDataManager";
 import IconActionButton from "../../components/ui/IconActionButton";

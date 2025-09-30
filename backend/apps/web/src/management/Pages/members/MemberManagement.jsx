@@ -13,7 +13,7 @@ import OrdersList from "../../components/members/OrdersList";
 import RefundsList from "../../components/members/RefundsList";
 import HomeAddressList from "../../components/members/HomeAddressList";
 import CVSAddressList from "../../components/members/CVSAddressList";
-import { ADMIN_STYLES } from "../../../adminStyles";
+import { ADMIN_STYLES } from "../../Style/adminStyles";
 
 const empty = [];
 
