@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '../../apps/web')
-const tailwindConfigPath = path.resolve(__dirname, 'tailwind.config.js')
+const tailwindConfigPath = path.resolve(__dirname, 'tailwind.config.cjs')
 
 export default defineConfig({
   root: rootDir,
@@ -17,6 +17,6 @@ export default defineConfig({
       plugins: [tailwindcss({ config: tailwindConfigPath }), autoprefixer()]
     }
   },
-  server: { host: true, port: 3001, strictPort: true },
-  preview: { port: 3001, strictPort: true }
+  server: { host: true, port: 3001, strictPort: false },
+  preview: { port: 3001, strictPort: false }
 })

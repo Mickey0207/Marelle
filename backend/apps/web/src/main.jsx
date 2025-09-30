@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import './management/Style/index.css'
+import './Style/index.css'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import AppRouter from './management/components/core/AppRouter'
+import AppRouter from './components/core/AppRouter'
 
 // 註冊 GSAP 插件（模組層執行一次）
 gsap.registerPlugin(ScrollTrigger)
@@ -28,7 +28,7 @@ function App() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50 to-apricot-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50 to-cream-100">
       <AppRouter />
     </div>
   )
