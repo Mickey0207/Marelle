@@ -9,8 +9,9 @@ import {
   StarIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import { mockProducts, formatPrice } from "../../CloudflareWorkers/src/utils/data";
-import { useCart } from "../hooks";
+import { mockProducts } from "../../external_mock/data/products.mock";
+import { formatPrice } from "../../external_mock/data/format";
+import { useCart } from "../../external_mock/state/cart";
 
 const ProductDetail = () => {
   const { id } = useParams();

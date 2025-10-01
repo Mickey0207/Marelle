@@ -9,8 +9,8 @@ import {
   GlobeAltIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
-import { useCart } from "../../hooks";
-import { formatNavigationForNavbar, generateRoutePath } from "../../../CloudflareWorkers/src/utils/navigationConfig";
+import { useCart } from "../../../external_mock/state/cart"; // 移至 external_mock 暫存層
+import { formatNavigationForNavbar } from "../../../external_mock/data/navigation";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

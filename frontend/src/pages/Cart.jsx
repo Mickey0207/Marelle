@@ -7,8 +7,8 @@ import {
   PlusIcon,
   ShoppingBagIcon
 } from '@heroicons/react/24/outline';
-import { formatPrice } from "../../CloudflareWorkers/src/utils/data";
-import { useCart } from "../hooks";
+import { formatPrice } from "../../external_mock/data/format";
+import { useCart } from "../../external_mock/state/cart";
 
 const Cart = () => {
   const { 

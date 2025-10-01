@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ChevronRightIcon, SparklesIcon, HeartIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
-import { mockProducts, formatPrice } from "../../CloudflareWorkers/src/utils/data";
+import { mockProducts } from "../../external_mock/data/products.mock";
+import { formatPrice } from "../../external_mock/data/format";
 
 const Home = () => {
   const heroRef = useRef(null);

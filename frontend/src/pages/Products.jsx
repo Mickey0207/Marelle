@@ -3,9 +3,11 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { HeartIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import { mockProducts, categories, formatPrice } from "../../CloudflareWorkers/src/utils/data";
-import { navigationConfig, generateRoutePath } from "../../CloudflareWorkers/src/utils/navigationConfig";
-import { useCart } from "../../CloudflareWorkers/src/hooks";
+import { mockProducts } from "../../external_mock/data/products.mock";
+import { categories } from "../../external_mock/data/categories";
+import { formatPrice } from "../../external_mock/data/format";
+import { navigationConfig, generateRoutePath } from "../../external_mock/data/navigation";
+import { useCart } from "../../external_mock/state/cart";
 import SortDropdown from "../components/ui/SortDropdown";
 
 // 將 navigationConfig 轉換為適合的格式
