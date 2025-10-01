@@ -4,7 +4,7 @@ import StandardTable from '../../components/ui/StandardTable';
 import { getFunnel } from '../../../../external_mock/user-tracking/dataManager';
 
 const FunnelsPage = () => {
-  const [steps, setSteps] = useState(['product_view','add_to_cart','checkout_start','purchase']);
+  const [steps, _setSteps] = useState(['product_view','add_to_cart','checkout_start','purchase']);
   const data = useMemo(() => getFunnel(steps, {}), [steps]);
   const columns = [
     { key: 'step', label: '步驟', sortable: false },

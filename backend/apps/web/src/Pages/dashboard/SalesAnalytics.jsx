@@ -2,7 +2,6 @@
 import { gsap } from 'gsap';
 import {
   ChartBarIcon,
-  CurrencyDollarIcon,
   ArrowTrendingUpIcon,
   CalendarDaysIcon
 } from '@heroicons/react/24/outline';

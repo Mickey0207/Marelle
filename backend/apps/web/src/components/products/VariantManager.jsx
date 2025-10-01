@@ -4,17 +4,11 @@ import {
   XMarkIcon,
   TrashIcon,
   TagIcon,
-  CubeIcon,
-  PhotoIcon
+  CubeIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from '../../../adminStyles';
 
 const VariantManager = ({ hasVariants, variants, onChange }) => {
-  const [variantOptions, setVariantOptions] = useState([
-    { id: 1, name: '顏色', values: ['紅色', '藍色', '綠色'] },
-    { id: 2, name: '尺寸', values: ['S', 'M', 'L', 'XL'] }
-  ]);
-
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [newOptionName, setNewOptionName] = useState('');
   const [newOptionValues, setNewOptionValues] = useState('');
@@ -204,12 +198,7 @@ const VariantManager = ({ hasVariants, variants, onChange }) => {
             </span>
           </div>
 
-          <div className="space-y-4 max-h-96" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+          <div className="space-y-4 max-h-96 hide-scrollbar" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
             {variants.map(variant => (
               <div key={variant.id} className="border border-gray-200 rounded-lg p-4">
                 <div className="grid grid-cols-4 gap-4">

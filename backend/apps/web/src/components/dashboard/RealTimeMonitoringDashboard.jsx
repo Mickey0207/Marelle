@@ -10,7 +10,6 @@ import {
   CurrencyDollarIcon,
   ShoppingCartIcon,
   UserGroupIcon,
-  TruckIcon,
   BellIcon,
   ClockIcon,
   ArrowTrendingUpIcon,
@@ -20,8 +19,7 @@ import {
   SignalIcon,
   EyeIcon,
   Cog6ToothIcon,
-  LightBulbIcon,
-  InformationCircleIcon
+  LightBulbIcon
 } from '@heroicons/react/24/outline';
 import dashboardDataManager from '../../../../external_mock/core/dashboardDataManager';
 
@@ -31,7 +29,7 @@ const RealTimeMonitoringDashboard = () => {
   const [anomalies, setAnomalies] = useState([]);
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30); // 30秒
+  const [refreshInterval, _setRefreshInterval] = useState(30); // 30秒
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
   useEffect(() => {
@@ -176,7 +174,7 @@ const RealTimeMonitoringDashboard = () => {
 // 系統健康狀態概覽
 const SystemHealthOverview = ({ systemHealth }) => {
   const getHealthStatus = () => {
-    const { database_response_time, api_response_time, error_rate_percentage, queue_processing_status } = systemHealth;
+    const { database_response_time, api_response_time, error_rate_percentage, queue_processing_status: _queue_processing_status } = systemHealth;
     
     if (database_response_time > 200 || api_response_time > 500 || parseFloat(error_rate_percentage) > 2) {
       return { status: 'critical', color: 'red', text: '嚴重' };
@@ -324,12 +322,12 @@ const RealTimeMetricsGrid = ({ metrics }) => {
       </div>
 
   <div className="grid grid-cols-3 gap-4">
-        {metricCards.map((card, index) => (
+        {metricCards.map((card, _index) => (
           <motion.div
             key={card.title}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: _index * 0.1 }}
             className="bg-white/50 rounded-lg p-4 border border-gray-200"
           >
             <div className="flex items-center justify-between mb-2">
@@ -570,7 +568,7 @@ const OperationalEfficiencyPanel = ({ efficiency }) => {
       </div>
 
       <div className="space-y-6">
-        {efficiencyMetrics.map((category, index) => (
+        {efficiencyMetrics.map((category) => (
           <div key={category.category}>
             <h4 className="text-sm font-medium text-gray-700 mb-3">{category.category}</h4>
             <div className="grid grid-cols-1 gap-3">
@@ -605,12 +603,12 @@ const TrendingIssuesPanel = ({ issues }) => {
       </div>
 
       <div className="space-y-4">
-        {issues.map((issue, index) => (
+        {issues.map((issue, _index) => (
           <motion.div
-            key={index}
+            key={_index}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={{ delay: _index * 0.1 }}
             className="p-4 bg-blue-50 rounded-lg border border-blue-200"
           >
             <div className="flex items-start justify-between mb-2">

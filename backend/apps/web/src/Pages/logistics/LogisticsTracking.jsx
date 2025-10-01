@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState, useMemo } from 'react';
+﻿import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import logisticsDataManager from '../../../../external_mock/logistics/logisticsDataManager';
 import { mapLogisticsStatusToText as mapStatusToText, getDetailedStatusMap, getFlatStatusMap } from '../../../../external_mock/logistics/statusMapper';
 import StandardTable from '../../components/ui/StandardTable';
@@ -6,7 +6,7 @@ import TabNavigation from '../../components/ui/TabNavigation';
 import GlassModal from '../../components/ui/GlassModal';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import { TruckIcon, EyeIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-import { ADMIN_STYLES, COMPONENT_DEFAULTS } from '../../Style/adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 
 // 將物流方式轉為中文（放在元件外避免初始化順序問題）
 function mapTypeToChinese(type, subType) {
@@ -118,7 +118,7 @@ export default function LogisticsTracking() {
 
   // mapTypeToChinese 已移至元件外
 
-  const getStatusBadgeClass = (text) => {
+  const getStatusBadgeClass = useCallback((text) => {
     if (!text) return ADMIN_STYLES.statusInfo;
     const s = String(text);
     const success = ['成功', '完成', '已配達', '已取件', '領取', '撥款'];
@@ -128,13 +128,13 @@ export default function LogisticsTracking() {
     if (success.some(k => s.includes(k))) return ADMIN_STYLES.statusSuccess;
     if (warning.some(k => s.includes(k))) return ADMIN_STYLES.statusWarning;
     return ADMIN_STYLES.statusInfo;
-  };
+  }, []);
 
-  const getStatusBadge = (text) => (
+  const getStatusBadge = useCallback((text) => (
     <span className={getStatusBadgeClass(text)}>{text || '未知狀態'}</span>
-  );
+  ), [getStatusBadgeClass]);
 
-  const getTypeBadgeClass = (type, subType) => {
+  const getTypeBadgeClass = useCallback((type, subType) => {
     if (type === 'Home') return ADMIN_STYLES.statusInfo; // 宅配：藍色
     if (type === 'CVS') {
       const m = {
@@ -150,7 +150,7 @@ export default function LogisticsTracking() {
       return m[subType] || ADMIN_STYLES.statusInfo;
     }
     return ADMIN_STYLES.statusInfo;
-  };
+  }, []);
 
   const columns = useMemo(() => [
     // 訂單成立時間
@@ -202,7 +202,7 @@ export default function LogisticsTracking() {
         </button>
       </div>
     )},
-  ], []);
+  ], [getTypeBadgeClass, getStatusBadge]);
 
   return (
     <div className="bg-[#fdf8f2] min-h-screen">

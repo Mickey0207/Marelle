@@ -1,6 +1,6 @@
 ﻿import React, { useMemo, useState } from 'react';
 import { 
-  UsersIcon, PlusIcon, PencilIcon, KeyIcon, TrashIcon, CheckCircleIcon, XCircleIcon, AdjustmentsHorizontalIcon
+  UsersIcon, PlusIcon, PencilIcon, KeyIcon, CheckCircleIcon, XCircleIcon, AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from '../../Style/adminStyles.js';
 import StandardTable from '../../components/ui/StandardTable';
@@ -17,8 +17,8 @@ const badge = (text, cls) => (
 
 const AdminManagement = () => {
   const [admins, setAdmins] = useState([]);
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [_loading, setLoading] = useState(false)
+  const [_error, setError] = useState(null)
   const [moduleOptions, setModuleOptions] = useState([]) // [{ key, label }]
 
   React.useEffect(() => {
@@ -118,7 +118,7 @@ const AdminManagement = () => {
     },
     {
       key: 'modules', label: '模組', sortable: false,
-      render: (value = [], row) => {
+      render: (value = []) => {
         const shown = value.slice(0, 3);
         const extra = value.length - shown.length;
         return (
@@ -137,8 +137,8 @@ const AdminManagement = () => {
       key: 'actions', label: '操作', sortable: false,
       render: (_, row) => (
         <div className="flex items-center gap-2">
-          <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" onClick={() => { setCurrent(row); setShowEdit(true); }} />
-          <IconActionButton Icon={AdjustmentsHorizontalIcon} label="權限設定" variant="blue" onClick={() => { setCurrent(row); setShowPerms(true); }} />
+          <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" onClick={() => openEdit(row)} />
+          <IconActionButton Icon={AdjustmentsHorizontalIcon} label="權限設定" variant="blue" onClick={() => openPerms(row)} />
           <IconActionButton Icon={KeyIcon} label="重設密碼" variant="gray" />
         </div>
       )
@@ -191,7 +191,9 @@ const AdminManagement = () => {
       const id = created?.id || `u${Date.now()}`
       // 建立後同步套用勾選的模組
       if (createForm.modules && createForm.modules.length > 0) {
-        try { await apiSetAdminModules(id, [...new Set(createForm.modules)]) } catch {}
+        try { await apiSetAdminModules(id, [...new Set(createForm.modules)]) } catch (e) {
+          console.warn('apiSetAdminModules failed', e)
+        }
       }
       setAdmins(prev => [{
         id,

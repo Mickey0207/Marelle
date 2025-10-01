@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockProducts } from "../../../../external_mock/products/mockProductData";
 import { ADMIN_STYLES } from '../../Style/adminStyles';
@@ -21,13 +21,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 
-const EditProduct = () => {
-  const { sku } = useParams();
-  const navigate = useNavigate();
-
-  const original = useMemo(() => mockProducts.find(p => p.baseSKU === sku), [sku]);
-
-  const defaultState = {
+const defaultState = {
     // 基本資訊
     name: '',
     slug: '',
@@ -71,7 +65,13 @@ const EditProduct = () => {
     useOpenGraphImageForSearch: true
   };
 
-  const mapProductToForm = (p) => {
+const EditProduct = () => {
+  const { sku } = useParams();
+  const navigate = useNavigate();
+
+  const original = useMemo(() => mockProducts.find(p => p.baseSKU === sku), [sku]);
+
+  const mapProductToForm = useCallback((p) => {
     if (!p) return { ...defaultState };
     return {
       name: p.name || '',
@@ -109,7 +109,7 @@ const EditProduct = () => {
       useMetaDescriptionForSearch: p.useMetaDescriptionForSearch !== false,
       useOpenGraphImageForSearch: p.useOpenGraphImageForSearch !== false
     };
-  };
+  }, []);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [productData, setProductData] = useState(mapProductToForm(original));
@@ -120,7 +120,7 @@ const EditProduct = () => {
 
   useEffect(() => {
     setProductData(mapProductToForm(original));
-  }, [original]);
+  }, [original, mapProductToForm]);
 
   const steps = [
     { id: 'basic', title: '基本資訊', description: '設定產品名稱、描述和基礎 SKU', icon: InformationCircleIcon, isCompleted: false },
@@ -150,7 +150,7 @@ const EditProduct = () => {
 
   const handleStepClick = (i) => { setCurrentStep(i); setErrors({}); };
 
-  const scrollToFirstError = (errorFieldName) => {
+  const _scrollToFirstError = (errorFieldName) => {
     setTimeout(() => {
       const el = document.querySelector(`[name="${errorFieldName}"] , #${errorFieldName}`);
       if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }

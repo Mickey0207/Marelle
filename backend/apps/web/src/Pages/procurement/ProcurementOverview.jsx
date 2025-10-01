@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import SearchableSelect from '../../components/ui/SearchableSelect';
 import StandardTable from '../../components/ui/StandardTable';
 import { ADMIN_STYLES } from '../../Style/adminStyles.js';
@@ -25,9 +25,27 @@ const ProcurementOverview = () => {
   const [supplierOptions, setSupplierOptions] = useState([]);
   const [saving, setSaving] = useState(false);
 
+  const loadProcurementData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (filters.status !== 'all') params.status = filters.status;
+      if (filters.searchQuery) params.search = filters.searchQuery;
+      const orders = procurementDataManager.getPurchaseOrders(params) || [];
+      const filtered = filters.priority === 'all'
+        ? orders
+        : orders.filter(o => o.priority === filters.priority);
+      setProcurementOrders(filtered);
+    } catch (error) {
+      console.error('Error loading procurement data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
   useEffect(() => {
     loadProcurementData();
-  }, [filters]);
+  }, [filters, loadProcurementData]);
 
   useEffect(() => {
     // 載入供應商選項
@@ -41,24 +59,7 @@ const ProcurementOverview = () => {
     }
   }, []);
 
-  const loadProcurementData = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (filters.status !== 'all') params.status = filters.status;
-      if (filters.searchQuery) params.search = filters.searchQuery;
-      const orders = procurementDataManager.getPurchaseOrders(params) || [];
-
-      const filtered = filters.priority === 'all'
-        ? orders
-        : orders.filter(o => o.priority === filters.priority);
-      setProcurementOrders(filtered);
-    } catch (error) {
-      console.error('Error loading procurement data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // loadProcurementData 已上移且用 useCallback 包裝
 
   const statusBadge = (status) => {
     const map = {

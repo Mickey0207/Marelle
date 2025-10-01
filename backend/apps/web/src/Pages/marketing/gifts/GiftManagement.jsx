@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { gsap } from 'gsap';
 import {
   GiftIcon,
@@ -28,7 +28,7 @@ const GiftManagement = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedGift, setSelectedGift] = useState(null);
-  const [statistics, setStatistics] = useState({
+  const [_statistics, setStatistics] = useState({
     totalGifts: 0,
     activeGifts: 0,
     outOfStock: 0,
@@ -67,13 +67,13 @@ const GiftManagement = () => {
     }
   };
 
-  const handleDeleteGift = async (id) => {
+  const handleDeleteGift = useCallback(async (id) => {
     if (window.confirm('確定要刪除這個禮品嗎？此操作無法復原。')) {
       const result = await giftDataManager.deleteGift(id);
       if (result?.success) { await loadGifts(); await loadStatistics(); }
       else alert('刪除失敗：' + (result?.error || '未知錯誤'));
     }
-  };
+  }, []);
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -119,7 +119,12 @@ const GiftManagement = () => {
         <div className="text-xs text-gray-500 line-clamp-1">{row.description}</div>
       </div>
     ) },
-    { key: 'status', label: '狀態', render: (v) => getStatusBadge(v) },
+    { key: 'status', label: '狀態', render: (v) => (
+      <div className="flex items-center gap-1">
+        {getStatusIcon(v)}
+        {getStatusBadge(v)}
+      </div>
+    ) },
     { key: 'pointsRequired', label: '所需積分' },
     { key: 'stock', label: '庫存數量' },
     { key: 'redeemedCount', label: '已兌換' },
@@ -130,7 +135,7 @@ const GiftManagement = () => {
         <IconActionButton Icon={TrashIcon} label="刪除" variant="red" onClick={() => handleDeleteGift(row.id)} />
       </div>
     ) },
-  ]), [setSelectedGift]);
+  ]), [setSelectedGift, handleDeleteGift]);
 
   if (loading) {
     return (

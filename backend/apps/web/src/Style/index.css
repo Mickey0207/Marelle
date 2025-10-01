@@ -657,6 +657,16 @@
   }
 }
 
+/* AlertBox 進度條動畫 */
+@keyframes shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* 通用：隱藏子元素的 WebKit 滾動條（避免在元件內使用 <style jsx>） */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
 /* 隱藏所有滾動條 */
 ::-webkit-scrollbar {
   display: none;

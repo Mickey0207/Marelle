@@ -1,37 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  CogIcon,
   TruckIcon,
   CubeIcon,
-  ClockIcon,
   CurrencyDollarIcon,
   ChartBarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
-  InformationCircleIcon,
-  BuildingOffice2Icon,
   MapPinIcon,
-  ScaleIcon,
-  CalendarDaysIcon,
-  UserGroupIcon,
-  ShoppingCartIcon,
-  DocumentTextIcon,
   ArrowPathIcon,
-  EyeIcon,
-  AdjustmentsHorizontalIcon,
   ChartPieIcon,
   BoltIcon
 } from '@heroicons/react/24/outline';
 import analyticsDataManager from '../../../../external_mock/analytics/analyticsDataManager';
 
 const OperationalAnalytics = () => {
-  const [operationalData, setOperationalData] = useState({});
+  // 此頁使用 mock 資料展示
   const [selectedPeriod, setSelectedPeriod] = useState('30days');
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedMetric, setSelectedMetric] = useState('efficiency');
-  const [loading, setLoading] = useState(true);
 
   const tabOptions = [
     { value: 'overview', label: '營運總覽', icon: ChartBarIcon },
@@ -49,21 +35,18 @@ const OperationalAnalytics = () => {
     { value: '1year', label: '最近1年' }
   ];
 
-  useEffect(() => {
-    loadOperationalData();
-  }, [selectedPeriod, activeTab, selectedMetric]);
-
-  const loadOperationalData = async () => {
-    setLoading(true);
+  const loadOperationalData = useCallback(async () => {
     try {
-      const data = analyticsDataManager.getOperationalAnalytics(selectedPeriod, activeTab);
-      setOperationalData(data);
+      // 若未來接 API，可於此更新狀態
+      void analyticsDataManager.getOperationalAnalytics(selectedPeriod, activeTab);
     } catch (error) {
       console.error('載入營運數據失敗:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [selectedPeriod, activeTab]);
+
+  useEffect(() => {
+    loadOperationalData();
+  }, [loadOperationalData]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('zh-TW', {

@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import GlassModal from '../../components/ui/GlassModal';
 import TabNavigation from '../../components/ui/TabNavigation';
-import { ADMIN_STYLES } from '../../Style/adminStyles';
 import { QRCodePreviewModal } from '../../components/ui/QRCodeGenerator';
 
 // 輕量的欄位顯示工具

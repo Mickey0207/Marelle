@@ -1,8 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   BuildingOfficeIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
   EyeIcon,
   PencilIcon,
   TrashIcon,
@@ -28,11 +27,7 @@ const SupplierList = () => {
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    loadSuppliers();
-  }, [filters]);
-
-  const loadSuppliers = () => {
+  const loadSuppliers = useCallback(() => {
     setLoading(true);
     try {
       const list = supplierDataManager.getAllSuppliers() || [];
@@ -56,7 +51,13 @@ const SupplierList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    loadSuppliers();
+  }, [filters, loadSuppliers]);
+
+  // loadSuppliers 已用 useCallback 包裝
 
   const statusBadge = (status) => {
     const map = {

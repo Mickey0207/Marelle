@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -9,14 +9,9 @@ import {
   UserIcon,
   CalendarIcon,
   FunnelIcon,
-  MagnifyingGlassIcon,
   ChevronDownIcon,
   EllipsisHorizontalIcon,
-  PlusIcon,
-  ArrowPathIcon,
-  DocumentTextIcon,
-  TagIcon,
-  ArrowRightIcon
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import dashboardDataManager, { TaskStatus, TaskPriority, TaskType, BusinessImpact } from '../../../../external_mock/core/dashboardDataManager';
 
@@ -46,15 +41,7 @@ const TaskManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  useEffect(() => {
-    applyFiltersAndSort();
-  }, [tasks, filters, sortBy, sortOrder]);
-
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     setLoading(true);
     try {
       const response = dashboardDataManager.getTasks();
@@ -64,57 +51,51 @@ const TaskManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const applyFiltersAndSort = () => {
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
+
+  const applyFiltersAndSort = useCallback(() => {
     let filtered = [...tasks];
-
-    // 搜尋篩選
     if (filters.search) {
       filtered = filtered.filter(task => 
         task.title.toLowerCase().includes(filters.search.toLowerCase()) ||
         task.description.toLowerCase().includes(filters.search.toLowerCase())
       );
     }
-
-    // 狀態篩選
     if (filters.status.length > 0) {
       filtered = filtered.filter(task => filters.status.includes(task.status));
     }
-
-    // 優先級篩選
     if (filters.priority.length > 0) {
       filtered = filtered.filter(task => filters.priority.includes(task.priority));
     }
-
-    // 任務類型篩選
     if (filters.task_type.length > 0) {
       filtered = filtered.filter(task => filters.task_type.includes(task.task_type));
     }
-
-    // 指派者篩選
     if (filters.assigned_to) {
       filtered = filtered.filter(task => task.assigned_to === filters.assigned_to);
     }
-
-    // 排序
     filtered.sort((a, b) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
-
       if (sortBy === 'due_date' || sortBy === 'created_at') {
         aValue = aValue ? new Date(aValue) : new Date(0);
         bValue = bValue ? new Date(bValue) : new Date(0);
       }
-
       if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-
     setFilteredTasks(filtered);
     setCurrentPage(1);
-  };
+  }, [tasks, filters, sortBy, sortOrder]);
+
+  useEffect(() => {
+    applyFiltersAndSort();
+  }, [applyFiltersAndSort]);
+
 
   const updateTaskStatus = async (taskId, newStatus, notes = null) => {
     try {
@@ -175,49 +156,7 @@ const TaskManagement = () => {
     setSelectedTasks(newSelected);
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case TaskStatus.COMPLETED:
-        return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
-      case TaskStatus.IN_PROGRESS:
-        return <ArrowPathIcon className="h-5 w-5 text-blue-500" />;
-      case TaskStatus.OVERDUE:
-        return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
-      case TaskStatus.CANCELLED:
-        return <XCircleIcon className="h-5 w-5 text-gray-500" />;
-      default:
-        return <ClockIcon className="h-5 w-5 text-amber-500" />;
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case TaskPriority.CRITICAL:
-        return 'bg-red-100 text-red-800 border-red-200';
-      case TaskPriority.URGENT:
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      case TaskPriority.HIGH:
-        return 'bg-amber-100 text-amber-800 border-amber-200';
-      case TaskPriority.MEDIUM:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const formatDate = (date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('zh-TW', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const isOverdue = (task) => {
-    if (!task.due_date || task.status === TaskStatus.COMPLETED) return false;
-    return new Date(task.due_date) < new Date();
-  };
+  // 移除未使用的輔助函式以符合 no-unused-vars 規則
 
   // 分頁計算
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
@@ -357,12 +296,7 @@ const TaskManagement = () => {
           </div>
 
           {/* 表格內容 */}
-          <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+          <div className="hide-scrollbar" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50/50">
                 <tr>
@@ -711,12 +645,7 @@ const FilterDropdown = ({ label, options, selected, onChange, getLabel }) => {
             zIndex: 99999
           }}
         >
-          <div className="max-h-60" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+          <div className="max-h-60 hide-scrollbar" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
             {options.map((option) => (
               <label key={option} className="glass-dropdown-option cursor-pointer">
                 <div className="flex items-center w-full">

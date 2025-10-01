@@ -1,12 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { gsap } from 'gsap';
 import {
   CurrencyDollarIcon,
   ShoppingBagIcon,
-  UserGroupIcon,
   ClockIcon,
   ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from "../../Style/adminStyles";
@@ -27,9 +25,9 @@ const AdminOverview = () => {
     );
     
     loadDashboardData();
-  }, []);
+  }, [loadDashboardData]);
 
-  const loadDashboardData = () => {
+  const loadDashboardData = useCallback(() => {
     // 模擬載入數據
     setDashboardData({
       recentOrders: generateMockOrders(),
@@ -40,7 +38,7 @@ const AdminOverview = () => {
         { id: 3, type: 'success', message: '銷售目標達成：本月已達成 105% 銷售目標' }
       ]
     });
-  };
+  }, []);
 
   const generateMockOrders = () => 
     Array.from({ length: 5 }, (_, i) => ({

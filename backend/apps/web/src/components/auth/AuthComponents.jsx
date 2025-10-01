@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, createContext } from 'react';
+import React, { useState, useEffect, useContext, createContext, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
 import { login as apiLogin, me as apiMe, refreshAccessToken, clearAccessToken, getAdminModules } from '../../../../external_mock/core/frontendApiMock'
 
@@ -11,44 +11,23 @@ export const AuthProvider = ({ children }) => {
   const [sessionWarning, setSessionWarning] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
-  useEffect(() => {
-    // 嘗試使用 refresh cookie 自動取得 access token 並獲取使用者資訊
-    (async () => {
-      try {
-        const token = await refreshAccessToken()
-        if (token) {
-          const profile = await apiMe()
-          let modules = []
-          try { modules = await getAdminModules(profile.id) } catch {}
-          setCurrentUser({ id: profile.id, email: profile.email, permissions: modules })
-          setupSessionWarning({ lastActivity: new Date().toISOString() })
-          setupPeriodicRefresh()
-        }
-      } catch {}
-    })()
-    return () => {
-      if (window.__marelle_refresh_interval__) {
-        clearInterval(window.__marelle_refresh_interval__)
-        window.__marelle_refresh_interval__ = null
-      }
+  const logout = useCallback(() => {
+    clearAccessToken()
+    setCurrentUser(null)
+    setSessionWarning(false)
+    setCountdown(0)
+    if (window.__marelle_refresh_interval__) {
+      clearInterval(window.__marelle_refresh_interval__)
+      window.__marelle_refresh_interval__ = null
     }
   }, []);
 
-  const setupSessionWarning = (session) => {
-    // 計算會話到期時間
-    const expirationTime = new Date(session.lastActivity).getTime() + (24 * 60 * 60 * 1000); // 24小時
-    const warningTime = expirationTime - (10 * 60 * 1000); // 到期前10分鐘
-    const now = Date.now();
+  const handleSessionExpired = useCallback(() => {
+    logout();
+    alert('會話已到期，請重新登入');
+  }, [logout]);
 
-    if (warningTime > now) {
-      // 設定到期提醒
-      setTimeout(() => {
-        showSessionWarning();
-      }, warningTime - now);
-    }
-  };
-
-  const showSessionWarning = () => {
+  const showSessionWarning = useCallback(() => {
     setSessionWarning(true);
     setCountdown(10 * 60); // 10分鐘倒數
 
@@ -62,7 +41,51 @@ export const AuthProvider = ({ children }) => {
         return prev - 1;
       });
     }, 1000);
-  };
+  }, [handleSessionExpired]);
+
+  const setupSessionWarning = useCallback((session) => {
+    // 計算會話到期時間
+    const expirationTime = new Date(session.lastActivity).getTime() + (24 * 60 * 60 * 1000); // 24小時
+    const warningTime = expirationTime - (10 * 60 * 1000); // 到期前10分鐘
+    const now = Date.now();
+
+    if (warningTime > now) {
+      // 設定到期提醒
+      setTimeout(() => {
+        showSessionWarning();
+      }, warningTime - now);
+    }
+  }, [showSessionWarning]);
+
+  useEffect(() => {
+    // 嘗試使用 refresh cookie 自動取得 access token 並獲取使用者資訊
+    (async () => {
+      try {
+        const token = await refreshAccessToken()
+        if (token) {
+          const profile = await apiMe()
+          let modules = []
+          try { modules = await getAdminModules(profile.id) } catch (e) {
+            console.debug('getAdminModules failed', e)
+          }
+          setCurrentUser({ id: profile.id, email: profile.email, permissions: modules })
+          setupSessionWarning({ lastActivity: new Date().toISOString() })
+          setupPeriodicRefresh()
+        }
+      } catch (e) {
+        // ignore refresh failure at startup; user will see login screen
+        console.debug('refreshAccessToken at mount failed', e)
+      }
+    })()
+    return () => {
+      if (window.__marelle_refresh_interval__) {
+        clearInterval(window.__marelle_refresh_interval__)
+        window.__marelle_refresh_interval__ = null
+      }
+    }
+  }, [setupSessionWarning]);
+
+  // setupSessionWarning 已提升為 useCallback 版本
 
   const handleExtendSession = () => {
     // 這裡可以呼叫輕量 API 保持會話活躍，例如 /auth/me
@@ -70,17 +93,16 @@ export const AuthProvider = ({ children }) => {
     setCountdown(0);
   };
 
-  const handleSessionExpired = () => {
-    logout();
-    alert('會話已到期，請重新登入');
-  };
+  // handleSessionExpired 已提升為 useCallback 版本
 
   const login = async (credentials) => {
     try {
       await apiLogin(credentials.email, credentials.password)
       const profile = await apiMe()
       let modules = []
-      try { modules = await getAdminModules(profile.id) } catch {}
+      try { modules = await getAdminModules(profile.id) } catch (e) {
+        console.debug('getAdminModules failed', e)
+      }
       setCurrentUser({ id: profile.id, email: profile.email, permissions: modules })
       setupSessionWarning({ lastActivity: new Date().toISOString() })
       setupPeriodicRefresh()
@@ -90,16 +112,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    clearAccessToken()
-    setCurrentUser(null)
-    setSessionWarning(false)
-    setCountdown(0)
-    if (window.__marelle_refresh_interval__) {
-      clearInterval(window.__marelle_refresh_interval__)
-      window.__marelle_refresh_interval__ = null
-    }
-  };
+  // logout 已提升為 useCallback 版本
 
   const checkPermission = (module, _operation) => {
     // 簡化為「具某模組即具備操作權」；後續可擴充至 action 細粒度
@@ -273,7 +286,9 @@ function setupPeriodicRefresh() {
   // 使用全域變數避免在 SSR 或重覆掛載時出錯
   if (!window.__marelle_refresh_interval__) {
     window.__marelle_refresh_interval__ = setInterval(async () => {
-      try { await refreshAccessToken() } catch {}
+      try { await refreshAccessToken() } catch (e) {
+        console.debug('periodic refreshAccessToken failed', e)
+      }
     }, 12 * 60 * 1000)
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { gsap } from 'gsap';
 import { ChevronDown, Search, Check, X } from 'lucide-react';
@@ -36,7 +36,7 @@ const SearchableSelect = ({
     });
   };
 
-  const formattedOptions = formatOptions(options);
+  const formattedOptions = useMemo(() => formatOptions(options), [options]);
 
   useEffect(() => {
     const filtered = formattedOptions.filter(option =>
@@ -44,7 +44,7 @@ const SearchableSelect = ({
       option.value.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredOptions(filtered);
-  }, [searchTerm, options]);
+  }, [searchTerm, formattedOptions]);
 
   useEffect(() => {
     if (multiple) {
@@ -351,7 +351,7 @@ const SearchableSelect = ({
                     style={{ backgroundColor: '#CC824D' }}
                   ></div>
                 </div>
-                <span className="group-hover:text-orange-800">創建 "{searchTerm}"</span>
+                <span className="group-hover:text-orange-800">創建 &quot;{searchTerm}&quot;</span>
               </button>
             )}
 

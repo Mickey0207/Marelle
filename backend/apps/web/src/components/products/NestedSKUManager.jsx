@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   PlusIcon,
   XMarkIcon,
   TrashIcon,
-  TagIcon,
   CubeIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -17,6 +16,27 @@ import {
 import { ADMIN_STYLES } from '../../Style/adminStyles';
 import { QRCodePreviewModal } from '../../components/ui/QRCodeGenerator';
 import ImageUpload from './ImageUpload';
+
+// 模組層級純函式：避免在 hooks 依賴中產生不必要的重新建立
+const generateId = () => Date.now() + Math.random();
+
+const createDefaultConfig = () => ({
+  price: '',
+  comparePrice: '',
+  costPrice: '',
+  quantity: '',
+  lowStockThreshold: 5,
+  allowBackorder: false,
+  trackQuantity: true,
+  weight: '',
+  dimensions: { length: '', width: '', height: '' },
+  isActive: true,
+  barcode: '',
+  hsCode: '',
+  origin: '',
+  note: '',
+  variantImages: []
+});
 
 const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [], singleVariant = false, variantSelected = null }) => {
   const [skuTree, setSKUTree] = useState([]);
@@ -37,10 +57,10 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     else if (!isInitialized && (!skuVariants || skuVariants.length === 0)) {
       setIsInitialized(true);
     }
-  }, [skuVariants, baseSKU]);
+  }, [skuVariants, baseSKU, skuTree.length, isInitialized, rebuildTreeFromVariants]);
 
   // 從變體重建樹狀結構
-  const rebuildTreeFromVariants = (variants) => {
+  const rebuildTreeFromVariants = useCallback((variants) => {
     if (!variants || variants.length === 0) return;
     
     const tree = [];
@@ -93,7 +113,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     
     setSKUTree(tree);
     setLevelTitles(levelTitlesMap);
-  };
+  }, [baseSKU]);
 
   // 單一變體模式：初始化右側詳情
   useEffect(() => {
@@ -112,24 +132,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     setShowDetailPanel(true);
   }, [singleVariant, variantSelected, baseSKU]);
 
-  // 創建默認配置
-  const createDefaultConfig = () => ({
-    price: '',
-    comparePrice: '',
-    costPrice: '',
-    quantity: '',
-    lowStockThreshold: 5,
-    allowBackorder: false,
-    trackQuantity: true,
-    weight: '',
-    dimensions: { length: '', width: '', height: '' },
-    isActive: true,
-    barcode: '',
-    hsCode: '',
-    origin: '',
-    note: '',
-    variantImages: []
-  });
+  // createDefaultConfig 已移至模組層級
 
   // 更新層級標題
   const updateLevelTitle = (level, title) => {
@@ -144,8 +147,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     return levelTitles[level] || `第 ${level} 層`;
   };
 
-  // 生成新的節點 ID
-  const generateId = () => Date.now() + Math.random();
+  // generateId 已移至模組層級
 
   // 創建新節點
   const createNewNode = (level, parentSKU = '') => ({
@@ -323,18 +325,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     });
   };
 
-  // 遞歸查找節點
-  const findNodeById = (nodeId) => {
-    const findInNodes = (nodes) => {
-      for (const node of nodes) {
-        if (node.id === nodeId) return node;
-        const found = findInNodes(node.children);
-        if (found) return found;
-      }
-      return null;
-    };
-    return findInNodes(skuTree);
-  };
+  // 注意：原本 findNodeById 未被使用，已移除以減少 lint 警告
 
   // 添加子節點
   const addChildNode = (parentId) => {
@@ -506,7 +497,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
   };
 
   // 自動生成變體
-  const autoGenerateVariants = (currentTree = null) => {
+  const autoGenerateVariants = useCallback((currentTree = null) => {
     const treeToUse = currentTree || skuTree;
     const variants = [];
     const toNum = (v) => {
@@ -563,7 +554,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
 
     collectLeafNodes(treeToUse);
     return variants;
-  };
+  }, [skuTree, baseSKU, levelTitles, basePrice, baseComparePrice, baseCostPrice]);
 
   // 當樹狀結構變化時自動更新變體
   useEffect(() => {
@@ -573,7 +564,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
         onChange(currentVariants);
       }
     }
-  }, [skuTree, baseSKU, isInitialized, basePrice, baseComparePrice, baseCostPrice]);
+  }, [skuTree, baseSKU, isInitialized, basePrice, baseComparePrice, baseCostPrice, autoGenerateVariants, onChange]);
 
   return (
     <div className="space-y-6">
@@ -956,7 +947,7 @@ const SKUTreeNode = ({
 };
 
 // SKU 詳細設定面板組件
-const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [] }) => {
+const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle: _getLevelTitle, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [] }) => {
   const stockStatus = sku.config.trackQuantity 
     ? (parseInt(sku.config.quantity) || 0) <= (parseInt(sku.config.lowStockThreshold) || 0)
       ? 'low'
@@ -1059,7 +1050,7 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle, basePrice = 0, 
       {/* 價格設定 */}
       <div>
         <h6 className="text-sm font-medium text-gray-900 mb-3">價格設定</h6>
-        <p className="text-xs text-gray-500 mb-2">提示：此處輸入的是"差額"，會與定價設定中的基礎價格相加（可為負數）。</p>
+  <p className="text-xs text-gray-500 mb-2">提示：此處輸入的是&quot;差額&quot;，會與定價設定中的基礎價格相加（可為負數）。</p>
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">售價 *</label>

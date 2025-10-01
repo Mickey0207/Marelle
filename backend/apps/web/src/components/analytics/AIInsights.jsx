@@ -1,36 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   SparklesIcon,
   ExclamationTriangleIcon,
   LightBulbIcon,
   ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  EyeIcon,
   ShieldCheckIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  ChartBarIcon,
-  UserGroupIcon,
-  ShoppingBagIcon,
-  CubeIcon,
-  BoltIcon,
   InformationCircleIcon,
-  CheckCircleIcon,
   ArrowPathIcon,
-  AdjustmentsHorizontalIcon,
   BeakerIcon,
-  RocketLaunchIcon,
-  MagnifyingGlassIcon,
-  ExclamationCircleIcon
+  RocketLaunchIcon
 } from '@heroicons/react/24/outline';
-import analyticsDataManager from '../../../../external_mock/analytics/analyticsDataManager';
+// 移除未使用的資料載入依賴，改以靜態 mock 展示
 
 const AIInsights = () => {
-  const [insightsData, setInsightsData] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [activeTab, setActiveTab] = useState('insights');
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const categoryOptions = [
@@ -58,26 +43,11 @@ const AIInsights = () => {
     { value: 'risks', label: '風險評估', icon: ShieldCheckIcon }
   ];
 
-  useEffect(() => {
-    loadInsightsData();
-  }, [selectedCategory, selectedPriority, activeTab]);
-
-  const loadInsightsData = async () => {
-    setLoading(true);
-    try {
-      const data = analyticsDataManager.getAIInsights(selectedCategory, selectedPriority, activeTab);
-      setInsightsData(data);
-    } catch (error) {
-      console.error('載入AI洞察失敗:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 提示：此頁以 mock 資料展示，refresh 僅模擬重算
 
   const handleRefresh = async () => {
     setRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 2000)); // 模擬AI分析時間
-    await loadInsightsData();
     setRefreshing(false);
   };
 

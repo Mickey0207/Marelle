@@ -1,9 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { gsap } from 'gsap';
 import {
   ChartBarIcon,
   CurrencyDollarIcon,
-  ShoppingBagIcon,
   TruckIcon,
   UserIcon,
   CogIcon,
@@ -32,7 +31,7 @@ export const DashboardStatsSection = ({
   const [statsData, setStatsData] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const categoryConfig = {
+  const categoryConfig = useMemo(() => ({
     [STATS_CATEGORIES.SALES]: {
       title: '銷售統計',
       icon: CurrencyDollarIcon,
@@ -103,7 +102,7 @@ export const DashboardStatsSection = ({
         { label: '錯誤率', value: '0.02%', trend: '-0.01%', trendUp: true }
       ]
     }
-  };
+  }), []);
 
   const getCategoryIcon = (category) => {
     const iconMap = {
@@ -118,11 +117,7 @@ export const DashboardStatsSection = ({
     return iconMap[category] || '';
   };
 
-  useEffect(() => {
-    loadStatsData();
-  }, [categories]);
-
-  const loadStatsData = async () => {
+  const loadStatsData = useCallback(async () => {
     setLoading(true);
     try {
       // 模擬 API 調用
@@ -139,7 +134,13 @@ export const DashboardStatsSection = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [categories, categoryConfig]);
+
+  useEffect(() => {
+    loadStatsData();
+  }, [categories, loadStatsData]);
+
+  // loadStatsData 已用 useCallback 包裝
 
   const toggleCategory = (category) => {
     const newExpanded = new Set(expandedCategories);

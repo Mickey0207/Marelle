@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthComponents';
 import TabNavigation from '../ui/TabNavigation';
 import { getTabsForPath } from '../../../../external_mock/ui/tabsConfig';
-import { ADMIN_STYLES, ADMIN_COLORS } from '../../Style/adminStyles';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 import notificationDataManager from '../../../../external_mock/notifications/notificationDataManager';
 import {
   HomeIcon,
@@ -13,8 +13,6 @@ import {
   ChartBarIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
-  Bars3Icon,
-  XMarkIcon,
   CubeIcon,
   BellIcon,
   ShoppingCartIcon,
@@ -26,7 +24,7 @@ import {
 const ManagementLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user: _user, logout } = useAuth();
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
   const sidebarRef = useRef(null);

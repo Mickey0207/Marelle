@@ -20,7 +20,7 @@ const empty = [];
 const MemberManagement = () => {
   const [selectedLevel, setSelectedLevel] = useState('全部');
   const [selectedStatus, setSelectedStatus] = useState('全部');
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [_showAddModal, _setShowAddModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'orders' | 'home' | 'cvs' | 'refunds'
   const [memberOrders, setMemberOrders] = useState([]);
@@ -201,7 +201,7 @@ const MemberManagement = () => {
             <UsersIcon className="w-8 h-8 text-amber-500 mr-3" />
             <h1 className="text-3xl font-bold text-gray-800 font-chinese">會員管理系統</h1>
           </div>
-          <button className="btn btn-primary flex items-center" onClick={() => setShowAddModal(true)}>
+          <button className="btn btn-primary flex items-center" onClick={() => _setShowAddModal(true)}>
             <PlusIcon className="w-5 h-5 mr-2" />
             新增會員
           </button>

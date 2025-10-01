@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import {
   PhotoIcon,
   XMarkIcon,
-  PlusIcon,
   ArrowUpTrayIcon
 } from '@heroicons/react/24/outline';
 
@@ -89,13 +88,7 @@ const ImageUpload = ({ images = [], onChange, maxImages = 10 }) => {
     onChange(images.filter(img => img.id !== imageId));
   };
 
-  const moveImage = (dragIndex, hoverIndex) => {
-    const dragImage = images[dragIndex];
-    const newImages = [...images];
-    newImages.splice(dragIndex, 1);
-    newImages.splice(hoverIndex, 0, dragImage);
-    onChange(newImages);
-  };
+  // 如需拖曳排序，之後可實作 moveImage 並搭配 DnD 套件
 
   return (
     <div className="space-y-4">

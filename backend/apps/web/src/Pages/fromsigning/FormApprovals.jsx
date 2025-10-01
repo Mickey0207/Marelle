@@ -70,7 +70,7 @@ const FormApprovals = () => {
       key: 'actions',
       label: '操作',
       sortable: false,
-      render: (_, row) => (
+  render: (_, _row) => (
         <div className="flex items-center gap-2">
           <IconActionButton Icon={EyeIcon} label="檢視" variant="blue" />
           <IconActionButton Icon={CheckIcon} label="通過" variant="green" />

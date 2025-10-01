@@ -6,7 +6,7 @@ import GlassModal from '../../components/ui/GlassModal';
 import { SimpleColumn } from '../../components/ui/Charts';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import IconActionButton from '../../components/ui/IconActionButton';
-import { getSessions, getEvents, SOURCES as SOURCE_OPTIONS, DEVICES as DEVICE_OPTIONS } from '../../../../external_mock/user-tracking/dataManager';
+import { getSessions, SOURCES as SOURCE_OPTIONS, DEVICES as DEVICE_OPTIONS } from '../../../../external_mock/user-tracking/dataManager';
 
 const SessionsPage = () => {
   const [filters, setFilters] = useState({ sources: [], devices: [] });

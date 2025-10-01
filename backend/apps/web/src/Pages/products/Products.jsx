@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { gsap } from 'gsap';
 import StandardTable from "../../components/ui/StandardTable";
 import ProductQuickViewModal from "../../components/products/ProductQuickViewModal";
 import GlassModal from "../../components/ui/GlassModal";
@@ -10,14 +9,13 @@ import {
   PencilIcon,
   TrashIcon,
   EyeIcon,
-  ChevronUpIcon,
-  ChevronDownIcon
+  
 } from '@heroicons/react/24/outline';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 import IconActionButton from "../../components/ui/IconActionButton.jsx";
 // 改用擴充後的模擬商品資料（包含新增/編輯頁完整欄位）
 import { mockProducts, formatPrice } from "../../../../external_mock/products/mockProductData";
-import { ADMIN_STYLES, GSAP_ANIMATIONS, getStatusColor } from "../../Style/adminStyles.js";
+import { ADMIN_STYLES } from "../../Style/adminStyles.js";
 // withPageTabs HOC 已移除，子頁籤導航統一在頂部管理
 
 const AdminProducts = () => {
@@ -54,7 +52,7 @@ const AdminProducts = () => {
   // 當 NestedSKUManager 變更時合併回產品列表（用 id 對應）
   const handleSkuManagerChange = (newVariants) => {
     if (!skuManagerTarget?.productId) return;
-    const targetVariantId = skuManagerTarget?.variant?.id;
+  // merge variants back to product list
     setProducts(prev => prev.map(p => {
       if (p.id !== skuManagerTarget.productId) return p;
       const merged = Array.isArray(p.skuVariants) ? p.skuVariants.map(v => {

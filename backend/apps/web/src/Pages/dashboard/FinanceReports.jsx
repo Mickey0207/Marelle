@@ -1,7 +1,6 @@
 ﻿import { useEffect } from 'react';
 import { gsap } from 'gsap';
 import {
-  CurrencyDollarIcon,
   DocumentTextIcon,
   ChartPieIcon,
   BanknotesIcon,
@@ -151,12 +150,7 @@ const FinanceReports = () => {
       <div className="finance-section mt-8">
         <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">最近交易記錄</h2>
         <div className={ADMIN_STYLES.glassCard}>
-          <div className="" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+          <div className="hide-scrollbar" style={{overflowX: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">

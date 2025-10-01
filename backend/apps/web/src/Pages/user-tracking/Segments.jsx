@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { ADMIN_STYLES } from '../../Style/adminStyles';
 import StandardTable from '../../components/ui/StandardTable';
 
 const SegmentsPage = () => {
-  const [segments, setSegments] = useState([
+  const [segments, _setSegments] = useState([
     { id: 'seg1', name: '近7天活躍+有加購物車', rules: 'last7d && add_to_cart' },
   ]);
   const columns = [

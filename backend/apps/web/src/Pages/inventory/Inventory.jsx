@@ -2,21 +2,17 @@ import React, { useMemo, useState } from 'react';
 import { 
   ArchiveBoxIcon, 
   FunnelIcon, 
-  PencilIcon,
   ExclamationTriangleIcon,
   QrCodeIcon,
-  TruckIcon,
   BuildingStorefrontIcon,
-  EyeIcon,
-  ArrowsRightLeftIcon
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import SearchableSelect from "../../components/ui/SearchableSelect";
 import StandardTable from "../../components/ui/StandardTable";
 import { buildInventoryFromProducts, getInventoryFilters } from "../../../../external_mock/inventory/inventoryDataManager";
 import { PRODUCT_CATEGORIES, getAllChildCategoryIds, getCategoryBreadcrumb } from "../../../../external_mock/products/categoryDataManager";
 import CategoryCascader from "../../components/ui/CategoryCascader";
-import QRCodeGenerator, { QRCodePreviewModal } from "../../components/ui/QRCodeGenerator";
-import GlassModal from "../../components/ui/GlassModal";
+import { QRCodePreviewModal } from "../../components/ui/QRCodeGenerator";
 import { ADMIN_STYLES } from "../../Style/adminStyles";
 import IconActionButton from "../../components/ui/IconActionButton";
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Cog6ToothIcon,
   ShieldCheckIcon,
@@ -9,16 +9,11 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
-  UserIcon,
   ServerIcon,
-  GlobeAltIcon,
   DocumentArrowDownIcon,
   DocumentArrowUpIcon,
-  MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
-  EyeIcon,
-  PencilIcon,
-  ArrowPathIcon
+  UserIcon,
 } from '@heroicons/react/24/outline';
 import systemSettingsDataManager from '../../../../external_mock/settings/systemSettingsDataManager';
 import {
@@ -29,12 +24,12 @@ import {
 import SearchableSelect from "../ui/SearchableSelect";
 
 const SystemSettingsOverview = () => {
-  const [statistics, setStatistics] = useState({});
+  const [_statistics, setStatistics] = useState({});
   const [recentChanges, setRecentChanges] = useState([]);
   const [systemStatus, setSystemStatus] = useState({});
   const [quickSettings, setQuickSettings] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchTerm, _setSearchTerm] = useState('');
+  const [_searchResults, setSearchResults] = useState([]);
   // 系統選項：部門/角色/模組（對接後端 Settings CRUD）
   const [departments, setDepartments] = useState([])
   const [roles, setRoles] = useState([])
@@ -44,9 +39,24 @@ const SystemSettingsOverview = () => {
   const [newRole, setNewRole] = useState('')
   const [newModule, setNewModule] = useState('')
 
+  const loadData = useCallback(() => {
+    // 載入統計資料
+    const stats = systemSettingsDataManager.getSettingsStatistics();
+    setStatistics(stats);
+    setRecentChanges(stats.recentChanges);
+
+    // 載入系統狀態
+    const status = getSystemStatus();
+    setSystemStatus(status);
+
+    // 載入快速設定
+    const quick = getQuickSettings();
+    setQuickSettings(quick);
+  }, []);
+
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   useEffect(() => {
     // 載入部門/角色/模組選項
@@ -78,20 +88,7 @@ const SystemSettingsOverview = () => {
     }
   }, [searchTerm]);
 
-  const loadData = () => {
-    // 載入統計資料
-    const stats = systemSettingsDataManager.getSettingsStatistics();
-    setStatistics(stats);
-    setRecentChanges(stats.recentChanges);
-
-    // 載入系統狀態
-    const status = getSystemStatus();
-    setSystemStatus(status);
-
-    // 載入快速設定
-    const quick = getQuickSettings();
-    setQuickSettings(quick);
-  };
+  // loadData 已提升為 useCallback 版本
 
   const getSystemStatus = () => {
     const securitySettings = systemSettingsDataManager.getSettingsByCategory('system_security');
@@ -205,7 +202,7 @@ const SystemSettingsOverview = () => {
     }
   };
 
-  const getCategoryIcon = (category) => {
+  const _getCategoryIcon = (category) => {
     const icons = {
       system_core: <ServerIcon className="h-5 w-5" />,
       system_security: <ShieldCheckIcon className="h-5 w-5" />,
@@ -216,7 +213,7 @@ const SystemSettingsOverview = () => {
     return icons[category] || <Cog6ToothIcon className="h-5 w-5" />;
   };
 
-  const getCategoryName = (category) => {
+  const _getCategoryName = (category) => {
     const names = {
       system_core: '系統核心',
       system_security: '安全設定',

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import inboxDataManager from '../../../../external_mock/notification-center/inboxDataManager';
 import StandardTable from '../../components/ui/StandardTable';
-import { BellIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { BellIcon } from '@heroicons/react/24/outline';
 
 const columns = [
   { key: 'title', label: '標題', render: (v, row) => (

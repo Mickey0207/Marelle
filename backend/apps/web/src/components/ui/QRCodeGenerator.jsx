@@ -2,11 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
 import {
   QrCodeIcon,
-  ArrowDownTrayIcon,
-  PhotoIcon,
-  DocumentTextIcon,
-  LinkIcon,
-  CheckCircleIcon
+  ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 import GlassModal from './GlassModal';
 

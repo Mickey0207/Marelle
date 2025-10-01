@@ -1,15 +1,11 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   BellIcon, 
-  CheckCircleIcon,
-  XCircleIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
   EyeIcon,
   TrashIcon,
-  MagnifyingGlassIcon,
-  ClockIcon
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { gsap } from 'gsap';
 import notificationDataManager from '../../../../external_mock/notifications/notificationDataManager.js';
@@ -34,16 +30,53 @@ const NotificationHistory = () => {
   // 從資料管理器讀取模擬通知
   const allNotifications = notificationDataManager.getNotifications();
 
+  const loadNotifications = useCallback(async () => {
+    setLoading(true);
+    try {
+      // 模擬API調用
+      await new Promise(resolve => setTimeout(resolve, 800));
+      let filteredNotifications = [...allNotifications];
+      // 狀態篩選
+      if (filters.status !== 'all') {
+        filteredNotifications = filteredNotifications.filter(n => n.status === filters.status);
+      }
+      // 類型篩選
+      if (filters.type !== 'all') {
+        filteredNotifications = filteredNotifications.filter(n => n.type === filters.type);
+      }
+      // 搜尋篩選
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        filteredNotifications = filteredNotifications.filter(n => 
+          n.subject.toLowerCase().includes(query) ||
+          n.recipientName.toLowerCase().includes(query) ||
+          n.recipientEmail.toLowerCase().includes(query)
+        );
+      }
+      // 日期範圍篩選
+      const now = new Date();
+      const dateFilter = { '1day': 1, '7days': 7, '30days': 30, '90days': 90 };
+      if (filters.dateRange !== 'all' && dateFilter[filters.dateRange]) {
+        const cutoffDate = new Date(now.getTime() - dateFilter[filters.dateRange] * 24 * 60 * 60 * 1000);
+        filteredNotifications = filteredNotifications.filter(n => new Date(n.createdAt) >= cutoffDate);
+      }
+      setNotifications(filteredNotifications);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [allNotifications, filters]);
+
   useEffect(() => {
     loadNotifications();
-    
     // 動畫效果
     gsap.fromTo(
       '.notification-item',
       { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" }
+      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }
     );
-  }, [filters]);
+  }, [filters, loadNotifications]);
 
   // 當使用者在 UI 切換狀態時，同步更新網址查詢參數（保持可分享）
   useEffect(() => {
@@ -61,70 +94,10 @@ const NotificationHistory = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.status]);
 
-  const loadNotifications = async () => {
-    setLoading(true);
-    try {
-      // 模擬API調用
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-  let filteredNotifications = [...allNotifications];
-      
-      // 狀態篩選
-      if (filters.status !== 'all') {
-        filteredNotifications = filteredNotifications.filter(n => n.status === filters.status);
-      }
-      
-      // 類型篩選
-      if (filters.type !== 'all') {
-        filteredNotifications = filteredNotifications.filter(n => n.type === filters.type);
-      }
-      
-      // 搜尋篩選
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        filteredNotifications = filteredNotifications.filter(n => 
-          n.subject.toLowerCase().includes(query) ||
-          n.recipientName.toLowerCase().includes(query) ||
-          n.recipientEmail.toLowerCase().includes(query)
-        );
-      }
-      
-      // 日期範圍篩選
-      const now = new Date();
-      const dateFilter = {
-        '1day': 1,
-        '7days': 7,
-        '30days': 30,
-        '90days': 90
-      };
-      
-      if (filters.dateRange !== 'all' && dateFilter[filters.dateRange]) {
-        const cutoffDate = new Date(now.getTime() - dateFilter[filters.dateRange] * 24 * 60 * 60 * 1000);
-        filteredNotifications = filteredNotifications.filter(n => 
-          new Date(n.createdAt) >= cutoffDate
-        );
-      }
-      
-      setNotifications(filteredNotifications);
-    } catch (error) {
-      console.error('Error loading notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 移除未使用的輔助函式以符合 no-unused-vars 規則
+  // getStatusIcon, getTypeIcon, getPriorityClass, handleSelectNotification 均未引用
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'delivered':
-        return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-      case 'failed':
-        return <XCircleIcon className="w-5 h-5 text-red-500" />;
-      case 'pending':
-        return <ClockIcon className="w-5 h-5 text-yellow-500" />;
-      default:
-        return <InformationCircleIcon className="w-5 h-5 text-gray-400" />;
-    }
-  };
+  // 已移除未使用的 getStatusIcon
 
   const getStatusText = (status) => {
     switch (status) {
@@ -156,22 +129,7 @@ const NotificationHistory = () => {
     }
   };
 
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'order':
-        return '';
-      case 'payment':
-        return '';
-      case 'shipping':
-        return '';
-      case 'promotion':
-        return '';
-      case 'system':
-        return '';
-      default:
-        return '';
-    }
-  };
+  // 已移除未使用的 getTypeIcon
 
   const getTypeText = (type) => {
     switch (type) {
@@ -190,20 +148,7 @@ const NotificationHistory = () => {
     }
   };
 
-  const getPriorityClass = (priority) => {
-    switch (priority) {
-      case 'urgent':
-        return 'border-l-4 border-red-500';
-      case 'high':
-        return 'border-l-4 border-orange-500';
-      case 'normal':
-        return 'border-l-4 border-blue-500';
-      case 'low':
-        return 'border-l-4 border-gray-500';
-      default:
-        return 'border-l-4 border-gray-300';
-    }
-  };
+  // 已移除未使用的 getPriorityClass
 
   const formatDateTime = (dateString) => {
     if (!dateString) return '-';
@@ -218,15 +163,7 @@ const NotificationHistory = () => {
     });
   };
 
-  const handleSelectNotification = (notificationId) => {
-    setSelectedNotifications(prev => {
-      if (prev.includes(notificationId)) {
-        return prev.filter(id => id !== notificationId);
-      } else {
-        return [...prev, notificationId];
-      }
-    });
-  };
+  // 已移除未使用的 handleSelectNotification
 
   const handleBatchDelete = (ids) => {
     if (!ids || ids.length === 0) return;

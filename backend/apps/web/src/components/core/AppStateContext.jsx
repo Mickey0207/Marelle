@@ -168,13 +168,14 @@ const appReducer = (state, action) => {
         }
       };
       
-    case ACTION_TYPES.CLEAR_ERROR:
+    case ACTION_TYPES.CLEAR_ERROR: {
       const newErrors = { ...state.errors };
       delete newErrors[action.payload];
       return {
         ...state,
         errors: newErrors
       };
+    }
       
     case ACTION_TYPES.CLEAR_ALL_ERRORS:
       return {

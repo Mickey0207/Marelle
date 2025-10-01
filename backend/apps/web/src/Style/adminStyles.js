@@ -206,7 +206,7 @@ export const applyAdminStyles = (element, styles) => {
 };
 
 // 10. 獲取狀態顏色的輔助函數
-export const getStatusColor = (status, type = 'general') => {
+export const getStatusColor = (status, _type = 'general') => {
   const statusKey = `${status}`;
   if (STATUS_COLORS[statusKey]) {
     return STATUS_COLORS[statusKey];

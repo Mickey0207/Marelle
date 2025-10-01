@@ -143,15 +143,7 @@ const AddProductAdvanced = () => {
     handleInputChange(field, value);
   };
 
-  const handleNestedInputChange = (parentField, field, value) => {
-    setProductData(prev => ({
-      ...prev,
-      [parentField]: {
-        ...prev[parentField],
-        [field]: value
-      }
-    }));
-  };
+  // 已不再使用的巢狀輸入處理器，移除以降低噪音
 
   const addTag = () => {
     if (newTag.trim() && !productData.tags.includes(newTag.trim())) {

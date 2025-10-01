@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ChartBarIcon,
   CurrencyDollarIcon,
@@ -12,7 +12,6 @@ import {
   ArrowPathIcon,
   EyeIcon,
   DevicePhoneMobileIcon,
-  ComputerDesktopIcon,
   MapPinIcon,
   FireIcon,
   SparklesIcon
@@ -22,49 +21,44 @@ import analyticsDataManager from '../../../../external_mock/analytics/analyticsD
 const AnalyticsOverview = () => {
   const [kpiData, setKpiData] = useState({});
   const [realtimeData, setRealtimeData] = useState({});
-  const [salesTrends, setSalesTrends] = useState({});
-  const [aiInsights, setAiInsights] = useState({});
+  const [_salesTrends, setSalesTrends] = useState({});
+  const [_aiInsights, setAiInsights] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
-  useEffect(() => {
-    loadAnalyticsData();
-    const interval = setInterval(loadRealtimeData, 30000); // 每30秒更新實時數據
-    return () => clearInterval(interval);
-  }, [selectedPeriod]);
+  const loadRealtimeData = useCallback(() => {
+    const realtime = analyticsDataManager.getRealTimeMetrics();
+    setRealtimeData(realtime);
+    setLastUpdated(new Date());
+  }, []);
 
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // 獲取 KPI 數據
+      // 取得 KPI 數據
       const kpis = analyticsDataManager.getKPIDashboard(selectedPeriod);
       setKpiData(kpis);
-      
-      // 獲取銷售趨勢
+      // 取得銷售趨勢
       const trends = analyticsDataManager.getSalesTrends(selectedPeriod);
       setSalesTrends(trends);
-      
-      // 獲取 AI 洞察
+      // 取得 AI 洞察
       const insights = analyticsDataManager.getAIInsights();
       setAiInsights(insights);
-      
-      // 獲取實時數據
+      // 取得實時數據
       loadRealtimeData();
-      
     } catch (error) {
       console.error('載入分析數據失敗:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPeriod, loadRealtimeData]);
 
-  const loadRealtimeData = () => {
-    const realtime = analyticsDataManager.getRealTimeMetrics();
-    setRealtimeData(realtime);
-    setLastUpdated(new Date());
-  };
+  useEffect(() => {
+    loadAnalyticsData();
+    const interval = setInterval(loadRealtimeData, 30000); // 每30秒更新實時數據
+    return () => clearInterval(interval);
+  }, [selectedPeriod, loadAnalyticsData, loadRealtimeData]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('zh-TW', {

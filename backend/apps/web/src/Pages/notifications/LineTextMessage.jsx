@@ -78,7 +78,7 @@ const LineTextMessage = () => {
   const [activeVarTab, setActiveVarTab] = useState(VARIABLE_CATEGORIES[0].key);
   const [varSearch, setVarSearch] = useState('');
   const variableCatalog = useMemo(() => getVariableCatalog(), []);
-  const sampleCtx = useMemo(() => buildSampleContext(), []);
+  const _sampleCtx = useMemo(() => buildSampleContext(), []);
 
   // 將 catalog 攤平成可查詢的陣列/索引: path -> meta, token -> meta
   const flatCatalog = useMemo(() => {
@@ -178,7 +178,7 @@ const LineTextMessage = () => {
     } else {
       setForm({ name: '', category: '', description: '', tags: [], content: '' });
     }
-  }, [current?.id]);
+  }, [current]);
 
   // 搜尋
   const filtered = useMemo(() => (keyword ? searchTemplates(keyword) : list), [keyword, list]);

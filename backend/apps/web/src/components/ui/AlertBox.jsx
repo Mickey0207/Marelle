@@ -106,12 +106,7 @@ const AlertBox = ({
         )}
       </div>
       
-      <style jsx>{`
-        @keyframes shrink {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
+      {/* keyframes shrink 已移至全域樣式表 apps/web/src/Style/index.css */}
     </div>
   );
 };

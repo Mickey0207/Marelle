@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
-import { FunnelIcon, EyeIcon, PencilIcon, TrashIcon, PrinterIcon, ArrowDownTrayIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { FunnelIcon, EyeIcon, PencilIcon, TrashIcon, PrinterIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from "../../Style/adminStyles";
 import SearchableSelect from "../../components/ui/SearchableSelect";
 import orderDataManager from "../../../../external_mock/orders/orderDataManager";
@@ -23,7 +23,7 @@ const OrderList = () => {
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [ordersPerPage] = useState(10);
-  const [statistics, setStatistics] = useState({
+  const [_statistics, _setStatistics] = useState({
     total: 0,
     pending: 0,
     processing: 0,
@@ -61,7 +61,7 @@ const OrderList = () => {
       // getOrderStatistics 回傳為物件而非 { success, data }
       const stats = await orderDataManager.getOrderStatistics();
       const sd = stats?.statusDistribution || {};
-      setStatistics({
+      _setStatistics({
         total: stats?.totalOrders || 0,
         pending: sd.pending || 0,
         processing: sd.processing || 0,

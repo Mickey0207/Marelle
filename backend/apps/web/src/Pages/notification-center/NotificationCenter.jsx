@@ -22,7 +22,7 @@ const columns = [
     <span className={`px-2 py-0.5 text-xs rounded-full ${v === 'unread' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}`}>{v}</span>
   )},
   { key: 'receivedAt', label: '接收時間', render: (v) => new Date(v).toLocaleString() },
-  { key: 'actions', label: '操作', sortable: false, render: (_, row) => (
+  { key: 'actions', label: '操作', sortable: false, render: (_, _row) => (
     <div className="flex items-center gap-2">
       <button className="p-2 text-gray-500 hover:text-[#cc824d]" title="檢視">
         <EyeIcon className="w-5 h-5" />

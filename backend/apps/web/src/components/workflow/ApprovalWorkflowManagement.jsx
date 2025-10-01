@@ -1,30 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon,
-  UserIcon,
-  CalendarIcon,
-  DocumentTextIcon,
   ArrowPathIcon,
-  ExclamationTriangleIcon,
-  ChatBubbleLeftRightIcon,
-  PaperClipIcon,
   ChevronRightIcon,
   ChevronDownIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-  PlayIcon,
-  PauseIcon,
   StopIcon,
-  ArrowRightIcon,
   HandThumbUpIcon,
   HandThumbDownIcon,
   ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
-import dashboardDataManager, { ApprovalStatus, TaskPriority, BusinessImpact } from '../../../../external_mock/core/dashboardDataManager';
+import dashboardDataManager, { ApprovalStatus, TaskPriority } from '../../../../external_mock/core/dashboardDataManager';
 
 const ApprovalWorkflowManagement = () => {
   const [approvalInstances, setApprovalInstances] = useState([]);
@@ -43,20 +32,11 @@ const ApprovalWorkflowManagement = () => {
     search: ''
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [approvalInstances, filters, activeTab]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const instancesResponse = dashboardDataManager.getApprovalInstances();
       const workflowsData = dashboardDataManager.approvalWorkflows;
-      
       setApprovalInstances(instancesResponse.instances);
       setWorkflows(workflowsData);
     } catch (error) {
@@ -64,12 +44,14 @@ const ApprovalWorkflowManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const applyFilters = () => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const applyFilters = useCallback(() => {
     let filtered = [...approvalInstances];
-
-    // 活動標籤篩選
     if (activeTab === 'pending') {
       filtered = filtered.filter(instance => 
         instance.overall_status === ApprovalStatus.PENDING || 
@@ -82,44 +64,33 @@ const ApprovalWorkflowManagement = () => {
         instance.overall_status === ApprovalStatus.CANCELLED
       );
     }
-
-    // 搜尋篩選
     if (filters.search) {
       filtered = filtered.filter(instance => 
         instance.submission_notes?.toLowerCase().includes(filters.search.toLowerCase()) ||
         instance.entity_type.toLowerCase().includes(filters.search.toLowerCase())
       );
     }
-
-    // 工作流程類型篩選
     if (filters.workflow_type) {
       const workflowIds = workflows
         .filter(w => w.entity_type === filters.workflow_type)
         .map(w => w.id);
-      filtered = filtered.filter(instance => 
-        workflowIds.includes(instance.workflow_id)
-      );
+      filtered = filtered.filter(instance => workflowIds.includes(instance.workflow_id));
     }
-
-    // 狀態篩選
     if (filters.status.length > 0) {
-      filtered = filtered.filter(instance => 
-        filters.status.includes(instance.overall_status)
-      );
+      filtered = filtered.filter(instance => filters.status.includes(instance.overall_status));
     }
-
-    // 優先級篩選
     if (filters.priority.length > 0) {
-      filtered = filtered.filter(instance => 
-        filters.priority.includes(instance.priority)
-      );
+      filtered = filtered.filter(instance => filters.priority.includes(instance.priority));
     }
-
-    // 按提交時間排序（最新的在前）
     filtered.sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
-
     setFilteredInstances(filtered);
-  };
+  }, [approvalInstances, filters, activeTab, workflows]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  // 移除舊的重複宣告的 loadData/applyFilters
 
   const approveInstance = async (instanceId, comments = '') => {
     try {
@@ -173,45 +144,7 @@ const ApprovalWorkflowManagement = () => {
     }
   };
 
-  const getWorkflowName = (workflowId) => {
-    const workflow = workflows.find(w => w.id === workflowId);
-    return workflow ? workflow.workflow_name : '未知工作流程';
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case ApprovalStatus.APPROVED:
-        return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
-      case ApprovalStatus.REJECTED:
-        return <XCircleIcon className="h-5 w-5 text-red-500" />;
-      case ApprovalStatus.IN_PROGRESS:
-        return <ArrowPathIcon className="h-5 w-5 text-blue-500" />;
-      case ApprovalStatus.CANCELLED:
-        return <StopIcon className="h-5 w-5 text-gray-500" />;
-      default:
-        return <ClockIcon className="h-5 w-5 text-amber-500" />;
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case TaskPriority.CRITICAL:
-        return 'bg-red-100 text-red-800 border-red-200';
-      case TaskPriority.URGENT:
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      case TaskPriority.HIGH:
-        return 'bg-amber-100 text-amber-800 border-amber-200';
-      case TaskPriority.MEDIUM:
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const isOverdue = (instance) => {
-    if (!instance.due_date || instance.overall_status !== ApprovalStatus.PENDING) return false;
-    return new Date(instance.due_date) < new Date();
-  };
+  // 移除未使用的 getWorkflowName/getStatusIcon/getPriorityColor/isOverdue
 
   if (loading) {
     return (
@@ -412,7 +345,6 @@ const ApprovalStatsCards = ({ instances }) => {
 
 // 簽核實例卡片元件
 const ApprovalInstanceCard = ({ instance, workflow, index, onApprove, onReject, onViewDetails }) => {
-  const [showActions, setShowActions] = useState(false);
   const [showApprovalForm, setShowApprovalForm] = useState(false);
 
   const isOverdue = instance.due_date && 
@@ -543,7 +475,6 @@ const ApprovalProgress = ({ instance, workflow }) => {
         {workflow.approval_steps.map((step, index) => {
           const isCurrentStep = index + 1 === instance.current_step;
           const isCompleted = index + 1 < instance.current_step;
-          const isPending = index + 1 > instance.current_step;
 
           return (
             <React.Fragment key={index}>
@@ -581,7 +512,6 @@ const ApprovalProgress = ({ instance, workflow }) => {
 // 簽核表單元件
 const ApprovalForm = ({ onApprove, onReject, onCancel }) => {
   const [comments, setComments] = useState('');
-  const [action, setAction] = useState('');
 
   const handleSubmit = (actionType) => {
     if (actionType === 'approve') {
@@ -589,8 +519,7 @@ const ApprovalForm = ({ onApprove, onReject, onCancel }) => {
     } else if (actionType === 'reject') {
       onReject(comments);
     }
-    setComments('');
-    setAction('');
+  setComments('');
   };
 
   return (
@@ -680,12 +609,7 @@ const FilterDropdown = ({ label, options, selected, onChange }) => {
             zIndex: 99999
           }}
         >
-          <div className="max-h-60" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+          <div className="max-h-60 hide-scrollbar" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
             {options.map((option) => (
               <label key={option} className="glass-dropdown-option cursor-pointer">
                 <div className="flex items-center w-full">
@@ -724,7 +648,7 @@ const ApprovalDetailModal = ({ instance, workflow, isOpen, onClose, onApprove, o
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh]" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}
+        className="bg-white rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] hide-scrollbar" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}
       >
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold text-gray-900">簽核詳情</h3>

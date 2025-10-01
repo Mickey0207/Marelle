@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import SearchableSelect from './SearchableSelect';
 
 // 簡易級聯選單（最多 5 層）
@@ -9,7 +9,7 @@ import SearchableSelect from './SearchableSelect';
 // - placeholder: string
 const CategoryCascader = ({ tree = [], value = null, onChange, placeholder = '選擇分類' }) => {
   // 將 value 映射成層級路徑
-  const findPathById = (nodes, id, path = []) => {
+  const findPathById = useCallback((nodes, id, path = []) => {
     for (const n of nodes) {
       const nextPath = [...path, n];
       if (n.id === id) return nextPath;
@@ -19,17 +19,16 @@ const CategoryCascader = ({ tree = [], value = null, onChange, placeholder = '�
       }
     }
     return null;
-  };
+  }, []);
 
-  const initialPath = useMemo(() => (value ? findPathById(tree, value) : []), [tree, value]);
+  const initialPath = useMemo(() => (value ? findPathById(tree, value) : []), [tree, value, findPathById]);
   const [path, setPath] = useState(initialPath || []);
 
   useEffect(() => {
     // 外部 value 變更時，同步路徑
     const p = value ? findPathById(tree, value) : [];
     setPath(p || []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, tree, findPathById]);
 
   // 當前每一層的 options
   const levelOptions = useMemo(() => {
@@ -51,8 +50,10 @@ const CategoryCascader = ({ tree = [], value = null, onChange, placeholder = '�
 
   const handleSelectAtLevel = (levelIdx, id) => {
     if (!id) {
+      // 先用目前的 path 推算上一層 id，再更新狀態
+      const prevId = levelIdx === 0 ? null : (path[levelIdx - 1]?.id || null);
       setPath(prev => prev.slice(0, levelIdx));
-      if (onChange) onChange(levelIdx === 0 ? null : prev[levelIdx - 1]?.id || null);
+      if (onChange) onChange(prevId);
       return;
     }
     const opts = levelOptions[levelIdx] || [];
