@@ -5,6 +5,14 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    screens: {
+      'xs': '480px',   // 手機大
+      'sm': '640px',   // 平板小
+      'md': '768px',   // 平板
+      'lg': '1024px',  // 電腦小
+      'xl': '1280px',  // 電腦大
+      '2xl': '1536px', // 超大螢幕
+    },
     extend: {
       colors: {
         // 主要品牌色彩 - 精確色彩規範

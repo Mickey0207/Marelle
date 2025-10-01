@@ -3,12 +3,12 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { HeartIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import { mockProducts, getProductsByCategory, getProductsByCategoryPath } from "../../external_mock/data/products.mock";
-import { categories, findCategoryById, getCategoryPath } from "../../external_mock/data/categories";
-import { formatPrice } from "../../external_mock/data/format";
-import { useCart } from "../../external_mock/state/cart.jsx";
-import SortDropdown from "../components/ui/SortDropdown";
-import { getProductTags, getTagConfig } from "../../external_mock/data/productTags";
+import { mockProducts, getProductsByCategory, getProductsByCategoryPath } from "../../../external_mock/data/products.mock.js";
+import { categories, findCategoryById, getCategoryPath } from "../../../external_mock/data/categories.js";
+import { formatPrice } from "../../../external_mock/data/format.js";
+import { useCart } from "../../../external_mock/state/cart.jsx";
+import SortDropdown from "../../components/ui/SortDropdown.jsx";
+import { getProductTags, getTagConfig } from "../../../external_mock/data/productTags.js";
 
 // 使用統一的分類系統
 const hierarchicalCategories = categories;
@@ -208,8 +208,8 @@ export default function Products() {
   return (
     <div className="min-h-screen pt-20 xs:pt-22 sm:pt-24 md:pt-24 pb-16 xs:pb-20 sm:pb-24 md:pb-24" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%)'}}>
       <div className="w-full px-4 xs:px-5 sm:px-6 md:px-8 lg:px-12 xl:px-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xs:gap-8 sm:gap-10 md:gap-12 xl:gap-16">
-          <aside className="hidden lg:block lg:col-span-3 xl:col-span-2">
+        <div className="grid grid-cols-1 gap-6 xs:gap-8 sm:gap-10 md:gap-12 xl:gap-16">
+          <aside className="hidden">
             <div className="sticky top-24 space-y-2">
               <div className="pb-4 lg:pb-5 xl:pb-6 border-b border-gray-200">
                 <h3 className="font-medium font-chinese text-xs lg:text-xs xl:text-xs tracking-[0.15em] uppercase mb-3 lg:mb-4" style={{color: '#666666'}}>分類</h3>
@@ -433,7 +433,7 @@ export default function Products() {
                 return (
                   <div key={p.id} id={`product-${p.id}`} className="group">
                     <Link to={`/product/${p.id}`} className="block">
-                      <div className="relative mb-3 xs:mb-3.5 sm:mb-4 md:mb-4 overflow-hidden bg-white" style={{aspectRatio: '1/1'}}>
+                      <div className="relative mb-3 xs:mb-3.5 sm:mb-4 md:mb-4 overflow-hidden bg-white rounded-lg" style={{aspectRatio: '1/1'}}>
                         {primaryTag && (
                           <div 
                             className="absolute top-2 xs:top-3 sm:top-3 md:top-4 left-2 xs:left-3 sm:left-3 md:left-4 z-10 px-2 xs:px-3 sm:px-3 md:px-4 py-1 xs:py-1 sm:py-1.5 md:py-1.5 text-[10px] xs:text-xs sm:text-xs md:text-xs font-semibold font-chinese tracking-widest uppercase shadow-lg"
@@ -471,8 +471,8 @@ export default function Products() {
                             aria-label="收藏"
                           >
                             {favorites.has(p.id)
-                              ? <HeartSolidIcon className="w-4 xs:w-4.5 sm:w-5 md:w-5 h-4 xs:h-4.5 sm:h-5 md:h-5" />
-                              : <HeartIcon className="w-4 xs:w-4.5 sm:w-5 md:w-5 h-4 xs:h-4.5 sm:h-5 md:h-5" />}
+                              ? <HeartSolidIcon className="w-4 xs:w-5 sm:w-5 md:w-5 h-4 xs:h-5 sm:h-5 md:h-5" />
+                              : <HeartIcon className="w-4 xs:w-5 sm:w-5 md:w-5 h-4 xs:h-5 sm:h-5 md:h-5" />}
                           </button>
                           
                           {p.inStock && (
@@ -482,7 +482,7 @@ export default function Products() {
                                 e.stopPropagation(); 
                                 handleAddToCart(p); 
                               }}
-                              className="px-3 xs:px-4 sm:px-5 md:px-6 h-10 xs:h-11 sm:h-12 md:h-12 rounded-full font-chinese text-xs xs:text-xs sm:text-sm md:text-sm font-medium tracking-wide transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 hidden xs:flex items-center justify-center"
+                              className="px-3 xs:px-4 sm:px-5 md:px-6 h-10 xs:h-11 sm:h-12 md:h-12 rounded-full font-chinese text-xs xs:text-xs sm:text-sm md:text-sm font-medium tracking-wide transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 flex items-center justify-center"
                               style={{
                                 background: '#CC824D',
                                 color: '#FFFFFF'
@@ -528,7 +528,7 @@ export default function Products() {
                 <Link 
                   to="/products"
                   onClick={() => {setSearchTerm(''); setSelectedNode(null);}}
-                  className="inline-block px-6 xs:px-7 sm:px-8 md:px-8 py-2.5 xs:py-3 sm:py-3 md:py-3 font-chinese text-xs xs:text-sm sm:text-sm md:text-sm font-medium tracking-wider transition-all duration-300"
+                  className="inline-block px-6 xs:px-7 sm:px-8 md:px-8 py-2.5 xs:py-3 sm:py-3 md:py-3 font-chinese text-xs xs:text-sm sm:text-sm md:text-sm font-medium tracking-wider transition-all duration-300 rounded-lg"
                   style={{
                     background: '#CC824D',
                     color: '#FFFFFF',

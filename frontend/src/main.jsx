@@ -8,12 +8,12 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import Home from './pages/Home'
-import Products from './pages/Products'
-import ProductDetail from './pages/ProductDetail'
-import Cart from './pages/Cart'
-import Checkout from './pages/Checkout'
-import FrontLogin from './pages/FrontLogin'
-import FrontRegister from './pages/FrontRegister'
+import Products from './pages/products/Products.jsx'
+import ProductDetail from './pages/products/ProductDetail.jsx'
+import Cart from './pages/check/Cart.jsx'
+import Checkout from './pages/check/Checkout.jsx'
+import FrontLogin from './pages/auth/FrontLogin.jsx'
+import FrontRegister from './pages/auth/FrontRegister.jsx'
 
 gsap.registerPlugin(ScrollTrigger)
 

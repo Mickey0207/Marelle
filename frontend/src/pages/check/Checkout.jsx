@@ -6,8 +6,8 @@ import {
   ShoppingBagIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
-import { formatPrice } from "../../external_mock/data/format";
-import { useCart } from "../../external_mock/state/cart.jsx";
+import { formatPrice } from "../../../external_mock/data/format.js";
+import { useCart } from "../../../external_mock/state/cart.jsx";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -126,14 +126,14 @@ const Checkout = () => {
 
   if (orderComplete) {
     return (
-      <div className="min-h-screen pt-20 flex items-center justify-center bg-lofi">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="bg-white/80 border border-gray-200 p-12 rounded-2xl success-content">
-            <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-lofi mb-4 font-chinese">
+      <div className="min-h-screen pt-16 xs:pt-18 sm:pt-20 md:pt-20 lg:pt-20 flex items-center justify-center bg-lofi">
+        <div className="text-center max-w-md mx-auto px-4 xs:px-6 sm:px-8">
+          <div className="bg-white/80 border border-gray-200 p-8 xs:p-10 sm:p-12 md:p-12 lg:p-14 rounded-xl xs:rounded-xl sm:rounded-2xl md:rounded-2xl success-content">
+            <CheckCircleIcon className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 md:w-16 md:h-16 text-green-500 mx-auto mb-4 xs:mb-5 sm:mb-6 md:mb-6" />
+            <h2 className="text-xl xs:text-xl sm:text-2xl md:text-2xl lg:text-3xl font-bold text-lofi mb-3 xs:mb-3 sm:mb-4 md:mb-4 font-chinese">
               訂單完成！
             </h2>
-            <p className="text-gray-500 mb-8 font-chinese">
+            <p className="text-sm xs:text-sm sm:text-base md:text-base text-gray-500 mb-6 xs:mb-7 sm:mb-8 md:mb-8 font-chinese">
               感謝您的購買，我們會盡快為您處理訂單。
             </p>
             <button
@@ -155,21 +155,21 @@ const Checkout = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-20 pb-12 bg-lofi">
-  <div className="w-full px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-16 xs:pt-18 sm:pt-20 md:pt-20 lg:pt-20 pb-8 xs:pb-10 sm:pb-12 md:pb-12 lg:pb-14 xl:pb-16 bg-lofi">
+  <div className="w-full px-4 xs:px-6 sm:px-8 md:px-10 lg:px-12 xl:px-16">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary-btn font-chinese">
+        <div className="mb-6 xs:mb-7 sm:mb-8 md:mb-8 lg:mb-10">
+          <h1 className="text-2xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-bold text-primary-btn font-chinese">
             結帳
           </h1>
         </div>
 
         {/* Progress Steps */}
-        <div className="mb-12">
+        <div className="mb-8 xs:mb-10 sm:mb-12 md:mb-12 lg:mb-14">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => (
               <div key={step.number} className="flex items-center flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                <div className={`w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-10 md:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center text-xs xs:text-sm sm:text-base md:text-base font-semibold ${
                   step.completed 
                     ? 'bg-green-500 text-white' 
                     : step.active 
@@ -178,13 +178,13 @@ const Checkout = () => {
                 }`}>
                   {step.completed ? '✓' : step.number}
                 </div>
-                <span className={`ml-2 font-medium font-chinese ${
+                <span className={`ml-1 xs:ml-2 sm:ml-2 md:ml-2 text-[10px] xs:text-xs sm:text-sm md:text-base font-medium font-chinese ${
                   step.active ? 'text-primary-btn' : 'text-gray-600'
                 }`}>
                   {step.title}
                 </span>
                 {index < steps.length - 1 && (
-                  <div className={`flex-1 h-1 mx-4 ${
+                  <div className={`flex-1 h-0.5 xs:h-0.5 sm:h-1 md:h-1 mx-2 xs:mx-3 sm:mx-4 md:mx-4 ${
                     step.completed ? 'bg-green-500' : 'bg-gray-200'
                   }`}></div>
                 )}
@@ -193,18 +193,18 @@ const Checkout = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 xs:gap-7 sm:gap-8 md:gap-8 lg:gap-8 xl:gap-10">
           {/* Main Content */}
           <div className="lg:col-span-2">
             {/* Step 1: Shipping Information */}
             {currentStep === 1 && (
-              <div className="checkout-step glass p-8 rounded-2xl">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">
+              <div className="checkout-step glass p-5 xs:p-6 sm:p-7 md:p-8 lg:p-8 rounded-xl xs:rounded-xl sm:rounded-2xl md:rounded-2xl">
+                <h2 className="text-lg xs:text-lg sm:text-xl md:text-xl lg:text-2xl font-bold text-gray-900 mb-4 xs:mb-5 sm:mb-6 md:mb-6 font-chinese">
                   配送資訊
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 xs:gap-3 sm:gap-4 md:gap-4 lg:gap-5">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
+                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       姓名 *
                     </label>
                     <input
@@ -217,7 +217,7 @@ const Checkout = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
+                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       電子郵件 *
                     </label>
                     <input
@@ -230,7 +230,7 @@ const Checkout = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
+                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       電話 *
                     </label>
                     <input
@@ -243,7 +243,7 @@ const Checkout = () => {
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
+                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       地址 *
                     </label>
                     <input
@@ -256,7 +256,7 @@ const Checkout = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
+                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       城市 *
                     </label>
                     <input
@@ -269,7 +269,7 @@ const Checkout = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
+                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       郵遞區號 *
                     </label>
                     <input
@@ -282,7 +282,7 @@ const Checkout = () => {
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
+                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       備註
                     </label>
                     <textarea
@@ -299,14 +299,14 @@ const Checkout = () => {
 
             {/* Step 2: Payment Information */}
             {currentStep === 2 && (
-              <div className="checkout-step glass p-8 rounded-2xl">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">
+              <div className="checkout-step glass p-5 xs:p-6 sm:p-7 md:p-8 lg:p-8 rounded-xl xs:rounded-xl sm:rounded-2xl md:rounded-2xl">
+                <h2 className="text-lg xs:text-lg sm:text-xl md:text-xl lg:text-2xl font-bold text-gray-900 mb-4 xs:mb-5 sm:mb-6 md:mb-6 font-chinese">
                   付款方式
                 </h2>
                 
                 {/* Payment Method Selection */}
-                <div className="space-y-4 mb-6">
-                  <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <div className="space-y-3 xs:space-y-3 sm:space-y-4 md:space-y-4 mb-5 xs:mb-5 sm:mb-6 md:mb-6">
+                  <label className="flex items-center p-3 xs:p-3 sm:p-4 md:p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -315,11 +315,11 @@ const Checkout = () => {
                       onChange={(e) => handleInputChange('payment', 'method', e.target.value)}
                       className="mr-3"
                     />
-                    <CreditCardIcon className="w-5 h-5 mr-2" />
-                    <span className="font-medium font-chinese">信用卡</span>
+                    <CreditCardIcon className="w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 mr-2" />
+                    <span className="text-sm xs:text-sm sm:text-base md:text-base font-medium font-chinese">信用卡</span>
                   </label>
                   
-                  <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <label className="flex items-center p-3 xs:p-3 sm:p-4 md:p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -328,15 +328,15 @@ const Checkout = () => {
                       onChange={(e) => handleInputChange('payment', 'method', e.target.value)}
                       className="mr-3"
                     />
-                    <span className="font-medium font-chinese">銀行轉帳</span>
+                    <span className="text-sm xs:text-sm sm:text-base md:text-base font-medium font-chinese">銀行轉帳</span>
                   </label>
                 </div>
 
                 {/* Credit Card Details */}
                 {paymentInfo.method === 'credit-card' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 xs:gap-3 sm:gap-4 md:gap-4 lg:gap-5">
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">
+                      <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                         持卡人姓名 *
                       </label>
                       <input
@@ -349,7 +349,7 @@ const Checkout = () => {
                     </div>
                     
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2">
                         卡號 *
                       </label>
                       <input
@@ -362,7 +362,7 @@ const Checkout = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2">
                         有效期限 *
                       </label>
                       <input
@@ -375,7 +375,7 @@ const Checkout = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2">
                         CVV *
                       </label>
                       <input
@@ -393,25 +393,25 @@ const Checkout = () => {
 
             {/* Step 3: Order Confirmation */}
             {currentStep === 3 && (
-              <div className="checkout-step glass p-8 rounded-2xl">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">
+              <div className="checkout-step glass p-5 xs:p-6 sm:p-7 md:p-8 lg:p-8 rounded-xl xs:rounded-xl sm:rounded-2xl md:rounded-2xl">
+                <h2 className="text-lg xs:text-lg sm:text-xl md:text-xl lg:text-2xl font-bold text-gray-900 mb-4 xs:mb-5 sm:mb-6 md:mb-6 font-chinese">
                   確認訂單
                 </h2>
                 
                 {/* Order Items */}
-                <div className="space-y-4 mb-8">
+                <div className="space-y-3 xs:space-y-3 sm:space-y-4 md:space-y-4 mb-6 xs:mb-7 sm:mb-8 md:mb-8">
                   {cartItems.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-4 p-4 bg-white/50 rounded-lg">
+                    <div key={item.id} className="flex items-center space-x-3 xs:space-x-3 sm:space-x-4 md:space-x-4 p-3 xs:p-3 sm:p-4 md:p-4 bg-white/50 rounded-lg">
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="w-16 h-16 object-cover rounded-lg"
+                        className="w-14 h-14 xs:w-14 xs:h-14 sm:w-16 sm:h-16 md:w-16 md:h-16 object-cover rounded-lg"
                       />
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 font-chinese">{item.name}</h3>
-                        <p className="text-sm text-gray-600 font-chinese">數量：{item.quantity}</p>
+                        <h3 className="text-sm xs:text-sm sm:text-base md:text-base font-semibold text-gray-900 font-chinese">{item.name}</h3>
+                        <p className="text-xs xs:text-xs sm:text-sm md:text-sm text-gray-600 font-chinese">數量：{item.quantity}</p>
                       </div>
-                      <div className="text-lg font-bold text-apricot-600">
+                      <div className="text-base xs:text-base sm:text-lg md:text-lg font-bold text-apricot-600">
                         {formatPrice(item.price * item.quantity)}
                       </div>
                     </div>
@@ -419,10 +419,10 @@ const Checkout = () => {
                 </div>
 
                 {/* Shipping & Payment Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div className="p-4 bg-white/50 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 mb-2 font-chinese">配送地址</h3>
-                    <p className="text-sm text-gray-600 font-chinese">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xs:gap-5 sm:gap-6 md:gap-6 mb-6 xs:mb-7 sm:mb-8 md:mb-8">
+                  <div className="p-3 xs:p-3 sm:p-4 md:p-4 bg-white/50 rounded-lg">
+                    <h3 className="text-sm xs:text-sm sm:text-base md:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">配送地址</h3>
+                    <p className="text-xs xs:text-xs sm:text-sm md:text-sm text-gray-600 font-chinese">
                       {shippingInfo.fullName}<br />
                       {shippingInfo.address}<br />
                       {shippingInfo.city} {shippingInfo.zipCode}<br />
@@ -430,9 +430,9 @@ const Checkout = () => {
                     </p>
                   </div>
                   
-                  <div className="p-4 bg-white/50 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 mb-2 font-chinese">付款方式</h3>
-                    <p className="text-sm text-gray-600 font-chinese">
+                  <div className="p-3 xs:p-3 sm:p-4 md:p-4 bg-white/50 rounded-lg">
+                    <h3 className="text-sm xs:text-sm sm:text-base md:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">付款方式</h3>
+                    <p className="text-xs xs:text-xs sm:text-sm md:text-sm text-gray-600 font-chinese">
                       {paymentInfo.method === 'credit-card' ? '信用卡' : '銀行轉帳'}
                       {paymentInfo.method === 'credit-card' && paymentInfo.cardNumber && (
                         <span className="block">**** **** **** {paymentInfo.cardNumber.slice(-4)}</span>
@@ -444,7 +444,7 @@ const Checkout = () => {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
+            <div className="flex justify-between mt-6 xs:mt-7 sm:mt-8 md:mt-8">
               <button
                 onClick={handleBack}
                 disabled={currentStep === 1}
@@ -474,26 +474,26 @@ const Checkout = () => {
 
           {/* Order Summary Sidebar */}
           <div className="lg:col-span-1">
-            <div className="glass p-6 rounded-2xl sticky top-24">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 font-chinese">
+            <div className="glass p-4 xs:p-5 sm:p-6 md:p-6 lg:p-6 rounded-xl xs:rounded-xl sm:rounded-2xl md:rounded-2xl sticky top-20 xs:top-22 sm:top-24 md:top-24">
+              <h2 className="text-lg xs:text-lg sm:text-xl md:text-xl lg:text-2xl font-bold text-gray-900 mb-4 xs:mb-5 sm:mb-6 md:mb-6 font-chinese">
                 訂單摘要
               </h2>
               
-              <div className="space-y-4">
+              <div className="space-y-3 xs:space-y-3 sm:space-y-4 md:space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 font-chinese">商品小計</span>
-                  <span className="text-gray-900">{formatPrice(cartTotal)}</span>
+                  <span className="text-sm xs:text-sm sm:text-base md:text-base text-gray-600 font-chinese">商品小計</span>
+                  <span className="text-sm xs:text-sm sm:text-base md:text-base text-gray-900">{formatPrice(cartTotal)}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-gray-600 font-chinese">運費</span>
-                  <span className="text-gray-900">免費</span>
+                  <span className="text-sm xs:text-sm sm:text-base md:text-base text-gray-600 font-chinese">運費</span>
+                  <span className="text-sm xs:text-sm sm:text-base md:text-base text-gray-900">免費</span>
                 </div>
                 
-                <div className="border-t border-gray-200 pt-4">
+                <div className="border-t border-gray-200 pt-3 xs:pt-3 sm:pt-4 md:pt-4">
                   <div className="flex justify-between">
-                    <span className="text-lg font-bold text-gray-900 font-chinese">總計</span>
-                    <span className="text-lg font-bold text-apricot-600">
+                    <span className="text-base xs:text-base sm:text-lg md:text-lg lg:text-xl font-bold text-gray-900 font-chinese">總計</span>
+                    <span className="text-base xs:text-base sm:text-lg md:text-lg lg:text-xl font-bold text-apricot-600">
                       {formatPrice(cartTotal)}
                     </span>
                   </div>
