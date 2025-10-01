@@ -8,7 +8,7 @@ import {
   ShoppingBagIcon
 } from '@heroicons/react/24/outline';
 import { formatPrice } from "../../external_mock/data/format";
-import { useCart } from "../../external_mock/state/cart";
+import { useCart } from "../../external_mock/state/cart.jsx";
 
 const Cart = () => {
   const { 

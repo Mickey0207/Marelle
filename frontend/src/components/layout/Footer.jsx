@@ -36,37 +36,38 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="border-t mt-auto bg-lofi" >
-  <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <footer className="mt-auto" style={{background: '#FEFDFB', borderTop: '1px solid #E5E7EB'}}>
+      <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand Section */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center space-x-3 mb-4">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary-btn">
-                <span className="text-btn-white font-bold text-lg">M</span>
-              </div>
-              <span className="font-bold text-xl font-chinese text-lofi">Marelle</span>
+            <Link to="/" className="inline-block mb-6">
+              <span className="font-light text-2xl font-chinese tracking-tight" style={{color: '#333333', letterSpacing: '0.05em'}}>
+                Marelle
+              </span>
             </Link>
-            <p className="text-sm mb-4 font-chinese leading-relaxed text-lofi">
-              致力於為您帶來溫暖質樸的生活美學，
-              每一件商品都經過精心挑選，
-              體現Lo-Fi的生活態度與美好。
+            <p className="text-sm font-chinese leading-relaxed" style={{color: '#999999'}}>
+              致力於為您帶來溫暖質樸的生活美學<br/>
+              每一件商品都經過精心挑選<br/>
+              體現簡約的生活態度與美好
             </p>
           </div>
 
           {/* Footer Links */}
           {footerSections.map((section) => (
             <div key={section.title}>
-              <h3 className="font-semibold mb-4 font-chinese text-primary-btn">{section.title}</h3>
-              <ul className="space-y-2">
+              <h3 className="font-medium mb-6 font-chinese text-xs tracking-[0.15em] uppercase" style={{color: '#666666'}}>
+                {section.title}
+              </h3>
+              <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-sm font-chinese transition-colors duration-200"
-                      style={{color: '#666666'}}
+                      className="text-sm font-chinese font-normal transition-colors duration-200"
+                      style={{color: '#999999', letterSpacing: '0.02em'}}
                       onMouseEnter={(e) => e.target.style.color = '#CC824D'}
-                      onMouseLeave={(e) => e.target.style.color = '#666666'}
+                      onMouseLeave={(e) => e.target.style.color = '#999999'}
                     >
                       {link.name}
                     </Link>
@@ -78,26 +79,26 @@ const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="mt-8 pt-8 flex flex-col md:flex-row justify-between items-center" style={{borderTop: '1px solid rgba(102, 102, 102, 0.1)'}}>
-          <p className="text-sm font-chinese" style={{color: '#666666'}}>
-            © {currentYear} Marelle. 版權所有。
+        <div className="mt-12 pt-8 flex flex-col md:flex-row justify-between items-center" style={{borderTop: '1px solid #E5E7EB'}}>
+          <p className="text-xs font-chinese" style={{color: '#AAAAAA', letterSpacing: '0.05em'}}>
+            © {currentYear} Marelle. All rights reserved.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
+          <div className="flex space-x-8 mt-4 md:mt-0">
             <Link 
               to="/privacy" 
-              className="text-sm transition-colors duration-200 font-chinese"
-              style={{color: '#666666'}}
+              className="text-xs transition-colors duration-200 font-chinese"
+              style={{color: '#AAAAAA', letterSpacing: '0.05em'}}
               onMouseEnter={(e) => e.target.style.color = '#CC824D'}
-              onMouseLeave={(e) => e.target.style.color = '#666666'}
+              onMouseLeave={(e) => e.target.style.color = '#AAAAAA'}
             >
               隱私政策
             </Link>
             <Link 
               to="/terms" 
-              className="text-sm transition-colors duration-200 font-chinese"
-              style={{color: '#666666'}}
+              className="text-xs transition-colors duration-200 font-chinese"
+              style={{color: '#AAAAAA', letterSpacing: '0.05em'}}
               onMouseEnter={(e) => e.target.style.color = '#CC824D'}
-              onMouseLeave={(e) => e.target.style.color = '#666666'}
+              onMouseLeave={(e) => e.target.style.color = '#AAAAAA'}
             >
               服務條款
             </Link>

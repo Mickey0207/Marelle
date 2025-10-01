@@ -3,10 +3,10 @@ const r = (p) => p.replace(/\\/g, '/')
 
 module.exports = {
   content: [
-    r(path.resolve(__dirname, '../../apps/web/index.html')),
-    r(path.resolve(__dirname, '../../apps/web/src/**/*.{js,ts,jsx,tsx}')),
-    // 額外保險：掃描整個 web 目錄（含 Pages/components）
-    r(path.resolve(__dirname, '../../apps/web/**/*.{html,js,jsx,ts,tsx}')),
+  r(path.resolve(__dirname, '../apps/web/index.html')),
+  r(path.resolve(__dirname, '../apps/web/src/**/*.{js,ts,jsx,tsx}')),
+  // 額外保險：掃描整個 web 目錄（含 Pages/components）
+  r(path.resolve(__dirname, '../apps/web/**/*.{html,js,jsx,ts,tsx}')),
   ],
   safelist: [
     // 常用 utility 前綴（開發階段保險，避免 content 扫描落空）

@@ -11,7 +11,7 @@ import {
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { mockProducts } from "../../external_mock/data/products.mock";
 import { formatPrice } from "../../external_mock/data/format";
-import { useCart } from "../../external_mock/state/cart";
+import { useCart } from "../../external_mock/state/cart.jsx";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -81,17 +81,8 @@ const ProductDetail = () => {
     .slice(0, 4);
 
   return (
-    <div className="min-h-screen pt-20 pb-12 bg-lofi">
-  <div className="w-full px-4 sm:px-6 lg:px-8">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-6 font-chinese flex items-center px-4 py-2 rounded-lg transition-all duration-200 btn-secondary"
-        >
-          <ChevronLeftIcon className="w-5 h-5 mr-2" />
-          返回
-        </button>
-
+    <div className="min-h-screen pt-20 pb-12" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%)'}}>
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="product-detail-content">

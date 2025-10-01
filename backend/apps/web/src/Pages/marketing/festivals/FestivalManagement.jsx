@@ -47,15 +47,8 @@ const FestivalManagement = () => {
     { value: 'buy-one-get-one', label: '買一送一' }
   ];
 
-  useEffect(() => {
-    loadFestivals();
-  }, []);
-
-  useEffect(() => {
-    filterFestivals();
-  }, [festivals, searchQuery, statusFilter, typeFilter, filterFestivals]);
-
-  const loadFestivals = () => {
+  // 將函式提到 useEffect 之前，避免 TDZ (Temporal Dead Zone) 造成的 ReferenceError
+  const loadFestivals = useCallback(() => {
     try {
       const data = festivalDataManager.getAllFestivals();
       setFestivals(data);
@@ -64,19 +57,10 @@ const FestivalManagement = () => {
       console.error('載入節慶數據失敗:', error);
       setLoading(false);
     }
-  };
+  }, []);
 
   const filterFestivals = useCallback(() => {
     let filtered = [...festivals];
-              <div className="relative flex-1 max-w-xl">
-                <input
-                  type="text"
-                  placeholder="搜尋活動名稱或描述..."
-                  value={searchQuery}
-                  onChange={handleSearchInput}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cc824d] focus:border-transparent"
-                />
-              </div>
 
     // 搜尋篩選
     if (searchQuery) {
@@ -98,6 +82,14 @@ const FestivalManagement = () => {
 
     setFilteredFestivals(filtered);
   }, [festivals, searchQuery, statusFilter, typeFilter]);
+
+  useEffect(() => {
+    loadFestivals();
+  }, [loadFestivals]);
+
+  useEffect(() => {
+    filterFestivals();
+  }, [filterFestivals]);
 
   // 搜尋輸入框變更
   const handleSearchInput = (e) => setSearchQuery(e.target.value)

@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --config Package/fronted/vite.config.js",
-    "build": "vite build --config Package/fronted/vite.config.js",
-    "preview": "vite preview --config Package/fronted/vite.config.js",
-    "lint": "eslint apps/web/src --ext js,jsx -c Package/fronted/.eslintrc.cjs --report-unused-disable-directives --max-warnings 0"
+  "dev": "vite --config Package/vite.config.js",
+  "build": "vite build --config Package/vite.config.js",
+  "preview": "vite preview --config Package/vite.config.js",
+  "lint": "eslint apps/web/src --ext js,jsx -c Package/.eslintrc.cjs --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@ant-design/plots": "^2.6.5",

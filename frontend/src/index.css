@@ -152,12 +152,43 @@
 @layer base {
   html {
     font-family: "Noto Sans TC", system-ui, sans-serif;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    /* 隱藏捲軸但保持滾動功能 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  /* 隱藏 Chrome/Safari 捲軸 */
+  html::-webkit-scrollbar {
+    display: none;
   }
   
   body {
-    background-color: #EFEAE4;
+    background: linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%);
     color: #666666;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    /* 隱藏捲軸但保持滾動功能 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  /* 隱藏 Chrome/Safari 捲軸 */
+  body::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* 全域隱藏所有捲軸 */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 }
 

@@ -7,8 +7,9 @@ import { mockProducts } from "../../external_mock/data/products.mock";
 import { categories } from "../../external_mock/data/categories";
 import { formatPrice } from "../../external_mock/data/format";
 import { navigationConfig, generateRoutePath } from "../../external_mock/data/navigation";
-import { useCart } from "../../external_mock/state/cart";
+import { useCart } from "../../external_mock/state/cart.jsx";
 import SortDropdown from "../components/ui/SortDropdown";
+import { getProductTags, getTagConfig } from "../../external_mock/data/productTags";
 
 // 將 navigationConfig 轉換為適合的格式
 const hierarchicalCategories = navigationConfig;
@@ -217,27 +218,36 @@ export default function Products() {
   const { currentTitle, breadcrumb } = getDisplayInfo();
 
   return (
-    <div className="min-h-screen pt-20 pb-12">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <aside className="hidden lg:block lg:col-span-3">
-            <div className="sticky top-24 space-y-6">
-              <div className="p-4 rounded-xl bg-white/80 border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold font-chinese text-primary-btn">分類</h3>
-                  <SortDropdown value={sortBy} onChange={setSortBy} size="sm" />
-                </div>
+    <div className="min-h-screen pt-24 pb-24" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%)'}}>
+      <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-16">
+          <aside className="hidden lg:block lg:col-span-2">
+            <div className="sticky top-24 space-y-2">
+              <div className="pb-6 border-b border-gray-200">
+                <h3 className="font-medium font-chinese text-xs tracking-[0.15em] uppercase mb-4" style={{color: '#666666'}}>分類</h3>
                 <nav className="space-y-1">
                   {/* 全部商品按鈕 */}
                   <Link
                     to="/products"
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-chinese transition-all duration-300 ${
+                    className={`block py-2.5 pl-3 text-sm font-chinese transition-colors duration-200 relative ${
                       location.pathname === '/products'
-                        ? 'bg-primary-btn text-btn-white shadow-sm' 
-                        : 'text-lofi hover:bg-primary-btn/10 hover:text-primary-btn'
+                        ? 'font-medium' 
+                        : 'font-normal'
                     }`}
+                    style={{
+                      color: location.pathname === '/products' ? '#CC824D' : '#666666'
+                    }}
+                    onMouseEnter={(e) => e.target.style.color = '#CC824D'}
+                    onMouseLeave={(e) => {
+                      if (location.pathname !== '/products') {
+                        e.target.style.color = '#666666';
+                      }
+                    }}
                   >
                     <span>全部商品</span>
+                    {location.pathname === '/products' && (
+                      <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary-btn"></span>
+                    )}
                   </Link>
                   
                   {/* 分類導航 */}
@@ -251,20 +261,32 @@ export default function Products() {
                         <Link
                           to={getNodeRoutePath(root.slug)}
                           onClick={() => toggleExpand(root.slug)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-chinese transition-all duration-300 ${
-                            isNodeSelected(root.slug) 
-                              ? 'bg-primary-btn text-btn-white shadow-sm' 
-                              : isNodeParent(root.slug)
-                                ? 'bg-primary-btn/10 text-primary-btn font-medium'
-                                : 'text-lofi hover:bg-primary-btn/10 hover:text-primary-btn'
+                          className={`block py-2.5 pl-3 text-sm font-chinese transition-colors duration-200 relative ${
+                            isNodeSelected(root.slug) || isNodeParent(root.slug)
+                              ? 'font-medium' 
+                              : 'font-normal'
                           }`}
+                          style={{
+                            color: (isNodeSelected(root.slug) || isNodeParent(root.slug)) ? '#CC824D' : '#666666'
+                          }}
+                          onMouseEnter={(e) => e.target.style.color = '#CC824D'}
+                          onMouseLeave={(e) => {
+                            if (!isNodeSelected(root.slug) && !isNodeParent(root.slug)) {
+                              e.target.style.color = '#666666';
+                            }
+                          }}
                         >
-                          <span>{root.name}</span>
-                          {root.children && <ChevronDownIcon className={`w-4 h-4 transition-transform ${rootExpanded?'rotate-180':''}`} />}
+                          <span className="flex items-center justify-between">
+                            <span>{root.name}</span>
+                            {root.children && <ChevronDownIcon className={`w-3.5 h-3.5 ml-2 transition-transform ${rootExpanded?'rotate-180':''}`} style={{strokeWidth: 1.5}} />}
+                          </span>
+                          {isNodeSelected(root.slug) && (
+                            <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary-btn"></span>
+                          )}
                         </Link>
                         <div
-                          className={`mt-1 ml-2 pl-2 border-l border-gray-200 space-y-1 ${rootExpanded ? 'sidebar-anim-expand' : 'sidebar-anim-collapse'}`}
-                          style={{ pointerEvents: rootExpanded ? 'auto' : 'none' }}
+                          className={`mt-1 ml-3 pl-3 space-y-1 ${rootExpanded ? 'sidebar-anim-expand' : 'sidebar-anim-collapse'}`}
+                          style={{ pointerEvents: rootExpanded ? 'auto' : 'none', borderLeft: rootExpanded ? '1px solid #E5E7EB' : 'none' }}
                         >
                           {root.children && root.children.map(child => {
                             const childExpanded = expanded[child.slug];
@@ -277,16 +299,25 @@ export default function Products() {
                                 <Link
                                   to={getNodeRoutePath(child.slug)}
                                   onClick={() => { if(hasGrand) toggleExpand(child.slug); }}
-                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-chinese transition-all duration-300 ${
-                                    isNodeSelected(child.slug)
-                                      ? 'bg-primary-btn/90 text-btn-white shadow-sm'
-                                      : isNodeParent(child.slug)
-                                        ? 'bg-primary-btn/10 text-primary-btn font-medium'
-                                        : 'text-lofi hover:bg-primary-btn/10 hover:text-primary-btn'
+                                  className={`block py-2 text-sm font-chinese transition-colors duration-200 ${
+                                    isNodeSelected(child.slug) || isNodeParent(child.slug)
+                                      ? 'font-medium'
+                                      : 'font-normal'
                                   }`}
+                                  style={{
+                                    color: (isNodeSelected(child.slug) || isNodeParent(child.slug)) ? '#CC824D' : '#888888'
+                                  }}
+                                  onMouseEnter={(e) => e.target.style.color = '#CC824D'}
+                                  onMouseLeave={(e) => {
+                                    if (!isNodeSelected(child.slug) && !isNodeParent(child.slug)) {
+                                      e.target.style.color = '#888888';
+                                    }
+                                  }}
                                 >
-                                  <span>{child.name}</span>
-                                  {hasGrand && <ChevronDownIcon className={`w-4 h-4 transition-transform ${childExpanded?'rotate-180':''}`} />}
+                                  <span className="flex items-center justify-between">
+                                    <span>{child.name}</span>
+                                    {hasGrand && <ChevronDownIcon className={`w-3 h-3 ml-2 transition-transform ${childExpanded?'rotate-180':''}`} style={{strokeWidth: 1.5}} />}
+                                  </span>
                                 </Link>
                                 <div
                                   className={`mt-1 ml-2 pl-2 border-l border-gray-200 space-y-1 ${hasGrand && childExpanded ? 'sidebar-anim-expand' : 'sidebar-anim-collapse'}`}
@@ -303,16 +334,25 @@ export default function Products() {
                                         <Link 
                                           to={getNodeRoutePath(grand.slug)}
                                           onClick={() => { if(hasGreatGrand) toggleExpand(grand.slug); }}
-                                          className={`block w-full flex items-center justify-between px-3 py-1.5 rounded text-sm font-chinese transition-all duration-300 ${
-                                            isNodeSelected(grand.slug)
-                                              ? 'bg-primary-btn/80 text-btn-white shadow-sm'
-                                              : isNodeParent(grand.slug)
-                                                ? 'bg-primary-btn/5 text-primary-btn font-medium'
-                                                : 'text-lofi hover:bg-primary-btn/10 hover:text-primary-btn'
+                                          className={`block py-1.5 text-xs font-chinese transition-colors duration-200 ${
+                                            isNodeSelected(grand.slug) || isNodeParent(grand.slug)
+                                              ? 'font-medium'
+                                              : 'font-normal'
                                           }`}
+                                          style={{
+                                            color: (isNodeSelected(grand.slug) || isNodeParent(grand.slug)) ? '#CC824D' : '#999999'
+                                          }}
+                                          onMouseEnter={(e) => e.target.style.color = '#CC824D'}
+                                          onMouseLeave={(e) => {
+                                            if (!isNodeSelected(grand.slug) && !isNodeParent(grand.slug)) {
+                                              e.target.style.color = '#999999';
+                                            }
+                                          }}
                                         >
-                                          <span>{grand.name}</span>
-                                          {hasGreatGrand && <ChevronDownIcon className={`w-3 h-3 transition-transform ${grandExpanded?'rotate-180':''}`} />}
+                                          <span className="flex items-center justify-between">
+                                            <span>{grand.name}</span>
+                                            {hasGreatGrand && <ChevronDownIcon className={`w-3 h-3 ml-2 transition-transform ${grandExpanded?'rotate-180':''}`} style={{strokeWidth: 1.5}} />}
+                                          </span>
                                         </Link>
                                         <div
                                           className={`mt-1 ml-2 pl-2 border-l border-gray-200 space-y-1 ${hasGreatGrand && grandExpanded ? 'sidebar-anim-expand' : 'sidebar-anim-collapse'}`}
@@ -378,64 +418,145 @@ export default function Products() {
             </div>
           </aside>
 
-          <div className="lg:col-span-9">
-            <div className="mb-8 rounded-xl overflow-hidden border border-gray-200 bg-white/60 backdrop-blur-sm">
-              <div className="aspect-[16/5] w-full bg-gradient-to-r from-[#EFEAE4] to-[#e6ddcf] flex items-center">
-                <div className="px-10 py-8">
-                  <h2 className="text-3xl font-bold font-chinese text-primary-btn mb-3">{currentTitle}</h2>
-                  <p className="text-lofi font-chinese opacity-80 text-sm max-w-xl">精選 {breadcrumb} 系列商品，呈現簡約與質感的生活美學。</p>
-                </div>
+          <div className="lg:col-span-10">
+            <div className="mb-16">
+              <div className="border-b pb-8" style={{borderColor: '#E5E7EB'}}>
+                <h1 className="text-4xl md:text-5xl font-light font-chinese tracking-tight mb-4" style={{color: '#333333'}}>
+                  {currentTitle}
+                </h1>
+                <p className="text-sm font-chinese" style={{color: '#999999', letterSpacing: '0.05em'}}>
+                  {breadcrumb}
+                </p>
               </div>
             </div>
-            <div className="flex items-center justify-end mb-4 lg:hidden">
-              <SortDropdown value={sortBy} onChange={setSortBy} />
+            <div className="flex items-center justify-between mb-8">
+              <p className="text-sm font-chinese" style={{color: '#999999'}}>
+                顯示 {filteredProducts.length} 個商品
+              </p>
+              <div className="hidden lg:block">
+                <SortDropdown value={sortBy} onChange={setSortBy} size="sm" />
+              </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-              {filteredProducts.map(p => (
-                <div key={p.id} id={`product-${p.id}`} className="product-item group">
-                  <div className="product-card-minimal relative overflow-hidden">
-                    <div className="imgbox">
-                      {!p.inStock && <div className="badge-out font-chinese">缺貨</div>}
-                      <Link to={`/product/${p.id}`} className="block w-full h-full">
-                        <img src={p.image} alt={p.name} />
-                      </Link>
-                      {/* hover/focus 時才顯示操作列 */}
-                      <button
-                        className={`product-card-favcenter${favorites.has(p.id) ? ' active' : ''}`}
-                        onClick={e => { e.preventDefault(); toggleFavorite(p.id); }}
-                        aria-label="收藏"
-                        tabIndex={0}
-                        style={{ pointerEvents: 'auto', background: 'none', border: 'none', boxShadow: 'none' }}
-                      >
-                        {favorites.has(p.id)
-                          ? <HeartSolidIcon className="w-8 h-8" />
-                          : <HeartIcon className="w-8 h-8" />}
-                      </button>
-                      <button
-                        className="product-card-cartbar"
-                        onClick={e => { e.preventDefault(); handleAddToCart(p); }}
-                        disabled={!p.inStock}
-                        style={{ pointerEvents: 'auto' }}
-                      >{p.inStock ? '加入購物車' : '暫時缺貨'}</button>
-                    </div>
-                    <div className="info font-chinese">
-                      <Link to={`/product/${p.id}`}> <h3 className="title text-lofi hover:opacity-70 transition-opacity">{p.name}</h3></Link>
-                      <div className="pricing">
-                        <span className="price-tag font-bold">{formatPrice(p.price)}</span>
-                        {p.originalPrice && <span className="price-original">{formatPrice(p.originalPrice)}</span>}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12">
+              {filteredProducts.map(p => {
+                const tags = getProductTags(p);
+                const primaryTag = tags[0] ? getTagConfig(tags[0]) : null;
+                
+                return (
+                  <div key={p.id} id={`product-${p.id}`} className="group">
+                    <Link to={`/product/${p.id}`} className="block">
+                      <div className="relative mb-4 overflow-hidden bg-white" style={{aspectRatio: '1/1'}}>
+                        {primaryTag && (
+                          <div 
+                            className="absolute top-4 left-4 z-10 px-4 py-1.5 text-xs font-semibold font-chinese tracking-widest uppercase shadow-lg"
+                            style={{
+                              background: primaryTag.bgColor,
+                              color: primaryTag.textColor,
+                              border: `2px solid ${primaryTag.borderColor}`,
+                              borderRadius: '4px',
+                              backdropFilter: 'blur(8px)'
+                            }}
+                          >
+                            {primaryTag.label}
+                          </div>
+                        )}
+                        <img 
+                          src={p.image} 
+                          alt={p.name}
+                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        />
+                      
+                      {/* Hover overlay with actions */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-500 ease-out opacity-0 group-hover:opacity-100">
+                        <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3 px-4">
+                          <button
+                            onClick={(e) => { 
+                              e.preventDefault(); 
+                              e.stopPropagation();
+                              toggleFavorite(p.id); 
+                            }}
+                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform translate-y-4 group-hover:translate-y-0"
+                            style={{
+                              background: 'rgba(255,255,255,0.95)',
+                              color: favorites.has(p.id) ? '#CC824D' : '#666666'
+                            }}
+                            aria-label="收藏"
+                          >
+                            {favorites.has(p.id)
+                              ? <HeartSolidIcon className="w-5 h-5" />
+                              : <HeartIcon className="w-5 h-5" />}
+                          </button>
+                          
+                          {p.inStock && (
+                            <button
+                              onClick={(e) => { 
+                                e.preventDefault();
+                                e.stopPropagation(); 
+                                handleAddToCart(p); 
+                              }}
+                              className="px-6 h-12 rounded-full font-chinese text-sm font-medium tracking-wide transition-all duration-300 transform translate-y-4 group-hover:translate-y-0"
+                              style={{
+                                background: '#CC824D',
+                                color: '#FFFFFF'
+                              }}
+                            >
+                              加入購物車
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                    
+                    {/* Product info */}
+                    <div className="text-center px-2">
+                      <h3 className="font-chinese text-sm mb-2 transition-colors duration-200" 
+                        style={{color: '#333333', letterSpacing: '0.02em'}}>
+                        {p.name}
+                      </h3>
+                      <div className="flex items-center justify-center gap-3">
+                        <span className="font-chinese text-base" style={{color: '#CC824D', fontWeight: 500}}>
+                          {formatPrice(p.price)}
+                        </span>
+                        {p.originalPrice && (
+                          <span className="font-chinese text-sm line-through" style={{color: '#CCCCCC'}}>
+                            {formatPrice(p.originalPrice)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
                 </div>
-              ))}
+                );
+              })}
             </div>
             {filteredProducts.length === 0 && (
-              <div className="text-center py-12">
-                <div className="p-8 rounded-xl max-w-md mx-auto shadow-sm bg-white/80 border border-gray-200">
-                  <h3 className="text-xl font-semibold mb-2 font-chinese text-lofi">沒有找到相關商品</h3>
-                  <p className="mb-4 font-chinese text-gray-500">請嘗試調整搜尋條件或篩選器</p>
-                  <button onClick={()=>{setSearchTerm(''); setSelectedCategory('all');}} className="px-6 py-3 rounded-lg font-medium font-chinese transform hover:scale-105 transition-all duration-200 bg-primary-btn text-btn-white">清除篩選</button>
-                </div>
+              <div className="col-span-full text-center py-24">
+                <h3 className="text-2xl font-light font-chinese mb-4" style={{color: '#666666', letterSpacing: '0.05em'}}>
+                  沒有找到相關商品
+                </h3>
+                <p className="mb-8 font-chinese text-sm" style={{color: '#999999'}}>
+                  請嘗試調整搜尋條件或瀏覽其他類別
+                </p>
+                <Link 
+                  to="/products"
+                  onClick={() => {setSearchTerm(''); setSelectedNode(null);}}
+                  className="inline-block px-8 py-3 font-chinese text-sm font-medium tracking-wider transition-all duration-300"
+                  style={{
+                    background: '#CC824D',
+                    color: '#FFFFFF',
+                    border: '1px solid #CC824D'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#FFFFFF';
+                    e.target.style.color = '#CC824D';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#CC824D';
+                    e.target.style.color = '#FFFFFF';
+                  }}
+                >
+                  瀏覽所有商品
+                </Link>
               </div>
             )}
           </div>
@@ -443,21 +564,85 @@ export default function Products() {
       </div>
       {showFilters && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/30" onClick={()=>setShowFilters(false)} />
-          <div className="absolute top-0 left-0 h-full w-80 bg-white/90 backdrop-blur-sm border-r border-gray-200 p-6 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4"><h3 className="font-semibold font-chinese text-primary-btn">篩選與搜尋</h3><button onClick={()=>setShowFilters(false)} className="btn-ghost font-chinese">關閉</button></div>
-            <div className="mb-6"><label className="block text-sm font-medium mb-2 font-chinese text-lofi">排序</label><SortDropdown value={sortBy} onChange={setSortBy} /></div>
-            <div>
-              <h4 className="font-semibold mb-3 font-chinese text-primary-btn">分類</h4>
-              <div className="flex flex-wrap gap-2">
-                {categories.map(cat => (
-                  <button key={cat.id} onClick={()=>setSelectedCategory(cat.id)} className={`category-btn-lofi px-4 py-2 font-medium font-chinese ${selectedCategory===cat.id?'selected':''}`}>{cat.name}</button>
-                ))}
-              </div>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={()=>setShowFilters(false)} />
+          <div className="absolute top-0 right-0 h-full w-80 bg-white p-8 overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between mb-8 pb-6 border-b" style={{borderColor: '#E5E7EB'}}>
+              <h3 className="font-medium font-chinese text-sm tracking-[0.15em] uppercase" style={{color: '#333333'}}>
+                篩選與排序
+              </h3>
+              <button 
+                onClick={()=>setShowFilters(false)} 
+                className="text-sm font-chinese transition-colors duration-200"
+                style={{color: '#999999'}}
+                onMouseEnter={(e) => e.target.style.color = '#CC824D'}
+                onMouseLeave={(e) => e.target.style.color = '#999999'}
+              >
+                關閉
+              </button>
             </div>
-            <div className="mt-8 flex gap-3">
-              <button onClick={()=>{setSearchTerm(''); setSelectedCategory('all'); setSortBy('name');}} className="btn-secondary flex-1 font-chinese">重設</button>
-              <button onClick={()=>setShowFilters(false)} className="btn-primary flex-1 font-chinese">套用</button>
+            
+            <div className="mb-8">
+              <label className="block text-xs font-medium mb-4 font-chinese tracking-wider uppercase" style={{color: '#666666'}}>
+                排序方式
+              </label>
+              <SortDropdown value={sortBy} onChange={setSortBy} />
+            </div>
+            
+            <div className="mb-8">
+              <h4 className="text-xs font-medium mb-4 font-chinese tracking-wider uppercase" style={{color: '#666666'}}>
+                商品分類
+              </h4>
+              <nav className="space-y-1">
+                <Link
+                  to="/products"
+                  onClick={() => setShowFilters(false)}
+                  className="block py-2.5 text-sm font-chinese transition-colors duration-200"
+                  style={{color: location.pathname === '/products' ? '#CC824D' : '#666666'}}
+                >
+                  全部商品
+                </Link>
+                {hierarchicalCategories.map(root => (
+                  <div key={root.slug}>
+                    <Link
+                      to={getNodeRoutePath(root.slug)}
+                      onClick={() => setShowFilters(false)}
+                      className="block py-2.5 text-sm font-chinese transition-colors duration-200"
+                      style={{
+                        color: (isNodeSelected(root.slug) || isNodeParent(root.slug)) ? '#CC824D' : '#666666'
+                      }}
+                    >
+                      {root.name}
+                    </Link>
+                  </div>
+                ))}
+              </nav>
+            </div>
+            
+            <div className="pt-6 border-t" style={{borderColor: '#E5E7EB'}}>
+              <button 
+                onClick={()=>{
+                  setSearchTerm(''); 
+                  setSelectedNode(null); 
+                  setSortBy('name');
+                  setShowFilters(false);
+                }} 
+                className="w-full py-3 font-chinese text-sm font-medium tracking-wider transition-all duration-300"
+                style={{
+                  border: '1px solid #CC824D',
+                  color: '#CC824D',
+                  background: '#FFFFFF'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#CC824D';
+                  e.target.style.color = '#FFFFFF';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#FFFFFF';
+                  e.target.style.color = '#CC824D';
+                }}
+              >
+                重設篩選
+              </button>
             </div>
           </div>
         </div>

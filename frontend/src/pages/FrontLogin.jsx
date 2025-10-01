@@ -31,7 +31,7 @@ const FrontLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fdf8f2]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%)'}}>
       <Navbar />
       <main className="flex-1 flex flex-col items-center justify-center py-8 pt-16">
         {/* LOGO 區域 */}

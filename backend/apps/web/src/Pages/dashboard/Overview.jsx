@@ -17,29 +17,7 @@ const AdminOverview = () => {
     alerts: []
   });
 
-  useEffect(() => {
-    gsap.fromTo(
-      '.dashboard-section',
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" }
-    );
-    
-    loadDashboardData();
-  }, [loadDashboardData]);
-
-  const loadDashboardData = useCallback(() => {
-    // 模擬載入數據
-    setDashboardData({
-      recentOrders: generateMockOrders(),
-      topProducts: generateMockProducts(),
-      alerts: [
-        { id: 1, type: 'warning', message: '庫存不足警告：白色連衣裙庫存僅剩 3 件' },
-        { id: 2, type: 'info', message: '新客戶註冊：今日新增 15 位客戶' },
-        { id: 3, type: 'success', message: '銷售目標達成：本月已達成 105% 銷售目標' }
-      ]
-    });
-  }, []);
-
+  // 先宣告產生 mock 資料的函式，避免使用順序造成 TDZ 錯誤
   const generateMockOrders = () => 
     Array.from({ length: 5 }, (_, i) => ({
       id: `ORD-${Date.now()}-${i}`,
@@ -56,6 +34,28 @@ const AdminOverview = () => {
       name: ['優雅白色連衣裙', '經典黑色西裝外套', '時尚牛仔褲', '舒適棉質T恤', '精緻絲巾'][i],
       sales: Math.floor(Math.random() * 100) + 50
     }));
+
+  const loadDashboardData = useCallback(() => {
+    // 模擬載入數據
+    setDashboardData({
+      recentOrders: generateMockOrders(),
+      topProducts: generateMockProducts(),
+      alerts: [
+        { id: 1, type: 'warning', message: '庫存不足警告：白色連衣裙庫存僅剩 3 件' },
+        { id: 2, type: 'info', message: '新客戶註冊：今日新增 15 位客戶' },
+        { id: 3, type: 'success', message: '銷售目標達成：本月已達成 105% 銷售目標' }
+      ]
+    });
+  }, []);
+
+  useEffect(() => {
+    gsap.fromTo(
+      '.dashboard-section',
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power2.out" }
+    );
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const getStatusColor = (status) => {
     switch (status) {

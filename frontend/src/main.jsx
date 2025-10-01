@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
-import { CartProvider } from '../external_mock/state/cart.js'
+import { CartProvider } from '../external_mock/state/cart.jsx'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
