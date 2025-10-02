@@ -1,5 +1,5 @@
 import { TAG_TYPES } from './productTags.js';
-import { categories, flattenCategories } from './categories.js';
+import { categories, flattenCategories, findCategoryById, getCategoryPath } from './categories.js';
 
 // 產品模板數據
 const productTemplates = [
@@ -62,34 +62,25 @@ const productTemplates = [
   { name: 'Signature Absolue 90ml', price: 5880, category: 'signature-90ml', image: 'fragrance-w-2' },
 ];
 
-// 獲取分類的完整路徑
+// 使用 categories.js 的資料處理器獲取分類完整路徑
 const getCategoryFullPath = (categoryId) => {
-  const allCategories = flattenCategories();
-  const category = allCategories.find(cat => cat.id === categoryId);
-  if (!category) return null;
+  const category = findCategoryById(categoryId);
+  if (!category) {
+    console.warn(`Category not found: ${categoryId}`);
+    return null;
+  }
   
-  // 遞迴獲取父分類
-  const getParents = (id, cats = categories) => {
-    for (const cat of cats) {
-      if (cat.id === id) return [cat];
-      if (cat.children) {
-        for (const child of cat.children) {
-          if (child.id === id) return [cat, child];
-          if (child.children) {
-            const found = getParents(id, child.children);
-            if (found) return [cat, child, ...found];
-          }
-        }
-      }
-    }
-    return [];
-  };
+  const path = getCategoryPath(categoryId);
+  if (!path) {
+    console.warn(`Category path not found: ${categoryId}`);
+    return null;
+  }
   
-  const path = getParents(categoryId);
   return {
     ids: path.map(c => c.id),
     names: path.map(c => c.name),
     slugs: path.map(c => c.slug),
+    href: category.href,
     category: category
   };
 };
@@ -123,7 +114,10 @@ export const mockProducts = productTemplates.map((template, i) => {
     reviews: Math.floor(Math.random() * 150) + 10,
     description: `${template.name}採用頂級工藝製作，展現品牌經典風格與卓越品質。每個細節都經過精心設計，為您帶來完美的使用體驗。`,
     tags: tags,
-    href: pathInfo ? pathInfo.category.href : `/products/${template.category}`
+    // 使用 categories.js 提供的正確路由
+    href: pathInfo ? pathInfo.href : `/products/${template.category}`,
+    // 添加產品詳情頁路由
+    detailHref: `/product/${i + 1}`
   };
 });
 

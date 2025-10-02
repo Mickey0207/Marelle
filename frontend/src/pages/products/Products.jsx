@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
-import { gsap } from 'gsap';
-import { HeartIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import { mockProducts, getProductsByCategory, getProductsByCategoryPath } from "../../../external_mock/data/products.mock.js";
+import { Link, useLocation } from 'react-router-dom';
+import { mockProducts, getProductsByCategory } from "../../../external_mock/data/products.mock.js";
 import { categories, findCategoryById, getCategoryPath } from "../../../external_mock/data/categories.js";
-import { formatPrice } from "../../../external_mock/data/format.js";
 import { useCart } from "../../../external_mock/state/cart.jsx";
-import SortDropdown from "../../components/ui/SortDropdown.jsx";
-import { getProductTags, getTagConfig } from "../../../external_mock/data/productTags.js";
+import ProductQuickAddModal from "../../components/product/ProductQuickAddModal.jsx";
+import ProductsHeader from '../../components/product/ProductsHeader.jsx';
+import ProductCard from '../../components/product/ProductCard.jsx';
+import CategorySidebar from '../../components/product/CategorySidebar.jsx';
+import MobileFilterPanel from '../../components/product/MobileFilterPanel.jsx';
 
 // 使用統一的分類系統
 const hierarchicalCategories = categories;
@@ -69,7 +68,9 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState(new Set());
-  const [activeParents, setActiveParents] = useState(new Set());
+  // const [activeParents, setActiveParents] = useState(new Set()); // 保留可能的後續使用
+  const [quickAddProduct, setQuickAddProduct] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 同步當前路徑
   useEffect(() => {
@@ -91,26 +92,7 @@ export default function Products() {
   };
 
   // 生成節點的完整路徑
-  const getNodePath = (targetSlug) => {
-    const path = [];
-    
-    const findPath = (items, target, currentPath = []) => {
-      for (const item of items) {
-        const newPath = [...currentPath, item.slug];
-        if (item.slug === target) {
-          path.push(...newPath);
-          return true;
-        }
-        if (item.children && findPath(item.children, target, newPath)) {
-          return true;
-        }
-      }
-      return false;
-    };
-    
-    findPath(hierarchicalCategories, targetSlug);
-    return path;
-  };
+  // const getNodePath = (targetSlug) => { ...保留原本未使用方法 }
 
   // 處理收藏切換
   const toggleFavorite = (productId) => {
@@ -166,7 +148,15 @@ export default function Products() {
     setFilteredProducts(filtered);
   }, [searchTerm, currentPathSegments, sortBy]);
 
-  const handleAddToCart = p => addToCart(p);
+  const handleAddToCart = (product, quantity, variant) => {
+    addToCart(product, quantity);
+    // 可以在這裡處理 variant 邏輯
+  };
+
+  const openQuickAddModal = (product) => {
+    setQuickAddProduct(product);
+    setIsModalOpen(true);
+  };
 
   // 檢查一個分類是否應該顯示為活躍狀態（選中狀態）
   const isNodeSelected = (nodeId) => {
@@ -407,115 +397,23 @@ export default function Products() {
           </aside>
 
           <div className="lg:col-span-9 xl:col-span-10">
-            <div className="mb-8 xs:mb-10 sm:mb-12 md:mb-14 lg:mb-16">
-              <div className="border-b pb-5 xs:pb-6 sm:pb-7 md:pb-8" style={{borderColor: '#E5E7EB'}}>
-                <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-light font-chinese tracking-tight mb-2 xs:mb-3 sm:mb-4 md:mb-4" style={{color: '#333333'}}>
-                  {currentTitle}
-                </h1>
-                <p className="text-xs xs:text-xs sm:text-sm md:text-sm font-chinese" style={{color: '#999999', letterSpacing: '0.05em'}}>
-                  {breadcrumb}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between mb-6 xs:mb-7 sm:mb-8 md:mb-8 gap-3 xs:gap-4 sm:gap-0">
-              <p className="text-xs xs:text-sm sm:text-sm md:text-sm font-chinese" style={{color: '#999999'}}>
-                顯示 {filteredProducts.length} 個商品
-              </p>
-              <div className="hidden sm:block w-full xs:w-auto sm:w-auto">
-                <SortDropdown value={sortBy} onChange={setSortBy} size="sm" />
-              </div>
-            </div>
+            <ProductsHeader
+              currentTitle={currentTitle}
+              breadcrumb={breadcrumb}
+              count={filteredProducts.length}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+            />
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-x-3 xs:gap-x-4 sm:gap-x-5 md:gap-x-6 lg:gap-x-6 gap-y-8 xs:gap-y-10 sm:gap-y-12 md:gap-y-12">
-              {filteredProducts.map(p => {
-                const tags = getProductTags(p);
-                const primaryTag = tags[0] ? getTagConfig(tags[0]) : null;
-                
-                return (
-                  <div key={p.id} id={`product-${p.id}`} className="group">
-                    <Link to={`/product/${p.id}`} className="block">
-                      <div className="relative mb-3 xs:mb-3.5 sm:mb-4 md:mb-4 overflow-hidden bg-white rounded-lg" style={{aspectRatio: '1/1'}}>
-                        {primaryTag && (
-                          <div 
-                            className="absolute top-2 xs:top-3 sm:top-3 md:top-4 left-2 xs:left-3 sm:left-3 md:left-4 z-10 px-2 xs:px-3 sm:px-3 md:px-4 py-1 xs:py-1 sm:py-1.5 md:py-1.5 text-[10px] xs:text-xs sm:text-xs md:text-xs font-semibold font-chinese tracking-widest uppercase shadow-lg"
-                            style={{
-                              background: primaryTag.bgColor,
-                              color: primaryTag.textColor,
-                              border: `2px solid ${primaryTag.borderColor}`,
-                              borderRadius: '4px',
-                              backdropFilter: 'blur(8px)'
-                            }}
-                          >
-                            {primaryTag.label}
-                          </div>
-                        )}
-                        <img 
-                          src={p.image} 
-                          alt={p.name}
-                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                        />
-                      
-                      {/* Hover overlay with actions */}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-500 ease-out opacity-0 group-hover:opacity-100">
-                        <div className="absolute bottom-3 xs:bottom-4 sm:bottom-5 md:bottom-6 left-0 right-0 flex justify-center gap-2 xs:gap-2.5 sm:gap-3 md:gap-3 px-2 xs:px-3 sm:px-4 md:px-4">
-                          <button
-                            onClick={(e) => { 
-                              e.preventDefault(); 
-                              e.stopPropagation();
-                              toggleFavorite(p.id); 
-                            }}
-                            className="w-10 xs:w-11 sm:w-12 md:w-12 h-10 xs:h-11 sm:h-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 transform translate-y-4 group-hover:translate-y-0"
-                            style={{
-                              background: 'rgba(255,255,255,0.95)',
-                              color: favorites.has(p.id) ? '#CC824D' : '#666666'
-                            }}
-                            aria-label="收藏"
-                          >
-                            {favorites.has(p.id)
-                              ? <HeartSolidIcon className="w-4 xs:w-5 sm:w-5 md:w-5 h-4 xs:h-5 sm:h-5 md:h-5" />
-                              : <HeartIcon className="w-4 xs:w-5 sm:w-5 md:w-5 h-4 xs:h-5 sm:h-5 md:h-5" />}
-                          </button>
-                          
-                          {p.inStock && (
-                            <button
-                              onClick={(e) => { 
-                                e.preventDefault();
-                                e.stopPropagation(); 
-                                handleAddToCart(p); 
-                              }}
-                              className="px-3 xs:px-4 sm:px-5 md:px-6 h-10 xs:h-11 sm:h-12 md:h-12 rounded-full font-chinese text-xs xs:text-xs sm:text-sm md:text-sm font-medium tracking-wide transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 flex items-center justify-center"
-                              style={{
-                                background: '#CC824D',
-                                color: '#FFFFFF'
-                              }}
-                            >
-                              加入購物車
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Product info */}
-                    <div className="text-center px-1 xs:px-1.5 sm:px-2 md:px-2">
-                      <h3 className="font-chinese text-xs xs:text-xs sm:text-sm md:text-sm lg:text-base mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 transition-colors duration-200 line-clamp-2" 
-                        style={{color: '#333333', letterSpacing: '0.02em'}}>
-                        {p.name}
-                      </h3>
-                      <div className="flex items-center justify-center gap-2 xs:gap-2.5 sm:gap-3 md:gap-3">
-                        <span className="font-chinese text-sm xs:text-sm sm:text-base md:text-base lg:text-lg" style={{color: '#CC824D', fontWeight: 500}}>
-                          {formatPrice(p.price)}
-                        </span>
-                        {p.originalPrice && (
-                          <span className="font-chinese text-xs xs:text-xs sm:text-sm md:text-sm line-through" style={{color: '#CCCCCC'}}>
-                            {formatPrice(p.originalPrice)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                </div>
-                );
-              })}
+              {filteredProducts.map(p => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  isFavorite={favorites.has(p.id)}
+                  onToggleFavorite={toggleFavorite}
+                  onQuickAdd={openQuickAddModal}
+                />
+              ))}
             </div>
             {filteredProducts.length === 0 && (
               <div className="col-span-full text-center py-16 xs:py-20 sm:py-24 md:py-24 px-4">
@@ -550,91 +448,34 @@ export default function Products() {
           </div>
         </div>
       </div>
-      {showFilters && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={()=>setShowFilters(false)} />
-          <div className="absolute top-0 right-0 h-full w-80 bg-white p-8 overflow-y-auto shadow-2xl">
-            <div className="flex items-center justify-between mb-8 pb-6 border-b" style={{borderColor: '#E5E7EB'}}>
-              <h3 className="font-medium font-chinese text-sm tracking-[0.15em] uppercase" style={{color: '#333333'}}>
-                篩選與排序
-              </h3>
-              <button 
-                onClick={()=>setShowFilters(false)} 
-                className="text-sm font-chinese transition-colors duration-200"
-                style={{color: '#999999'}}
-                onMouseEnter={(e) => e.target.style.color = '#CC824D'}
-                onMouseLeave={(e) => e.target.style.color = '#999999'}
-              >
-                關閉
-              </button>
-            </div>
-            
-            <div className="mb-8">
-              <label className="block text-xs font-medium mb-4 font-chinese tracking-wider uppercase" style={{color: '#666666'}}>
-                排序方式
-              </label>
-              <SortDropdown value={sortBy} onChange={setSortBy} />
-            </div>
-            
-            <div className="mb-8">
-              <h4 className="text-xs font-medium mb-4 font-chinese tracking-wider uppercase" style={{color: '#666666'}}>
-                商品分類
-              </h4>
-              <nav className="space-y-1">
-                <Link
-                  to="/products"
-                  onClick={() => setShowFilters(false)}
-                  className="block py-2.5 text-sm font-chinese transition-colors duration-200"
-                  style={{color: location.pathname === '/products' ? '#CC824D' : '#666666'}}
-                >
-                  全部商品
-                </Link>
-                {hierarchicalCategories.map(root => (
-                  <div key={root.slug}>
-                    <Link
-                      to={getNodeRoutePath(root.slug)}
-                      onClick={() => setShowFilters(false)}
-                      className="block py-2.5 text-sm font-chinese transition-colors duration-200"
-                      style={{
-                        color: (isNodeSelected(root.slug) || isNodeParent(root.slug)) ? '#CC824D' : '#666666'
-                      }}
-                    >
-                      {root.name}
-                    </Link>
-                  </div>
-                ))}
-              </nav>
-            </div>
-            
-            <div className="pt-6 border-t" style={{borderColor: '#E5E7EB'}}>
-              <button 
-                onClick={()=>{
-                  setSearchTerm(''); 
-                  setSelectedNode(null); 
-                  setSortBy('name');
-                  setShowFilters(false);
-                }} 
-                className="w-full py-3 font-chinese text-sm font-medium tracking-wider transition-all duration-300"
-                style={{
-                  border: '1px solid #CC824D',
-                  color: '#CC824D',
-                  background: '#FFFFFF'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = '#CC824D';
-                  e.target.style.color = '#FFFFFF';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = '#FFFFFF';
-                  e.target.style.color = '#CC824D';
-                }}
-              >
-                重設篩選
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileFilterPanel
+        show={showFilters}
+        onClose={() => setShowFilters(false)}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        categories={hierarchicalCategories}
+        isNodeSelected={isNodeSelected}
+        isNodeParent={isNodeParent}
+        getNodeRoutePath={getNodeRoutePath}
+        locationPathname={location.pathname}
+        onReset={() => {
+          setSearchTerm('');
+            setSelectedNode(null);
+            setSortBy('name');
+            setShowFilters(false);
+        }}
+      />
+      
+      {/* 快速加入購物車彈出視窗 */}
+      <ProductQuickAddModal
+        product={quickAddProduct}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setQuickAddProduct(null);
+        }}
+        onAddToCart={handleAddToCart}
+      />
     </div>
   );
 }

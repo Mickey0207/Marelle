@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Navbar from './components/layout/Navbar'
+import ScrollManager from './components/layout/ScrollManager.jsx'
 import Footer from './components/layout/Footer'
 import Home from './pages/Home'
 import Products from './pages/products/Products.jsx'
@@ -14,6 +15,10 @@ import Cart from './pages/check/Cart.jsx'
 import Checkout from './pages/check/Checkout.jsx'
 import FrontLogin from './pages/auth/FrontLogin.jsx'
 import FrontRegister from './pages/auth/FrontRegister.jsx'
+import Profile from './pages/member/account/Profile.jsx'
+import OrdersCenter from './pages/member/order/OrdersCenter.jsx'
+import VipArea from './pages/member/vip/VipArea.jsx'
+import Favorites from './pages/favorites.jsx'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -29,6 +34,7 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50 to-apricot-50">
+        <ScrollManager />
         <Routes>
           <Route path="/*" element={
             <>
@@ -43,6 +49,10 @@ function App() {
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/login" element={<FrontLogin />} />
                   <Route path="/register" element={<FrontRegister />} />
+                  <Route path="/account" element={<Profile />} />
+                  <Route path="/orders" element={<OrdersCenter />} />
+                  <Route path="/vip" element={<VipArea />} />
+                  <Route path="/favorites" element={<Favorites />} />
                 </Routes>
               </main>
               <Footer />

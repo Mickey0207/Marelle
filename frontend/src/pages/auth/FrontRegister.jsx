@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { addUser, verifyCredentials } from '../../../external_mock/state/users.js';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import Navbar from "../../components/layout/Navbar";
 
@@ -8,9 +9,13 @@ const FrontRegister = () => {
     country: 'TW',
     phone: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     agree1: false,
     agree2: false
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   
@@ -42,9 +47,41 @@ const FrontRegister = () => {
     setForm(f => ({ ...f, [field]: !f[field] }));
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: 串接前台會員註冊API
+    if (submitting) return;
+    setError('');
+
+    // 驗證欄位
+    if (!form.phone && !form.email) {
+      setError('請輸入手機或 Email');
+      return;
+    }
+    if (!form.password || !form.confirmPassword) {
+      setError('請輸入密碼與確認密碼');
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      setError('兩次密碼不一致');
+      return;
+    }
+    if (!form.agree2) {
+      setError('請同意服務條款及隱私權');
+      return;
+    }
+
+    // 選擇使用哪個當作 username (這裡預設 email 優先，沒有就用 phone)
+    const username = (form.email || form.phone).trim();
+    try {
+      setSubmitting(true);
+      addUser(username, form.password, { phone: form.phone, email: form.email });
+      await verifyCredentials(username, form.password); // 自動登入建立 session
+      navigate('/');
+    } catch (err) {
+      setError(err.message || '註冊失敗');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -113,6 +150,28 @@ const FrontRegister = () => {
                 required
               />
             </div>
+            <div>
+              <input
+                type="password"
+                value={form.password}
+                onChange={e => handleChange('password', e.target.value)}
+                className="block w-full border-0 border-b border-[#e5ded6] bg-transparent text-sm xs:text-sm sm:text-base md:text-base lg:text-lg py-2.5 xs:py-2.5 sm:py-3 md:py-3 px-0 focus:ring-0 focus:border-[#bfae9b] placeholder-[#bfae9b] font-serif"
+                placeholder="設定密碼"
+                required
+                minLength={4}
+              />
+            </div>
+            <div>
+              <input
+                type="password"
+                value={form.confirmPassword}
+                onChange={e => handleChange('confirmPassword', e.target.value)}
+                className="block w-full border-0 border-b border-[#e5ded6] bg-transparent text-sm xs:text-sm sm:text-base md:text-base lg:text-lg py-2.5 xs:py-2.5 sm:py-3 md:py-3 px-0 focus:ring-0 focus:border-[#bfae9b] placeholder-[#bfae9b] font-serif"
+                placeholder="確認密碼"
+                required
+                minLength={4}
+              />
+            </div>
             <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2 md:gap-2 text-[10px] xs:text-xs sm:text-xs md:text-xs text-[#bfae9b]">
               <input type="checkbox" id="agree1" checked={form.agree1} onChange={() => handleCheckbox('agree1')} className="accent-[#cc824d]" />
               <label htmlFor="agree1">我願意接收Lo-Fi warehouse 居家生活館最新優惠活動及及服務推播/簡訊/郵件</label>
@@ -121,7 +180,16 @@ const FrontRegister = () => {
               <input type="checkbox" id="agree2" checked={form.agree2} onChange={() => handleCheckbox('agree2')} className="accent-[#cc824d]" />
               <label htmlFor="agree2">我同意網站 <a href="#" className="underline">服務條款及隱私權條款</a></label>
             </div>
-            <button type="submit" className="w-full bg-[#e5ded6] text-[#bfae9b] text-sm xs:text-sm sm:text-base md:text-base lg:text-lg font-bold py-2.5 xs:py-2.5 sm:py-3 md:py-3 lg:py-3.5 rounded font-serif tracking-wider mt-1.5 xs:mt-2 sm:mt-2 md:mt-2 cursor-not-allowed" disabled>下一步</button>
+            {error && (
+              <div className="text-red-600 text-xs xs:text-xs sm:text-sm md:text-sm font-serif">{error}</div>
+            )}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-[#cc824d] hover:bg-[#b86c37] disabled:bg-[#e5ded6] disabled:text-[#bfae9b] text-white text-sm xs:text-sm sm:text-base md:text-base lg:text-lg font-bold py-2.5 xs:py-2.5 sm:py-3 md:py-3 lg:py-3.5 rounded font-serif tracking-wider mt-1.5 xs:mt-2 sm:mt-2 md:mt-2 transition-colors"
+            >
+              {submitting ? '建立中...' : '建立帳號'}
+            </button>
           </div>
           <div className="w-full flex items-center my-5 xs:my-5 sm:my-6 md:my-6 lg:my-7">
             <div className="flex-1 h-px bg-[#e5ded6]" />
