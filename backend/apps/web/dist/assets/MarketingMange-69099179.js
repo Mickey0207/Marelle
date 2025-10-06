@@ -1,1 +1,0 @@
-import{j as e,r as s,O as a}from"./index-09c3368c.js";const r=()=>e.jsx("div",{className:"min-h-full flex flex-col",children:e.jsx("div",{className:"flex-1",children:e.jsx(s.Suspense,{fallback:e.jsx("div",{className:"p-6 text-gray-600",children:"載入中..."}),children:e.jsx(a,{})})})});export{r as default};

@@ -1,1 +1,0 @@
-const t=[{id:"n1",status:"pending",type:"email",title:"寄送訂單確認信"},{id:"n2",status:"failed",type:"line",title:"LINE 推播"},{id:"n3",status:"sent",type:"sms",title:"簡訊驗證碼"}],i={getNotifications(){return t}};export{i as n};
