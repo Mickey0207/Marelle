@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import SearchableSelect from '../ui/SearchableSelect';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 
 const PROVIDERS = [
   { value: '711', label: '7-ELEVEN', icon: () => <span className="inline-block w-4 h-4 rounded-sm bg-green-600" /> },
@@ -19,7 +20,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
           <input
             value={newAddress.contactName || ''}
             onChange={(e) => setNewAddress(prev => ({ ...prev, contactName: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            className={ADMIN_STYLES.input}
             placeholder="王小明"
           />
         </div>
@@ -28,7 +29,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
           <input
             value={newAddress.phone || ''}
             onChange={(e) => setNewAddress(prev => ({ ...prev, phone: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            className={ADMIN_STYLES.input}
             placeholder="09xx-xxx-xxx"
           />
         </div>
@@ -49,7 +50,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
           <input
             value={newAddress.storeName || ''}
             onChange={(e) => setNewAddress(prev => ({ ...prev, storeName: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            className={ADMIN_STYLES.input}
             placeholder="如 台北站前門市"
           />
         </div>
@@ -61,7 +62,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
           <input
             value={newAddress.storeId || ''}
             onChange={(e) => setNewAddress(prev => ({ ...prev, storeId: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            className={ADMIN_STYLES.input}
             placeholder="e.g., 123456"
           />
         </div>
@@ -70,7 +71,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
           <input
             value={newAddress.storeAddress || ''}
             onChange={(e) => setNewAddress(prev => ({ ...prev, storeAddress: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            className={ADMIN_STYLES.input}
             placeholder="完整地址"
           />
         </div>
@@ -88,7 +89,7 @@ const CVSAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
         <button
           onClick={onSave}
           disabled={!!saving}
-          className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+          className={`${ADMIN_STYLES.primaryButton} py-1.5 text-sm`}
         >
           {saving ? '儲存中…' : '新增門市'}
         </button>

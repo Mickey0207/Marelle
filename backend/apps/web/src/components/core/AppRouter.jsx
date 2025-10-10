@@ -30,6 +30,7 @@ const OrderDetails = lazy(() => import('../../Pages/orders/OrderDetails'));
 
 // Members 模組
 const MemberManagement = lazy(() => import('../../Pages/members/MemberManagement'));
+const EditMember = lazy(() => import('../../Pages/members/EditMember'));
 
 // Gifts 模組 （整合至 marketing，移除不存在頁面的匯入）
 
@@ -137,6 +138,7 @@ const AppRouter = () => {
 
             {/* Members 模組路由 */}
             <Route path="members" element={<MemberManagement />} />
+            <Route path="members/edit/:id" element={<EditMember />} />
 
             {/* Gifts 模組路由（整合後導向行銷管理） */}
             <Route path="gifts" element={<Navigate to="/marketing" replace />} />

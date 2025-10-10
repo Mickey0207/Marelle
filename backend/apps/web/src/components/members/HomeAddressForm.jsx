@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import SearchableSelect from '../ui/SearchableSelect';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 import { TAIWAN_CITIES, getDistrictsByCity } from '../../../../external_mock/members/taiwanDivisions';
 
 const HomeAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
@@ -17,7 +18,7 @@ const HomeAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
           <input
             value={newAddress.contactName || ''}
             onChange={(e) => setNewAddress(prev => ({ ...prev, contactName: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            className={ADMIN_STYLES.input}
             placeholder="王小明"
           />
         </div>
@@ -26,7 +27,7 @@ const HomeAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
           <input
             value={newAddress.phone || ''}
             onChange={(e) => setNewAddress(prev => ({ ...prev, phone: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            className={ADMIN_STYLES.input}
             placeholder="09xx-xxx-xxx"
           />
         </div>
@@ -57,7 +58,7 @@ const HomeAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
           <input
             value={newAddress.postalCode || ''}
             onChange={(e) => setNewAddress(prev => ({ ...prev, postalCode: e.target.value }))}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            className={ADMIN_STYLES.input}
             placeholder="e.g., 100"
           />
         </div>
@@ -68,7 +69,7 @@ const HomeAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
         <input
           value={newAddress.streetAddress || ''}
           onChange={(e) => setNewAddress(prev => ({ ...prev, streetAddress: e.target.value }))}
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+          className={ADMIN_STYLES.input}
           placeholder="某某路 123 號 5 樓"
         />
       </div>
@@ -85,7 +86,7 @@ const HomeAddressForm = ({ newAddress, setNewAddress, onSave, saving }) => {
         <button
           onClick={onSave}
           disabled={!!saving}
-          className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+          className={`${ADMIN_STYLES.primaryButton} py-1.5 text-sm`}
         >
           {saving ? '儲存中…' : '新增地址'}
         </button>

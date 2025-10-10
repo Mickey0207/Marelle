@@ -14,12 +14,15 @@ import RefundsList from "../../components/members/RefundsList";
 import HomeAddressList from "../../components/members/HomeAddressList";
 import CVSAddressList from "../../components/members/CVSAddressList";
 import { ADMIN_STYLES } from "../../Style/adminStyles";
+import IconActionButton from "../../components/ui/IconActionButton";
+import { useNavigate } from 'react-router-dom';
 
 const empty = [];
 
 const MemberManagement = () => {
   const [selectedLevel, setSelectedLevel] = useState('全部');
   const [selectedStatus, setSelectedStatus] = useState('全部');
+  const navigate = useNavigate();
   const [_showAddModal, _setShowAddModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'orders' | 'home' | 'cvs' | 'refunds'
@@ -76,26 +79,28 @@ const MemberManagement = () => {
   }, [selectedLevel, selectedStatus, memberData]);
 
   const getLevelBadge = (level) => {
-    const levelConfig = {
-      'VIP': { bg: 'bg-purple-100', text: 'text-purple-700', icon: '👑' },
-      '金卡': { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: '🥇' },
-      '銀卡': { bg: 'bg-gray-100', text: 'text-gray-700', icon: '🥈' },
-      '一般': { bg: 'bg-blue-100', text: 'text-blue-700', icon: '✅' }
+    // 統一為專案的 chips 風格（圓角膠囊 + 一致色票）
+    const clsMap = {
+      VIP: 'bg-purple-100 text-purple-800',
+      金卡: 'bg-yellow-100 text-yellow-800',
+      銀卡: 'bg-gray-100 text-gray-800',
+      一般: 'bg-blue-100 text-blue-800',
     };
-    const config = levelConfig[level] || levelConfig['一般'];
+    const colorCls = clsMap[level] || clsMap['一般'];
     return (
-      <span className={`inline-flex items-center px-2 py-1 text-xs font-bold rounded font-chinese ${config.bg} ${config.text}`}>
-        {config.icon} {level}
+      <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full font-medium font-chinese ${colorCls}`}>
+        {level}
       </span>
     );
   };
 
   const getStatusBadge = (status) => {
-    return status === 'active' ? (
-      <span className="inline-flex items-center px-2 py-1 text-xs font-bold bg-green-100 text-green-700 rounded font-chinese">活動</span>
-    ) : (
-      <span className="inline-flex items-center px-2 py-1 text-xs font-bold bg-red-100 text-red-700 rounded font-chinese">休眠</span>
-    );
+    // 與全站一致的狀態樣式
+    const base = 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-full font-chinese';
+    if (status === 'active') {
+      return <span className={`${base} bg-green-100 text-green-800`}>活動</span>;
+    }
+    return <span className={`${base} bg-red-100 text-red-800`}>休眠</span>;
   };
 
   const columns = [
@@ -160,34 +165,29 @@ const MemberManagement = () => {
       key: 'tags',
       label: '標籤',
       sortable: false,
-      render: (value = []) => (
-        <div className="flex flex-wrap gap-1">
-          {value.slice(0, 2).map((tag, idx) => (
-            <span key={idx} className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded font-chinese">
-              <TagIcon className="w-3 h-3 mr-1" />{tag}
-            </span>
-          ))}
-        </div>
-      )
+      render: (value, _member) => {
+        const tags = Array.isArray(value) ? value : [];
+        return (
+          <div className="flex flex-wrap gap-1">
+            {tags.slice(0, 2).map((tag, idx) => (
+              <span key={idx} className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 font-chinese">
+                <TagIcon className="w-3 h-3" />{tag}
+              </span>
+            ))}
+          </div>
+        );
+      }
     },
     {
       key: 'actions',
       label: '操作',
       sortable: false,
       render: (value, member) => (
-        <div className="flex space-x-2">
-          <button className="p-1 text-blue-600 hover:bg-blue-100 rounded" title="查看詳情" onClick={() => setSelectedMember(member)}>
-            <EyeIcon className="w-4 h-4" />
-          </button>
-          <button className="p-1 text-green-600 hover:bg-green-100 rounded" title="編輯">
-            <PencilIcon className="w-4 h-4" />
-          </button>
-          <button className="p-1 text-purple-600 hover:bg-purple-100 rounded" title="溝通紀錄">
-            <ChatBubbleLeftIcon className="w-4 h-4" />
-          </button>
-          <button className="p-1 text-amber-600 hover:bg-amber-100 rounded" title="積分管理">
-            <CreditCardIcon className="w-4 h-4" />
-          </button>
+        <div className="flex items-center gap-2">
+          <IconActionButton Icon={EyeIcon} label="查看詳情" variant="blue" onClick={() => setSelectedMember(member)} />
+          <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" onClick={() => navigate(`/members/edit/${member.id}`)} />
+          <IconActionButton Icon={ChatBubbleLeftIcon} label="溝通紀錄" variant="purple" />
+          <IconActionButton Icon={CreditCardIcon} label="積分管理" variant="green" />
         </div>
       )
     }
@@ -201,7 +201,7 @@ const MemberManagement = () => {
             <UsersIcon className="w-8 h-8 text-amber-500 mr-3" />
             <h1 className="text-3xl font-bold text-gray-800 font-chinese">會員管理系統</h1>
           </div>
-          <button className="btn btn-primary flex items-center" onClick={() => _setShowAddModal(true)}>
+          <button className={`${ADMIN_STYLES.primaryButton} flex items-center`} onClick={() => _setShowAddModal(true)}>
             <PlusIcon className="w-5 h-5 mr-2" />
             新增會員
           </button>
@@ -233,7 +233,7 @@ const MemberManagement = () => {
           size="max-w-2xl"
         >
           {selectedMember && (
-            <div className="p-6 space-y-4">
+            <div className="p-6 pt-0 space-y-4">
               <TabNavigation
                 mode="controlled"
                 activeKey={activeTab}
@@ -418,7 +418,7 @@ const MemberManagement = () => {
             title={orderDetail.type === 'order' ? `訂單詳情：${orderDetail.data.orderNo}` : `退款詳情：${orderDetail.data.refundNo}`}
             size="max-w-4xl"
           >
-            <div className="p-4">
+            <div className="p-6 pt-0">
               <OrderRefundDetailTabs detail={orderDetail} />
             </div>
           </GlassModal>

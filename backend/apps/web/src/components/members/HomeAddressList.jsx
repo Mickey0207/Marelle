@@ -1,4 +1,5 @@
 import React from 'react';
+import { ADMIN_STYLES } from '../../Style/adminStyles';
 
 const HomeAddressList = ({ addresses, memberId, refreshAfter, dataManager }) => {
   const list = (addresses || []).filter(a => a.type === 'home');
@@ -14,14 +15,14 @@ const HomeAddressList = ({ addresses, memberId, refreshAfter, dataManager }) => 
           <div className="text-sm">
             <div className="font-chinese font-semibold">
               {addr.contactName}（{addr.phone}）
-              {addr.isDefault && <span className="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">預設</span>}
+              {addr.isDefault && <span className="ml-2 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">預設</span>}
             </div>
             <div className="text-gray-600">{addr.postalCode} {addr.city}{addr.district}{addr.streetAddress}</div>
           </div>
           <div className="flex gap-2 mt-0">
             {!addr.isDefault && (
               <button
-                className="px-3 py-1 text-xs bg-blue-600 text-white rounded"
+                className={`${ADMIN_STYLES.primaryButton} py-1 text-xs`}
                 onClick={async () => {
                   await dataManager.setDefaultShippingAddress(memberId, addr.id);
                   await refreshAfter();
@@ -29,7 +30,7 @@ const HomeAddressList = ({ addresses, memberId, refreshAfter, dataManager }) => 
               >設為預設</button>
             )}
             <button
-              className="px-3 py-1 text-xs bg-red-600 text-white rounded"
+              className="px-3 py-1 text-xs rounded-lg bg-red-600 text-white hover:bg-red-700"
               onClick={async () => {
                 await dataManager.deleteShippingAddress(memberId, addr.id);
                 await refreshAfter();

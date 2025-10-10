@@ -1,5 +1,7 @@
 import React from 'react';
 
+const money = (n) => `NT$ ${Number(n || 0).toLocaleString()}`;
+
 const OrdersList = ({ orders, onOpen }) => {
   if (!orders || orders.length === 0) {
     return <div className="text-sm text-gray-500">尚無訂單</div>;
@@ -15,7 +17,7 @@ const OrdersList = ({ orders, onOpen }) => {
           <div className="flex flex-wrap items-center justify-between">
             <div className="font-mono text-sm">{order.orderNo}</div>
             <div className="text-sm text-gray-600">{order.createdAt}</div>
-            <div className="text-sm font-semibold">NT$ {order.totals.grandTotal.toLocaleString()}</div>
+            <div className="text-sm font-semibold">{money(order?.totals?.grandTotal ?? order?.grandTotal ?? order?.total)}</div>
             <div className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{order.status}</div>
           </div>
         </button>
