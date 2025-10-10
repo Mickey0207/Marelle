@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
-import { getProductTags, getTagConfig } from '../../../external_mock/data/productTags';
-import { formatPrice } from '../../../external_mock/data/format';
+import { getProductTags, getTagConfig } from '../../../external_mock/data/productTags.js';
+import { buildProductDetailUrl } from '../../../external_mock/data/products.mock.js';
+import { formatPrice } from '../../../external_mock/data/format.js';
 
 const FeaturedProducts = ({ products }) => {
   return (
@@ -20,7 +21,7 @@ const FeaturedProducts = ({ products }) => {
             const tags = getProductTags(product);
             const primaryTag = tags[0] ? getTagConfig(tags[0]) : null;
             return (
-              <Link key={product.id} to={`/product/${product.id}`} className="product-card group block">
+              <Link key={product.id} to={buildProductDetailUrl(product)} className="product-card group block">
                 <div className="relative mb-3 xs:mb-3.5 sm:mb-4 md:mb-4 overflow-hidden bg-white rounded-lg" style={{aspectRatio: '1/1'}}>
                   {primaryTag && (
                     <div className="absolute top-2 xs:top-3 sm:top-3 md:top-4 left-2 xs:left-3 sm:left-3 md:left-4 z-10 px-2 xs:px-3 sm:px-3 md:px-4 py-1 xs:py-1 sm:py-1.5 md:py-1.5 text-[10px] xs:text-xs sm:text-xs md:text-xs font-semibold font-chinese tracking-widest uppercase shadow-lg"

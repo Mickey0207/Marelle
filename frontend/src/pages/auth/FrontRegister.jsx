@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { addUser, verifyCredentials } from '../../../external_mock/state/users.js';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { addUser, getCurrentUser, verifyCredentials } from '../../../external_mock/state/users.js';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import Navbar from "../../components/layout/Navbar";
 
 const FrontRegister = () => {
   const [form, setForm] = useState({
@@ -24,6 +23,16 @@ const FrontRegister = () => {
   ];
   
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // 已登入者造訪 /register 時，自動導回來源頁或帳戶頁
+  useEffect(() => {
+    const u = getCurrentUser();
+    if (u) {
+      const from = location.state?.from || '/account';
+      navigate(from, { replace: true });
+    }
+  }, [navigate, location]);
 
   // 點擊外部關閉下拉選單
   useEffect(() => {
@@ -86,7 +95,6 @@ const FrontRegister = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fdf8f2]">
-      <Navbar />
       <main className="flex-1 flex flex-col items-center justify-center py-6 xs:py-8 sm:py-10 md:py-12 pt-16 xs:pt-18 sm:pt-20 md:pt-20 px-4 xs:px-6 sm:px-8">
         {/* LOGO 區域 */}
         <div className="w-full max-w-md mx-auto mb-6 xs:mb-7 sm:mb-8 md:mb-8 lg:mb-10 text-center">
@@ -137,7 +145,6 @@ const FrontRegister = () => {
                 onChange={e => handleChange('phone', e.target.value)}
                 className="flex-1 border-0 border-b border-[#e5ded6] bg-transparent text-sm xs:text-sm sm:text-base md:text-base lg:text-lg py-2.5 xs:py-2.5 sm:py-3 md:py-3 px-0 focus:ring-0 focus:border-[#bfae9b] placeholder-[#bfae9b] font-serif"
                 placeholder="912 345 678"
-                required
               />
             </div>
             <div>
@@ -147,7 +154,6 @@ const FrontRegister = () => {
                 onChange={e => handleChange('email', e.target.value)}
                 className="block w-full border-0 border-b border-[#e5ded6] bg-transparent text-sm xs:text-sm sm:text-base md:text-base lg:text-lg py-2.5 xs:py-2.5 sm:py-3 md:py-3 px-0 focus:ring-0 focus:border-[#bfae9b] placeholder-[#bfae9b] font-serif"
                 placeholder="電郵"
-                required
               />
             </div>
             <div>

@@ -20,7 +20,8 @@ const SearchableSelect = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredOptions, setFilteredOptions] = useState(options);
   const [selectedValues, setSelectedValues] = useState(multiple ? (Array.isArray(value) ? value : []) : [value]);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, mode: 'fixed' });
+  const [portalTarget, setPortalTarget] = useState(null);
   
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
@@ -60,30 +61,42 @@ const SearchableSelect = ({
       const rect = dropdownRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const dropdownHeight = 300; // 估計下拉選單高度
-      
+
+      // 偵測 Modal 內的 portal 目標（若存在，改用 absolute 並基於該容器座標）
+      let target = portalTarget;
+      if (!target) {
+        const modalRoot = dropdownRef.current.closest('.glass-modal-root');
+        const portalEl = modalRoot ? modalRoot.querySelector('.glass-modal-portal') : null;
+        target = portalEl || document.body;
+        setPortalTarget(target);
+      }
+
       let top = rect.bottom + 2;
       let left = rect.left;
-      
-      // 檢查是否會超出視窗底部，如果會則顯示在按鈕上方
-      if (top + dropdownHeight > viewportHeight) {
-        top = rect.top - dropdownHeight - 2;
+      let mode = 'fixed';
+
+      if (target && target !== document.body) {
+        const rootRect = target.getBoundingClientRect();
+        top = rect.bottom - rootRect.top + 2;
+        left = rect.left - rootRect.left;
+        mode = 'absolute';
+      } else {
+        // 檢查是否會超出視窗底部，如果會則顯示在按鈕上方
+        if (top + dropdownHeight > viewportHeight) {
+          top = rect.top - dropdownHeight - 2;
+        }
+        // 檢查是否會超出視窗右邊，如果會則向左調整
+        if (left + rect.width > window.innerWidth) {
+          left = window.innerWidth - rect.width - 10;
+        }
+        // 確保不會超出視窗左邊
+        if (left < 10) {
+          left = 10;
+        }
+        top = Math.max(top, 10);
       }
-      
-      // 檢查是否會超出視窗右邊，如果會則向左調整
-      if (left + rect.width > window.innerWidth) {
-        left = window.innerWidth - rect.width - 10;
-      }
-      
-      // 確保不會超出視窗左邊
-      if (left < 10) {
-        left = 10;
-      }
-      
-      setDropdownPosition({
-        top: Math.max(top, 10), // 確保不會超出視窗頂部
-        left: left,
-        width: rect.width
-      });
+
+      setDropdownPosition({ top, left, width: rect.width, mode });
     }
   };
 
@@ -107,6 +120,10 @@ const SearchableSelect = ({
     if (isOpen && listRef.current) {
       // 確保位置正確
       updateDropdownPosition();
+      // 在開啟後短時間內多次重新計算，避免動畫或布局抖動
+      let raf1 = requestAnimationFrame(updateDropdownPosition);
+      let raf2 = requestAnimationFrame(updateDropdownPosition);
+      const t = setTimeout(updateDropdownPosition, 200);
       
       gsap.fromTo(listRef.current, 
         {
@@ -122,6 +139,7 @@ const SearchableSelect = ({
           ease: 'power2.out'
         }
       );
+      return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); clearTimeout(t); };
     }
   }, [isOpen]);
 
@@ -309,7 +327,7 @@ const SearchableSelect = ({
       {isOpen && createPortal(
         <div
           ref={listRef}
-          className="fixed z-[200000] glass-dropdown"
+          className={`glass-dropdown ${dropdownPosition.mode === 'fixed' ? 'fixed' : 'absolute'} z-[200000] pointer-events-auto`}
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
@@ -355,7 +373,7 @@ const SearchableSelect = ({
               </button>
             )}
 
-            {filteredOptions.slice(0, maxDisplayOptions).map((option) => (
+            {filteredOptions.map((option) => (
               <button
                 key={option.value}
                 onClick={() => handleSelect(option)}
@@ -382,14 +400,9 @@ const SearchableSelect = ({
               </div>
             )}
 
-            {filteredOptions.length > maxDisplayOptions && (
-              <div className="glass-dropdown-more font-chinese">
-                還有 {filteredOptions.length - maxDisplayOptions} 個選項...
-              </div>
-            )}
           </div>
         </div>,
-        document.body
+        portalTarget || document.body
       )}
     </div>
   );

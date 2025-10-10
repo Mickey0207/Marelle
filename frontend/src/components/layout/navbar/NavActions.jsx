@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBagIcon, MagnifyingGlassIcon, UserIcon, HeartIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useCart } from '../../../../external_mock/state/cart.jsx';
 import { getCurrentUser, logout } from '../../../../external_mock/state/users.js';
@@ -10,6 +10,7 @@ const NavActions = ({
 }) => {
   const { cartItemsCount } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const accountMenuRef = useRef(null);
@@ -22,6 +23,11 @@ const NavActions = ({
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
   }, []);
+
+  // 同頁籤內導頁時，同步檢查目前登入狀態（storage 事件不會在同頁觸發）
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -128,7 +134,8 @@ const NavActions = ({
         </div>
       ) : (
         <Link
-          to="/login"
+          to={{ pathname: '/login' }}
+          state={{ from: location.pathname }}
           className="p-1.5 xs:p-2 transition-colors duration-200"
           aria-label="會員登入"
           style={{color: '#666666'}}

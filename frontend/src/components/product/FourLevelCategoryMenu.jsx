@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import categories from '../../../external_mock/data/categories';
+import { categories } from '../../../external_mock/data/categories.js';
 
 // 四層分類選單元件 (移動到 product 專屬資料夾)
 const FourLevelCategoryMenu = ({ onSelect }) => {

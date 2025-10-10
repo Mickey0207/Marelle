@@ -79,7 +79,8 @@ const MobileMenu = ({
           </div>
           <div className="border-t px-6 py-6 mt-auto" style={{borderColor:'#E5E7EB', background:'#FAFAFA'}}>
             <Link
-              to="/login"
+              to={{ pathname: '/login' }}
+              state={{ from: window.location?.pathname || '/' }}
               onClick={() => { setIsMenuOpen(false); setExpandedItems({}); }}
               className="flex items-center py-3 font-chinese text-sm transition-colors duration-200"
               style={{color:'#666666', letterSpacing:'0.05em'}}

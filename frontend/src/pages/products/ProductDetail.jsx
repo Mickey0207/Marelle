@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
-import { mockProducts } from "../../../external_mock/data/products.mock.js";
+import { mockProducts, getProductByUrlKey } from "../../../external_mock/data/products.mock.js";
 import { useCart } from "../../../external_mock/state/cart.jsx";
 import { getCategoryPath } from "../../../external_mock/data/categories.js";
 import ProductBreadcrumb from '../../components/product/Detail/ProductBreadcrumb.jsx';
@@ -12,6 +12,7 @@ import RelatedProducts from '../../components/product/Detail/RelatedProducts.jsx
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -45,28 +46,51 @@ const ProductDetail = () => {
   const handleNextImage = () => setSelectedImage((prev) => (prev + 1) % productImages.length);
 
   useEffect(() => {
-    const foundProduct = mockProducts.find(p => p.id === parseInt(id));
+    const parseLegacyId = (s) => {
+      const m = String(s || '').match(/-(\d+)$/);
+      return m ? parseInt(m[1], 10) : null;
+    };
+
+    let targetId = id ? parseInt(id) : null;
+    if (!targetId) {
+      // 從萬用字元路由中取最後一段，優先以 urlKey 查找，找不到再嘗試舊版 slug-id 解析
+      const parts = location.pathname.split('/').filter(Boolean);
+      const last = parts[parts.length - 1];
+      const byKey = getProductByUrlKey(last);
+      targetId = byKey ? byKey.id : parseLegacyId(last);
+    }
+    if (!targetId || Number.isNaN(targetId)) {
+      setProduct(null);
+      navigate('/products');
+      return;
+    }
+    const foundProduct = mockProducts.find(p => p.id === targetId);
     if (foundProduct) {
       setProduct(foundProduct);
-      // Animate product details on load
-      gsap.fromTo(
-        '.product-detail-content',
-        {
-          opacity: 0,
-          y: 30,
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          stagger: 0.1,
-          ease: 'power2.out',
-        }
-      );
     } else {
+      setProduct(null);
       navigate('/products');
     }
-  }, [id, navigate]);
+    // 僅在 id 或 hash 變更時重查
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, location.hash, navigate]);
+
+  // 在 product 狀態更新且 DOM 已渲染後再進行動畫，避免 GSAP target not found 警告
+  useEffect(() => {
+    if (!product) return;
+    // 等待一個 frame 確保節點已插入
+    const raf = requestAnimationFrame(() => {
+      const targets = document.querySelectorAll('.product-detail-content');
+      if (targets.length) {
+        gsap.fromTo(
+          targets,
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: 'power2.out' }
+        );
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [product]);
 
   const handleAddToCart = (qty) => {
     if (!product) return;

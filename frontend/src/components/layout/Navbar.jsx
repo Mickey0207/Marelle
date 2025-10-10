@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { categories } from "../../../external_mock/data/categories";
+import { categories } from "../../../external_mock/data/categories.js";
 import MegaPanel from './navbar/MegaPanel.jsx';
 import NavActions from './navbar/NavActions.jsx';
 import MobileMenu from './navbar/MobileMenu.jsx';
@@ -13,6 +13,7 @@ const Navbar = () => {
   const [panelMode, setPanelMode] = useState('root');
   const [activeLevel2, setActiveLevel2] = useState(null);
   const [activeLevel3, setActiveLevel3] = useState(null);
+  const [activeLevel4, setActiveLevel4] = useState(null);
   const [panelHeight, setPanelHeight] = useState(0);
   const location = useLocation();
 
@@ -61,7 +62,7 @@ const Navbar = () => {
               <div
                 key={cat.id}
                 className="relative h-full flex items-center"
-                onMouseEnter={() => { setActiveRoot(cat.id); setPanelMode('root'); setActiveLevel2(null); setActiveLevel3(null); }}
+                onMouseEnter={() => { setActiveRoot(cat.id); setPanelMode('root'); setActiveLevel2(null); setActiveLevel3(null); setActiveLevel4(null); }}
               >
                 <Link
                   to={cat.href}
@@ -88,6 +89,8 @@ const Navbar = () => {
           setActiveLevel2={setActiveLevel2}
           activeLevel3={activeLevel3}
           setActiveLevel3={setActiveLevel3}
+          activeLevel4={activeLevel4}
+          setActiveLevel4={setActiveLevel4}
           categories={topLevelCategories}
         />
         {/* 選單後方主頁內容的玻璃態覆蓋層 */}
@@ -95,7 +98,7 @@ const Navbar = () => {
           <div
             className="hidden lg:block fixed left-0 right-0 z-30"
             style={{
-              top: `${80 + panelHeight}px`,
+              top: '80px',
               bottom: 0,
               background: 'rgba(255,255,255,0.4)',
               backdropFilter: 'blur(20px) saturate(160%)',

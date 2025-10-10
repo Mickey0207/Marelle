@@ -11,6 +11,7 @@ import Footer from './components/layout/Footer'
 import Home from './pages/Home'
 import Products from './pages/products/Products.jsx'
 import ProductDetail from './pages/products/ProductDetail.jsx'
+import ProductsOrDetail from './pages/products/ProductsOrDetail.jsx'
 import Cart from './pages/check/Cart.jsx'
 import Checkout from './pages/check/Checkout.jsx'
 import FrontLogin from './pages/auth/FrontLogin.jsx'
@@ -43,7 +44,9 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/products" element={<Products />} />
-                  <Route path="/products/*" element={<Products />} />
+                  {/* 使用萬用字元支援任意層級分類與最末段 product slug */}
+                  <Route path="/products/*" element={<ProductsOrDetail />} />
+                  {/* 舊路由暫時保留相容 */}
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />

@@ -9,7 +9,7 @@ export default function OrdersCenter() {
 
   useEffect(() => {
     if (!user) {
-      navigate('/login');
+      navigate('/login', { state: { from: '/orders' } });
     }
   }, [user, navigate]);
 

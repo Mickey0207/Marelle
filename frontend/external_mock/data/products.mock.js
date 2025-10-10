@@ -89,19 +89,42 @@ const getCategoryFullPath = (categoryId) => {
 export const mockProducts = productTemplates.map((template, i) => {
   const tags = [];
   const pathInfo = getCategoryFullPath(template.category);
-  
+
   // 根據索引分配不同標籤
   if (i % 7 === 0 && i % 5 !== 0) tags.push(TAG_TYPES.HOT_SALE);
   if (i % 8 === 0 && i % 5 !== 0) tags.push(TAG_TYPES.PRE_ORDER);
   if (i % 9 === 0) tags.push(TAG_TYPES.NEW_ARRIVAL);
   if (i % 6 === 0 && i % 5 !== 0) tags.push(TAG_TYPES.LIMITED);
   if (i % 3 === 0 && i % 5 !== 0) tags.push(TAG_TYPES.SALE);
-  
+
+  // 折扣 / 優惠對應的 mock 欄位
+  const isOnSale = tags.includes(TAG_TYPES.SALE);
+  const originalPrice = isOnSale ? Math.round(template.price * 1.3) : undefined;
+  const discountPercent = isOnSale && originalPrice
+    ? Math.max(1, Math.round(((originalPrice - template.price) / originalPrice) * 100))
+    : null;
+
+  // 產生 URL Key（例如：最後分類為 146，模板為 notebook-1 -> 146notebook）
+  const lastSlug = pathInfo ? pathInfo.slugs[pathInfo.slugs.length - 1] : '';
+  const digitsOnly = /^\d+$/.test(lastSlug || '');
+  const catDigits = (lastSlug && (lastSlug.match(/\d+/)?.[0])) || '';
+  const baseName = String(template.image).split('-')[0];
+  const urlKey = (catDigits ? `${catDigits}${baseName}` : String(template.image).replace(/[^a-zA-Z0-9]/g, ''))
+    .toLowerCase();
+
   return {
     id: i + 1,
     name: template.name,
     price: template.price,
-    originalPrice: tags.includes(TAG_TYPES.SALE) ? Math.round(template.price * 1.3) : undefined,
+    originalPrice,
+  // 英文商品 slug（統一採用 #146 筆記本邏輯：<分類數字><英文 baseName>）
+  slug: urlKey,
+  // 產品唯一網址鍵（不含中文與空白），例：146notebook、149pen；與 slug 同步
+    urlKey,
+    // 促銷資訊（供前端顯示優惠標籤或其他用途）
+    isOnSale,
+    discountPercent,
+    promotion: isOnSale && discountPercent ? { type: 'discount', percent: discountPercent, label: `省 ${discountPercent}%` } : null,
     category: pathInfo ? pathInfo.names[0] : '商品',
     categoryId: template.category,
     categoryPath: pathInfo ? pathInfo.ids : [],
@@ -142,3 +165,87 @@ export const getProductsByCategoryPath = (pathArray) => {
 export const getProductCountByCategory = (categoryId) => {
   return getProductsByCategory(categoryId).length;
 };
+
+// 依產品生成詳情頁 URL（類別多層 + hash 帶 id 與名稱）
+export function buildProductDetailUrl(product) {
+  // 以分類 href 作為基底，避免 slug 與實際路徑段落不一致（例如 slug: meisterstuck-149，但 href 段為 .../meisterstuck/149）
+  const href = product?.href || '';
+  const prefix = '/products/';
+  const path = href.startsWith(prefix) ? href.slice(prefix.length) : href.replace(/^\/+/, '');
+  const parts = path.split('/').filter(Boolean);
+
+  // 通用規則：依類別分支截斷到「最終掛載層級」，再接上單一 urlKey
+  // - leather-goods/travel -> 僅到 /leather-goods/travel
+  // - leather-goods/bags -> 到 /leather-goods/bags/{briefcases|backpacks}
+  // - writing-instruments/pens -> 到 /writing-instruments/pens/{fountain-pens|ballpoint-pens|rollerball-pens}
+  // - writing-instruments/refills -> notebooks 到 /.../refills/notebooks；其它筆芯到 /.../refills/pen-refills/{...}
+  // - accessories/watches -> 到 /accessories/watches
+  // - accessories/audio -> 到 /accessories/audio/headphones
+  // - fragrance -> 到 /fragrance/{mens-fragrance|womens-fragrance}/{legend|signature|explorer...}
+  // 其餘：若最後一段為純數字，移除；否則保留全部
+
+  let used = parts;
+  if (parts.length > 0) {
+    const [l1, l2, l3] = parts;
+    if (l1 === 'leather-goods') {
+      if (l2 === 'travel') {
+        // 旅行袋：固定到 travel 層級
+        used = parts.slice(0, 2);
+      } else if (l2 === 'bags') {
+        // 公事包/後背包：保留到第 3 層（briefcases/backpacks）
+        used = parts.slice(0, 3);
+      } else {
+        // 其他包款：至少保留到第 2 層
+        used = parts.slice(0, Math.min(2, parts.length));
+      }
+    } else if (l1 === 'writing-instruments') {
+      if (l2 === 'pens') {
+        // 書寫工具-筆：保留到第 3 層（fountain/ballpoint/rollerball）
+        used = parts.slice(0, 3);
+      } else if (l2 === 'refills') {
+        if (l3 === 'notebooks') {
+          // 筆記本：保留到 notebooks
+          used = parts.slice(0, 3);
+        } else {
+          // 其它補充品（筆芯/墨水）：保留到 pen-refills/fountain-pen-refills 等第 4 層
+          used = parts.slice(0, 4);
+        }
+      } else {
+        used = parts.slice(0, Math.min(2, parts.length));
+      }
+    } else if (l1 === 'accessories') {
+      if (l2 === 'watches') {
+        // 腕錶：到 watches 層
+        used = parts.slice(0, 2);
+      } else if (l2 === 'audio') {
+        // 耳機：到 audio/headphones 層
+        used = parts.slice(0, 3);
+      } else {
+        used = parts.slice(0, Math.min(2, parts.length));
+      }
+    } else if (l1 === 'fragrance') {
+      // 香水：到 {mens-fragrance|womens-fragrance}/{legend|signature|explorer...}
+      used = parts.slice(0, 3);
+    } else {
+      // 一般回退：若最後段是數字（146/149/50ml 等），移除末段
+      const last = parts[parts.length - 1] || '';
+      const digitsOnly = /^\d+$/.test(last);
+      used = digitsOnly ? parts.slice(0, -1) : parts;
+    }
+  }
+
+  const base = used.join('/');
+  return base ? `/products/${base}/${product.urlKey}` : `/products/${product.urlKey}`;
+}
+
+// 透過 urlKey 尋找產品（格式：自定義如 146notebook）
+export function getProductByUrlKey(urlKey) {
+  if (!urlKey) return null;
+  const key = String(urlKey).toLowerCase();
+  return mockProducts.find(p => p.urlKey === key) || null;
+}
+
+// 取得商品（依 id）
+export function getProductById(id) {
+  return mockProducts.find(p => p.id === Number(id));
+}

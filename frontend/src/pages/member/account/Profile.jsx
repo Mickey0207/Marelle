@@ -15,8 +15,8 @@ const Profile = () => {
   useEffect(() => {
     const u = getCurrentUser();
     if (!u) {
-      // 未登入導向登入頁
-      navigate('/login');
+      // 未登入導向登入頁，記錄來源路徑
+      navigate('/login', { state: { from: '/account' } });
     } else {
       setUser(u);
     }

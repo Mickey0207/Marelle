@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { gsap } from 'gsap';
-import { formatPrice } from '../../../external_mock/data/format.js';
-import { getStockStatus } from '../../../external_mock/data/stockStatus.js';
+import { formatPrice } from '../../../../external_mock/data/format.js';
+import { getStockStatus } from '../../../../external_mock/data/stockStatus.js';
 
 const ProductPurchasePanel = ({ product, onAddToCart }) => {
   const [quantity, setQuantity] = useState(1);

@@ -20,6 +20,7 @@ const RealTimeMonitoringDashboard = lazy(() => import('../dashboard/RealTimeMoni
 const AdminProducts = lazy(() => import('../../Pages/products/Products'));
 const AddProductAdvanced = lazy(() => import('../../Pages/products/AddProductAdvanced'));
 const EditProduct = lazy(() => import('../../Pages/products/EditProduct'));
+const CategoryManagement = lazy(() => import('../../Pages/products/CategoryManagement'));
 const Inventory = lazy(() => import('../../Pages/inventory/Inventory'));
 const WarehouseManagement = lazy(() => import('../../Pages/inventory/WarehouseManagement'));
 
@@ -63,6 +64,11 @@ const WebNotification = lazy(() => import('../../Pages/notifications/WebNotifica
 
 // Accounting 模組（改為表單審批入口）
 const FormApprovals = lazy(() => import('../../Pages/fromsigning/FormApprovals'));
+// 新增模組頁面
+const AccountingManagement = lazy(() => import('../../Pages/accounting/AccountingManagement'));
+const BalanceSheet = lazy(() => import('../../Pages/accounting/BalanceSheet'));
+const ChartOfAccounts = lazy(() => import('../../Pages/accounting/ChartOfAccounts'));
+const ReviewsManagement = lazy(() => import('../../Pages/reviews/ReviewsManagement'));
 
 // Analytics 模組
 const AdminAnalyticsOverview = lazy(() => import('../../Pages/analytics/AnalyticsOverview'));
@@ -129,6 +135,7 @@ const AppRouter = () => {
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/add" element={<AddProductAdvanced />} />
             <Route path="products/edit/:sku" element={<EditProduct />} />
+            <Route path="products/categories" element={<CategoryManagement />} />
 
             {/* Orders 模組路由 */}
             <Route path="orders" element={<OrderList />} />
@@ -189,6 +196,13 @@ const AppRouter = () => {
 
             {/* 表單審批 模組路由 */}
             <Route path="fromsigning" element={<FormApprovals />} />
+
+            {/* 新增：會計管理與評價管理 */}
+            <Route path="accounting" element={<Navigate to="/accounting/journal" replace />} />
+            <Route path="accounting/journal" element={<AccountingManagement />} />
+            <Route path="accounting/balance-sheet" element={<BalanceSheet />} />
+            <Route path="accounting/accounts" element={<ChartOfAccounts />} />
+            <Route path="reviews" element={<ReviewsManagement />} />
 
             {/* Analytics 模組路由 */}
             <Route path="analytics" element={<AdminAnalyticsOverview />} />

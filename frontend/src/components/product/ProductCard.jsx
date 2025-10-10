@@ -3,14 +3,19 @@ import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { formatPrice } from '../../../external_mock/data/format.js';
 import { getProductTags, getTagConfig } from '../../../external_mock/data/productTags.js';
+import { buildProductDetailUrl } from '../../../external_mock/data/products.mock.js';
 
 const ProductCard = ({ product, isFavorite, onToggleFavorite, onQuickAdd }) => {
   const tags = getProductTags(product);
   const primaryTag = tags[0] ? getTagConfig(tags[0]) : null;
+  const hasDiscount = typeof product.originalPrice === 'number' && product.originalPrice > product.price;
+  const discountPercent = hasDiscount
+    ? Math.max(1, Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100))
+    : null;
 
   return (
     <div id={`product-${product.id}`} className="group">
-      <Link to={`/product/${product.id}`} className="block">
+  <Link to={buildProductDetailUrl(product)} className="block">
         <div className="relative mb-3 xs:mb-3.5 sm:mb-4 md:mb-4 overflow-hidden bg-white rounded-lg" style={{aspectRatio: '1/1'}}>
           {primaryTag && (
             <div
@@ -24,6 +29,15 @@ const ProductCard = ({ product, isFavorite, onToggleFavorite, onQuickAdd }) => {
               }}
             >
               {primaryTag.label}
+            </div>
+          )}
+          {hasDiscount && (
+            <div
+              className="absolute top-2 xs:top-3 sm:top-3 md:top-4 right-2 xs:right-3 sm:right-3 md:right-4 z-10 px-2 xs:px-2.5 sm:px-3 md:px-3 py-1 xs:py-1 sm:py-1.5 md:py-1.5 rounded-full shadow-lg font-chinese text-[10px] xs:text-xs sm:text-xs md:text-xs tracking-wider"
+              style={{ background: '#CC824D', color: '#FFFFFF' }}
+              aria-label="優惠標籤"
+            >
+              {discountPercent ? `省 ${discountPercent}%` : '優惠'}
             </div>
           )}
           <img

@@ -63,11 +63,7 @@ const AdminProducts = () => {
     }));
   };
 
-  const getStockStatus = (inStock) => {
-    return inStock
-      ? { text: '有庫存', color: 'bg-green-100 text-green-800' }
-      : { text: '缺貨', color: 'bg-red-100 text-red-800' };
-  };
+  // 已移除母表格中的庫存欄位
 
   // 表格欄位定義
   const columns = [
@@ -110,14 +106,6 @@ const AdminProducts = () => {
       }
     },
     {
-      key: 'sku',
-      label: 'SKU',
-      sortable: true,
-      render: (_, product) => (
-        <span className="font-mono text-sm text-gray-800">{product?.baseSKU || '-'}</span>
-      )
-    },
-    {
       key: 'price',
       label: '價格',
       sortable: true,
@@ -133,19 +121,6 @@ const AdminProducts = () => {
           )}
         </div>
       )
-    },
-    {
-      key: 'inStock',
-      label: '庫存狀態',
-      sortable: true,
-      render: (_, product) => {
-        const stockStatus = getStockStatus(product?.inStock);
-        return (
-          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${stockStatus.color} font-chinese`}>
-            {stockStatus.text}
-          </span>
-        );
-      }
     },
     {
       key: 'slug',
@@ -184,32 +159,7 @@ const AdminProducts = () => {
         return <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${color}`}>{text}</span>;
       }
     },
-    {
-      key: 'variants',
-      label: '多變體',
-      sortable: true,
-      render: (_, product) => (
-        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${product?.hasVariants ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-          {product?.hasVariants ? '是' : '否'}
-        </span>
-      )
-    },
-    {
-      key: 'rating',
-      label: '評分',
-      sortable: true,
-      render: (_, product) => (
-        <div className="flex items-center">
-          <span className="text-sm text-gray-900">
-            {product?.rating || 0}
-          </span>
-          <span className="text-yellow-400 ml-1">★</span>
-          <span className="text-xs text-gray-500 ml-2">
-            ({product?.reviews || 0})
-          </span>
-        </div>
-      )
-    },
+    // 移除：SKU、庫存狀態、多變體、評分 欄位
     {
       key: 'actions',
       label: '操作',

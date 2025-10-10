@@ -126,7 +126,7 @@ const Checkout = () => {
 
   if (orderComplete) {
     return (
-      <div className="min-h-screen pt-16 xs:pt-18 sm:pt-20 md:pt-20 lg:pt-20 flex items-center justify-center bg-lofi">
+      <div className="min-h-screen pt-16 xs:pt-18 sm:pt-20 md:pt-20 lg:pt-20 flex items-center justify-center" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%)'}}>
         <div className="text-center max-w-md mx-auto px-4 xs:px-6 sm:px-8">
           <div className="bg-white/80 border border-gray-200 p-8 xs:p-10 sm:p-12 md:p-12 lg:p-14 rounded-xl xs:rounded-xl sm:rounded-2xl md:rounded-2xl success-content">
             <CheckCircleIcon className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 md:w-16 md:h-16 text-green-500 mx-auto mb-4 xs:mb-5 sm:mb-6 md:mb-6" />
@@ -155,7 +155,7 @@ const Checkout = () => {
   ];
 
   return (
-    <div className="min-h-screen pt-16 xs:pt-18 sm:pt-20 md:pt-20 lg:pt-20 pb-8 xs:pb-10 sm:pb-12 md:pb-12 lg:pb-14 xl:pb-16 bg-lofi">
+    <div className="min-h-screen pt-16 xs:pt-18 sm:pt-20 md:pt-20 lg:pt-20 pb-8 xs:pb-10 sm:pb-12 md:pb-12 lg:pb-14 xl:pb-16" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%)'}}>
   <div className="w-full px-4 xs:px-6 sm:px-8 md:px-10 lg:px-12 xl:px-16">
         {/* Header */}
         <div className="mb-6 xs:mb-7 sm:mb-8 md:mb-8 lg:mb-10">

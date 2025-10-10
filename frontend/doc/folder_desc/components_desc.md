@@ -8,9 +8,9 @@ src/components/layout/Navbar.jsx: 全站頂部導覽列外層組件，整合桌�
 src/components/layout/ScrollManager.jsx: 監控或管理捲動行為（滾動定位/狀態用途）。
 
 ### layout/navbar
-src/components/layout/navbar/MegaPanel.jsx: 桌面版多層級商品分類 mega menu 面板。
-src/components/layout/navbar/NavActions.jsx: 導覽列右側動作區（搜尋、收藏、購物車、帳號、行動選單按鈕）。
-src/components/layout/navbar/MobileMenu.jsx: 行動版漢堡選單與分類展開介面。
+src/components/layout/navbar/MegaPanel.jsx: 桌面版多層級商品分類 mega menu 面板（支援至第 5 層瀑布式展開）。
+src/components/layout/navbar/NavActions.jsx: 導覽列右側動作區（搜尋、收藏、購物車、帳號、行動選單按鈕；登入連結會攜帶返回路徑 state.from）。
+src/components/layout/navbar/MobileMenu.jsx: 行動版漢堡選單與分類展開介面（帳戶登入入口會攜帶返回路徑 state.from）。
 
 ## ui
 src/components/ui/GlassModal.jsx: 半透明玻璃感浮層通用模態視窗容器。
@@ -21,7 +21,7 @@ src/components/ui/StandardTable.jsx: 通用標準表格呈現組件。
 src/components/product/CategorySidebar.jsx: 商品列表側邊分類/篩選側欄（預留/擴充用）。
 src/components/product/FourLevelCategoryMenu.jsx: 四層級分類瀑布式選單（供導航或篩選）。
 src/components/product/MobileFilterPanel.jsx: 行動版商品篩選/分類抽屜式面板。
-src/components/product/ProductCard.jsx: 商品卡片（圖片、名稱、價格、互動）展示。
+src/components/product/ProductCard.jsx: 商品卡片（圖片、名稱、價格、互動）展示；有折扣時在圖片右上角顯示優惠標籤。
 src/components/product/ProductQuickAddModal.jsx: 快速加入購物車的商品細節簡易浮層。
 src/components/product/ProductsHeader.jsx: 商品列表頁面頂部標題與控制列。
 

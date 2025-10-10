@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { formatPrice } from "../../../external_mock/data/format.js";
 import { useCart } from "../../../external_mock/state/cart.jsx";
+import { buildProductDetailUrl } from "../../../external_mock/data/products.mock.js";
 
 const Cart = () => {
   const { 
@@ -124,7 +125,7 @@ const Cart = () => {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-gray-900 font-chinese text-sm xs:text-sm sm:text-base md:text-base line-clamp-2">
                           <Link 
-                            to={`/product/${item.id}`}
+                             to={buildProductDetailUrl(item)}
                             className="hover:text-apricot-600 transition-colors"
                           >
                             {item.name}

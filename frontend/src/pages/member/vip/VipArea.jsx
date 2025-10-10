@@ -10,7 +10,7 @@ export default function VipArea() {
 
   useEffect(() => {
     if (!user) {
-      navigate('/login');
+      navigate('/login', { state: { from: '/vip' } });
     }
   }, [user, navigate]);
 

@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "dev": "vite --config Package/vite.config.js",
-  "build": "vite build --config Package/vite.config.js",
-  "preview": "vite preview --config Package/vite.config.js",
-  "lint": "eslint apps/web/src --ext js,jsx -c Package/.eslintrc.cjs --report-unused-disable-directives --max-warnings 0"
+    "dev": "vite --config Package/vite.config.js",
+    "build": "vite build --config Package/vite.config.js",
+    "preview": "vite preview --config Package/vite.config.js",
+    "lint": "eslint apps/web/src --ext js,jsx -c Package/.eslintrc.cjs --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@ant-design/plots": "^2.6.5",
@@ -27,6 +27,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "postcss": "^8.4.31",
+    "supabase": "^2.48.3",
     "tailwindcss": "^3.3.6",
     "vite": "^4.5.0"
   }

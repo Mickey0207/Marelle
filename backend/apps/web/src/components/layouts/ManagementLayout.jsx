@@ -18,7 +18,9 @@ import {
   ShoppingCartIcon,
   MapPinIcon,
   DocumentTextIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  CurrencyDollarIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
 
 const ManagementLayout = () => {
@@ -96,6 +98,8 @@ const ManagementLayout = () => {
     { name: '行銷管理', href: '/marketing', icon: ChartBarIcon },
     { name: '會員管理', href: '/members', icon: UsersIcon },
     { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon },
+  { name: '會計管理', href: '/accounting/balance-sheet', icon: CurrencyDollarIcon },
+    { name: '評價管理', href: '/reviews', icon: StarIcon },
     { name: '表單審批', href: '/fromsigning', icon: DocumentTextIcon },
     // 通知中心從頂部鈴鐺進入，不在側邊欄顯示
   { name: '管理員管理', href: '/admin', icon: ShieldCheckIcon },
@@ -108,6 +112,11 @@ const ManagementLayout = () => {
     if (path === '/dashboard/overview') {
       return location.pathname === '/' || location.pathname === '/dashboard/overview';
     }
+    // 若導航連結是深層路徑（例如 /accounting/balance-sheet），
+    // 也應在同一模組根（/accounting/*）時標示為選中
+    const segments = path.split('/').filter(Boolean);
+    const base = segments.length > 0 ? `/${segments[0]}` : path;
+    if (base && location.pathname.startsWith(base)) return true;
     return location.pathname.startsWith(path);
   };
 

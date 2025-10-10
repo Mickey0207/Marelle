@@ -35,7 +35,7 @@ const GlassModal = ({
       ></div>
       
     {/* 玻璃態彈出視窗 */}
-  <div className={`relative ${size} w-full ${maxHeight} overflow-visible rounded-3xl bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl`}>
+  <div className={`relative glass-modal-root ${size} w-full ${maxHeight} overflow-visible rounded-3xl bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl`}>
         {/* 標題列 */}
         {title && (
           <div className={`${headerClass} backdrop-blur-sm text-white px-6 py-4 border-b border-white/20 rounded-t-3xl`}>
@@ -57,6 +57,9 @@ const GlassModal = ({
         <div className={`relative overflow-y-auto overflow-x-visible ${contentMaxHeight} bg-transparent` }>
           {children}
         </div>
+
+        {/* Portal 容器：給下拉等浮層在 Modal 內定位使用 */}
+        <div className="glass-modal-portal absolute inset-0 z-[200000] pointer-events-none" />
 
         {/* 底部區域：優先使用 footer，其次渲染 actions */}
         {(footer || actions.length > 0) && (

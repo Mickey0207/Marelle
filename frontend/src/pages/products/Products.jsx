@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
 import { mockProducts, getProductsByCategory } from "../../../external_mock/data/products.mock.js";
 import { categories, findCategoryById, getCategoryPath } from "../../../external_mock/data/categories.js";

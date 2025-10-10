@@ -47,6 +47,7 @@ export function getTabsForPath(pathname) {
     return [
       { id: 'list', label: '商品清單', href: '/products' },
       { id: 'add', label: '新增商品', href: '/products/add' },
+      { id: 'categories', label: '分類管理', href: '/products/categories' },
     ]
   }
 
@@ -83,6 +84,15 @@ export function getTabsForPath(pathname) {
     return [
       { id: 'overview', label: '採購總覽', href: '/procurement' },
       { id: 'suppliers', label: '供應商', href: '/procurement/suppliers' },
+    ]
+  }
+
+  // Accounting
+  if (p.startsWith('/accounting')) {
+    return [
+      { id: 'balance-sheet', label: '資產負債表', href: '/accounting/balance-sheet' },
+      { id: 'journal', label: '日記帳', href: '/accounting/journal' },
+      { id: 'accounts', label: '會計科目', href: '/accounting/accounts' },
     ]
   }
 
