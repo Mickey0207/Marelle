@@ -98,12 +98,12 @@ const OrderDetails = () => {
     if (window.confirm('確認要刪除這個訂單嗎？此操作無法復原。')) {
       // 模擬刪除操作
       alert('訂單已刪除');
-      navigate('/management/orders');
+  navigate('/orders');
     }
   };
 
   const handleEditOrder = () => {
-    navigate(`/management/orders/edit/${id}`);
+  navigate(`/orders`);
   };
 
   if (loading) {
@@ -131,7 +131,7 @@ const OrderDetails = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => navigate('/management/orders')}
+            onClick={() => navigate('/orders')}
             className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
           >
             <ArrowLeftIcon className="h-5 w-5" />

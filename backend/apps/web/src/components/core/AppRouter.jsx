@@ -137,9 +137,9 @@ const AppRouter = () => {
             <Route path="products/edit/:sku" element={<EditProduct />} />
             <Route path="products/categories" element={<CategoryManagement />} />
 
-            {/* Orders 模組路由 */}
+            {/* Orders 模組路由（統一路徑） */}
             <Route path="orders" element={<OrderList />} />
-            <Route path="orders/management" element={<OrderList />} />
+            <Route path="orders/management" element={<Navigate to="/orders" replace />} />
             <Route path="orders/details/:id" element={<OrderDetails />} />
             {/* 新增訂單頁已移除 */}
 

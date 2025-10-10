@@ -46,19 +46,6 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
   const [levelTitles, setLevelTitles] = useState({});
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // 初始化效果：從 skuVariants 重建樹狀結構
-  useEffect(() => {
-    // 如果有 skuVariants 但沒有樹狀結構，且還沒有初始化過
-    if (skuVariants && skuVariants.length > 0 && skuTree.length === 0 && !isInitialized) {
-      rebuildTreeFromVariants(skuVariants);
-      setIsInitialized(true);
-    }
-    // 如果沒有 skuVariants 但還沒初始化，標記為已初始化
-    else if (!isInitialized && (!skuVariants || skuVariants.length === 0)) {
-      setIsInitialized(true);
-    }
-  }, [skuVariants, baseSKU, skuTree.length, isInitialized, rebuildTreeFromVariants]);
-
   // 從變體重建樹狀結構
   const rebuildTreeFromVariants = useCallback((variants) => {
     if (!variants || variants.length === 0) return;
@@ -114,6 +101,19 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     setSKUTree(tree);
     setLevelTitles(levelTitlesMap);
   }, [baseSKU]);
+
+  // 初始化效果：從 skuVariants 重建樹狀結構（放在 rebuildTreeFromVariants 之後避免 TDZ）
+  useEffect(() => {
+    // 如果有 skuVariants 但沒有樹狀結構，且還沒有初始化過
+    if (skuVariants && skuVariants.length > 0 && skuTree.length === 0 && !isInitialized) {
+      rebuildTreeFromVariants(skuVariants);
+      setIsInitialized(true);
+    }
+    // 如果沒有 skuVariants 但還沒初始化，標記為已初始化
+    else if (!isInitialized && (!skuVariants || skuVariants.length === 0)) {
+      setIsInitialized(true);
+    }
+  }, [skuVariants, baseSKU, skuTree.length, isInitialized, rebuildTreeFromVariants]);
 
   // 單一變體模式：初始化右側詳情
   useEffect(() => {

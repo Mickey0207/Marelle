@@ -37,8 +37,7 @@ export function getTabsForPath(pathname) {
   // Orders
   if (p.startsWith('/orders')) {
     return [
-      { id: 'list', label: '訂單清單', href: '/orders' },
-      { id: 'management', label: '訂單管理', href: '/orders/management' },
+      { id: 'management', label: '訂單管理', href: '/orders' },
     ]
   }
 
