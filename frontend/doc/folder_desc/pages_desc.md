@@ -8,7 +8,7 @@ src/pages/favorites.jsx: 收藏清單頁，讀取 localStorage 顯示已收藏�
 
 ## products
 src/pages/products/Products.jsx: 商品列表與篩選/排序主頁，組合各商品列表子組件。
-src/pages/products/ProductDetail.jsx: 單一商品詳情頁，整合麵包屑、圖庫、購買面板、分頁、推薦。
+src/pages/products/ProductDetail.jsx: 單一商品詳情頁，整合麵包屑、圖庫、購買面板、分頁、推薦；若商品含 p.variants，於簡要說明下提供最多五層規格樹選擇，未選到最後一層時加入購物車按鈕為 disabled。
 
 ## auth
 src/pages/auth/FrontLogin.jsx: 前台登入頁，提供帳密登入與社群登入示意；若已登入會自動導回來源頁（state.from）或帳戶頁。

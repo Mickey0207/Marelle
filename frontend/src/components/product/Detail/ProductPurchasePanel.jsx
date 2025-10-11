@@ -3,14 +3,14 @@ import { gsap } from 'gsap';
 import { formatPrice } from '../../../../external_mock/data/format.js';
 import { getStockStatus } from '../../../../external_mock/data/stockStatus.js';
 
-const ProductPurchasePanel = ({ product, onAddToCart }) => {
+const ProductPurchasePanel = ({ product, onAddToCart, addToCartDisabled, variantSelector = null }) => {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
 
   const stock = getStockStatus(product.inStock);
 
   const handleAdd = () => {
-    if (!product.inStock) return;
+    if (!product.inStock || addToCartDisabled) return;
     onAddToCart(quantity);
     gsap.fromTo('.add-to-cart-btn', { scale: 1 }, { scale: 1.05, duration: 0.1, yoyo: true, repeat: 1 });
   };
@@ -47,6 +47,9 @@ const ProductPurchasePanel = ({ product, onAddToCart }) => {
         </p>
       </div>
 
+      {/* 規格選擇（顯示在簡要說明下方）*/}
+      {variantSelector}
+
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{background: stock.config.dotColor}} />
@@ -78,12 +81,12 @@ const ProductPurchasePanel = ({ product, onAddToCart }) => {
       <div className="space-y-3 pt-2">
         <button
           onClick={handleAdd}
-          disabled={!product.inStock}
-          className={`add-to-cart-btn w-full py-3.5 xs:py-4 font-chinese text-sm xs:text-base tracking-wider transition-all duration-300 rounded-lg ${product.inStock ? '' : 'opacity-50 cursor-not-allowed'}`}
-          style={{ background: product.inStock ? '#CC824D' : '#CCCCCC', color: '#FFFFFF' }}
-          onMouseEnter={(e) => { if (product.inStock) e.currentTarget.style.background = '#B8754A'; }}
-          onMouseLeave={(e) => { if (product.inStock) e.currentTarget.style.background = '#CC824D'; }}
-        >{product.inStock ? '加入購物車' : '暫時缺貨'}</button>
+          disabled={!product.inStock || addToCartDisabled}
+          className={`add-to-cart-btn w-full py-3.5 xs:py-4 font-chinese text-sm xs:text-base tracking-wider transition-all duration-300 rounded-lg ${product.inStock && !addToCartDisabled ? '' : 'opacity-50 cursor-not-allowed'}`}
+          style={{ background: product.inStock && !addToCartDisabled ? '#CC824D' : '#CCCCCC', color: '#FFFFFF' }}
+          onMouseEnter={(e) => { if (product.inStock && !addToCartDisabled) e.currentTarget.style.background = '#B8754A'; }}
+          onMouseLeave={(e) => { if (product.inStock && !addToCartDisabled) e.currentTarget.style.background = '#CC824D'; }}
+        >{product.inStock ? (addToCartDisabled ? '請選擇完整規格' : '加入購物車') : '暫時缺貨'}</button>
         <div className="flex gap-3">
           <button
             onClick={() => setIsFavorite(!isFavorite)}

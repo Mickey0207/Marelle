@@ -37,7 +37,6 @@ const FestivalManagement = () => {
       giftItems: []
     }
   });
-
   const festivalTypes = festivalDataManager.getFestivalTypes();
   const statusOptions = festivalDataManager.getStatusOptions();
   const productCategories = festivalDataManager.getProductCategories();
@@ -364,7 +363,8 @@ const FestivalManagement = () => {
   <GlassModal
         isOpen={showCreateModal || showEditModal}
         title={showCreateModal ? '新建節慶' : '編輯節慶'}
-        onClose={() => { setShowCreateModal(false); setShowEditModal(false); resetForm(); }}
+    onClose={() => { setShowCreateModal(false); setShowEditModal(false); resetForm(); }}
+    contentClass="pt-0 px-6"
         footer={null}
         actions={[
           { label: '取消', variant: 'secondary', onClick: () => { setShowCreateModal(false); setShowEditModal(false); resetForm(); } },
@@ -463,31 +463,18 @@ const FestivalManagement = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">目標商品類別</label>
-                  <div className="grid grid-cols-2 gap-2 max-h-32 border border-gray-300 rounded-md p-2 hide-scrollbar" style={{overflowY: 'scroll', scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-                    {productCategories.map((category) => (
-                      <label key={category} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={formData.targetProducts.includes(category)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData({
-                                ...formData,
-                                targetProducts: [...formData.targetProducts, category]
-                              });
-                            } else {
-                              setFormData({
-                                ...formData,
-                                targetProducts: formData.targetProducts.filter(p => p !== category)
-                              });
-                            }
-                          }}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">{category}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <SearchableSelect
+                    className="w-full"
+                    options={productCategories}
+                    multiple
+                    value={formData.targetProducts}
+                    onChange={(vals) => setFormData({
+                      ...formData,
+                      targetProducts: Array.isArray(vals) ? vals : []
+                    })}
+                    placeholder="選擇商品類別"
+                    allowClear
+                  />
                 </div>
 
                 {/* 促銷設定 */}

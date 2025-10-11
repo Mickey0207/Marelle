@@ -10,6 +10,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
  * @param {string} size - Modal大小 (Tailwind CSS class)
  * @param {boolean} showCloseButton - 是否顯示關閉按鈕 (預設為true)
  * @param {string} headerClass - 自訂標題列樣式
+ * @param {string} contentClass - 內容容器額外樣式（例如 pt-0），不影響標題列
  */
 const GlassModal = ({ 
   isOpen, 
@@ -19,6 +20,7 @@ const GlassModal = ({
   size = 'max-w-4xl',
   showCloseButton = true,
   headerClass = 'bg-gradient-to-r from-[#cc824d]/80 to-[#b3723f]/80',
+  contentClass = '',
   footer = null,
   actions = [],
   maxHeight = 'max-h-[90vh]',
@@ -54,7 +56,7 @@ const GlassModal = ({
         )}
         
         {/* 內容區域 */}
-        <div className={`relative overflow-y-auto overflow-x-visible ${contentMaxHeight} bg-transparent` }>
+        <div className={`relative overflow-y-auto overflow-x-visible ${contentMaxHeight} bg-transparent ${contentClass}`} >
           {children}
         </div>
 

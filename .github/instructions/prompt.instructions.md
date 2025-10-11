@@ -37,3 +37,20 @@ frontend\doc\folder_desc 的所有文件
 backend
 後台前端資料夾,包含所有後台頁面以及頁面組件,和暫時的模擬資料,資料夾架構參考
 backend\.github\instructions\prompt.instructions.md
+
+# Supabase 資料表說明
+## users
+使用者資料表,包含使用者的基本資料,另外要注意,使用者的密碼以及身份驗證相關資料,都不會存在這個資料表中,而是存在 Supabase Auth 中,但是還有儲存用戶的LINE ID,以便於發送 LINE 訊息資訊
+## 各資料表命名規則
+如果是專屬於後台使用的資料表請以 backend_ 開頭,如果是專屬於前台使用的資料表請以 fronted_ 開頭,如果是兩者共用的資料表請以 common_ 開頭
+## 各資料表說明文件
+請將所有建立的資料表按照欄位(中英文說明),以及此資料表的用途、資料表的關聯說明,簡短說明,後台的撰寫於 doc\backend_database.md ,前台的撰寫於 doc\frontend_database.md ,共用的撰寫於 doc\common_database.md ,並且每一次只要有更動資料表就需要更新這些文件,然後每一次要更新資料表的時候,都需要先讀一次這些文件確認修改的地方,然後再修改資料表
+
+# API 說明
+## API 命名規則
+如果是專屬於後台使用的 API 文件請以 backend_ 開頭,如果是專屬於前台使用的 API 文件請以 frontend_ 開頭,如果是兩者共用的 API 文件請以 common_ 開頭
+## API 文件說明
+後台 API 文件更新於 doc\backend_api.md ,前台 API 文件更新於 doc\frontend_api.md ,共用 API 文件更新於 doc\common_api.md ,並且每一個 API 都要有詳細的說明,包含 API 的用途、API 的路徑、API 的請求方式、API 的請求參數、API 的回傳參數、API 的錯誤代碼說明,並且每一次只要有更動 API 就需要更新這些文件,然後每一次要更新 API 的時候,都需要先讀一次這些文件確認修改的地方,然後再修改 API
+
+# 系統整體架構說明
+系統整體架構說明文件更新於 doc\system.md ,並且每一次只要有更動系統架構就需要更新這個文件,然後每一次要更新系統架構的時候,都需要先讀一次這個文件確認修改的地方,然後再修改系統架構,需要包含系統的整體架構圖,以及各個服務的說明,包含前端、後端、資料庫、第三方服務等

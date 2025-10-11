@@ -62,6 +62,133 @@ const productTemplates = [
   { name: 'Signature Absolue 90ml', price: 5880, category: 'signature-90ml', image: 'fragrance-w-2' },
 ];
 
+// 可選規格（最多五層）樹狀 mock，依 urlKey 掛載
+// 目前僅為 #146 經典筆記本（urlKey: 146notebook）示範，未來可擴充其他商品
+const variantTreesByUrlKey = {
+  '146notebook': [
+    {
+      id: 'color',
+      label: '顏色',
+      children: [
+        {
+          id: 'color-black',
+          label: '黑',
+          children: [
+            {
+              id: 'size-a5',
+              label: 'A5',
+              children: [
+                {
+                  id: 'paper-plain',
+                  label: '無格',
+                  children: [
+                    {
+                      id: 'cover-soft',
+                      label: '軟皮',
+                      children: [
+                        {
+                          id: 'pack-single',
+                          label: '單本',
+                          payload: { sku: '146NBK-BK-A5-PL-SO-1', stock: 12, price: 180 },
+                        },
+                        {
+                          id: 'pack-3set',
+                          label: '三入',
+                          payload: { sku: '146NBK-BK-A5-PL-SO-3', stock: 5, price: 480 },
+                        },
+                      ],
+                    },
+                    {
+                      id: 'cover-hard',
+                      label: '硬皮',
+                      children: [
+                        {
+                          id: 'pack-single-2',
+                          label: '單本',
+                          payload: { sku: '146NBK-BK-A5-PL-HA-1', stock: 0, price: 220 },
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  id: 'paper-lined',
+                  label: '橫線',
+                  children: [
+                    {
+                      id: 'cover-soft-l',
+                      label: '軟皮',
+                      children: [
+                        {
+                          id: 'pack-single-l',
+                          label: '單本',
+                          payload: { sku: '146NBK-BK-A5-LI-SO-1', stock: 9, price: 190 },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: 'size-a6',
+              label: 'A6',
+              children: [
+                {
+                  id: 'paper-grid',
+                  label: '方格',
+                  children: [
+                    {
+                      id: 'cover-soft-g',
+                      label: '軟皮',
+                      children: [
+                        {
+                          id: 'pack-single-g',
+                          label: '單本',
+                          payload: { sku: '146NBK-BK-A6-GR-SO-1', stock: 3, price: 160 },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          id: 'color-blue',
+          label: '藍',
+          children: [
+            {
+              id: 'size-a5-b',
+              label: 'A5',
+              children: [
+                {
+                  id: 'paper-plain-b',
+                  label: '無格',
+                  children: [
+                    {
+                      id: 'cover-soft-b',
+                      label: '軟皮',
+                      children: [
+                        {
+                          id: 'pack-single-b',
+                          label: '單本',
+                          payload: { sku: '146NBK-BL-A5-PL-SO-1', stock: 6, price: 180 },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 // 使用 categories.js 的資料處理器獲取分類完整路徑
 const getCategoryFullPath = (categoryId) => {
   const category = findCategoryById(categoryId);
@@ -86,7 +213,7 @@ const getCategoryFullPath = (categoryId) => {
 };
 
 // 生成產品資料
-export const mockProducts = productTemplates.map((template, i) => {
+const generatedProducts = productTemplates.map((template, i) => {
   const tags = [];
   const pathInfo = getCategoryFullPath(template.category);
 
@@ -143,6 +270,16 @@ export const mockProducts = productTemplates.map((template, i) => {
     detailHref: `/product/${i + 1}`
   };
 });
+
+// 掛載規格樹（若有）
+generatedProducts.forEach((p) => {
+  const tree = variantTreesByUrlKey[p.urlKey];
+  if (tree) {
+    p.variants = tree;
+  }
+});
+
+export const mockProducts = generatedProducts;
 
 // 根據分類篩選產品
 export const getProductsByCategory = (categoryId) => {

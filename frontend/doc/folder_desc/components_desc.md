@@ -31,6 +31,7 @@ src/components/product/Detail/ProductImageGallery.jsx: 商品詳情頁主要圖�
 src/components/product/Detail/ProductPurchasePanel.jsx: 商品詳情購買操作區（價格、數量、加入購物車等）。
 src/components/product/Detail/ProductTabs.jsx: 商品詳情分頁區（描述 / 規格 / 其他資訊）。
 src/components/product/Detail/RelatedProducts.jsx: 商品詳情下方的關聯或推薦商品列表。
+src/components/product/Detail/VariantTreeSelector.jsx: 規格樹選擇邏輯元件，支援最多五層樹狀選擇與狀態回傳（render props 供既有 UI 渲染）。
 
 ## home
 src/components/home/FeaturedProducts.jsx: 首頁精選商品區塊展示。

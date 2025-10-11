@@ -5,7 +5,7 @@
 ## data
 
 external_mock/data/categories.js: 五層級巢狀商品分類樹與查找/展開路徑相關工具 (flatten/find/path 等)。
-external_mock/data/products.mock.js: 根據分類模板生成 mock 產品清單與篩選/統計工具函式（含 isOnSale、originalPrice、discountPercent、promotion 等促銷欄位；slug 與 urlKey 同步，統一採用 #146 筆記本邏輯如 146notebook）。詳：產品詳情網址固定為「分類層級 + 單一 urlKey」，並依分支截斷到最終掛載層級：
+external_mock/data/products.mock.js: 根據分類模板生成 mock 產品清單與篩選/統計工具函式（含 isOnSale、originalPrice、discountPercent、promotion 等促銷欄位；slug 與 urlKey 同步，統一採用 #146 筆記本邏輯如 146notebook）。已新增依 urlKey 掛載的五層規格樹 p.variants（目前示範 146notebook；葉節點含 payload: { sku, stock, price }）。詳：產品詳情網址固定為「分類層級 + 單一 urlKey」，並依分支截斷到最終掛載層級：
 
 - leather-goods/travel 僅到 /leather-goods/travel
 - leather-goods/bags 到 /leather-goods/bags/{briefcases|backpacks}

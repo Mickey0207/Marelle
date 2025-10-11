@@ -7,6 +7,7 @@ import { getCategoryPath } from "../../../external_mock/data/categories.js";
 import ProductBreadcrumb from '../../components/product/Detail/ProductBreadcrumb.jsx';
 import ProductImageGallery from '../../components/product/Detail/ProductImageGallery.jsx';
 import ProductPurchasePanel from '../../components/product/Detail/ProductPurchasePanel.jsx';
+import VariantTreeSelector from '../../components/product/Detail/VariantTreeSelector.jsx';
 import ProductTabs from '../../components/product/Detail/ProductTabs.jsx';
 import RelatedProducts from '../../components/product/Detail/RelatedProducts.jsx';
 
@@ -18,6 +19,8 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState('details');
   const { addToCart } = useCart();
+  // 規格選擇狀態
+  const [variantState, setVariantState] = useState({ path: [], isComplete: false, leaf: undefined });
 
   // Mock additional images
   const productImages = product ? [
@@ -94,7 +97,11 @@ const ProductDetail = () => {
 
   const handleAddToCart = (qty) => {
     if (!product) return;
-    addToCart(product, qty);
+    const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
+    if (hasVariants && (!variantState.isComplete || !variantState.leaf)) return;
+    // 將選到的 variant leaf payload（若有）帶入購物車
+    const payloadProduct = hasVariants ? { ...product, variant: variantState.leaf } : product;
+    addToCart(payloadProduct, qty);
   };
 
   if (!product) {
@@ -125,7 +132,61 @@ const ProductDetail = () => {
             <ProductImageGallery images={productImages} selectedIndex={selectedImage} onPrev={handlePrevImage} onNext={handleNextImage} />
           </div>
           <div className="product-detail-content">
-            <ProductPurchasePanel product={product} onAddToCart={handleAddToCart} />
+            {/* 購買面板，按鈕 disabled 狀態依據 variantState.isComplete */}
+            <ProductPurchasePanel
+              product={{
+                ...product,
+                price: variantState.leaf?.payload?.price ?? product.price,
+                inStock: (Array.isArray(product.variants) && product.variants.length > 0)
+                  ? (variantState.leaf?.payload?.stock > 0)
+                  : product.inStock,
+              }}
+              onAddToCart={handleAddToCart}
+              addToCartDisabled={(Array.isArray(product.variants) && product.variants.length > 0) ? !variantState.isComplete : false}
+              variantSelector={
+                Array.isArray(product.variants) && product.variants.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="text-sm font-chinese text-gray-700">選擇規格</div>
+                    <VariantTreeSelector
+                      data={product.variants}
+                      maxDepth={5}
+                      onChange={setVariantState}
+                      labels={["顏色", "尺寸", "內頁", "封面", "包裝"]}
+                      renderSelect={({ level, options, value, onChange, disabled, label }) => (
+                        <div className="flex flex-col gap-2">
+                          {label && (
+                            <div className="text-xs font-chinese text-gray-500">{label}</div>
+                          )}
+                          <div className="flex flex-wrap gap-3">
+                            {options.map(opt => {
+                              const selected = value === opt.id;
+                              const isDisabled = disabled;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={() => onChange(opt.id)}
+                                  disabled={isDisabled}
+                                  className={`px-4 py-2 rounded-lg text-sm font-chinese border transition-colors ${
+                                    selected
+                                      ? 'border-[#CC824D] text-[#CC824D] bg-white'
+                                      : 'border-[#E5E7EB] text-[#666666] bg-[#F7F8FA]'
+                                  } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                  onMouseEnter={(e) => { if (!selected && !isDisabled) { e.currentTarget.style.background = '#F0F2F5'; } }}
+                                  onMouseLeave={(e) => { if (!selected && !isDisabled) { e.currentTarget.style.background = '#F7F8FA'; } }}
+                                >
+                                  {opt.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    />
+                  </div>
+                ) : null
+              }
+            />
           </div>
         </div>
 
