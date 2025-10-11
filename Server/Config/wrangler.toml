@@ -1,0 +1,10 @@
+name = "marelle-api"
+main = "../backend/API/index.ts"
+compatibility_date = "2024-10-01"
+
+[vars]
+# Set these in Cloudflare dashboard or .dev.vars for local dev
+SUPABASE_URL = ""
+SUPABASE_ANON_KEY = ""
+
+

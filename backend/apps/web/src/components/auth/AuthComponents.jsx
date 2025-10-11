@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, createContext, useCallback } from 'react';
 import { Navigate } from 'react-router-dom';
-import { login as apiLogin, me as apiMe, refreshAccessToken, clearAccessToken, getAdminModules } from '../../../../external_mock/core/frontendApiMock'
+import { login as apiLogin, me as apiMe, refresh as refreshAccessToken, clearAccessFlag as clearAccessToken, getAdminModules, logout as apiLogout } from '../../../../API/auth'
 
 // 創建認證上下文
 const AuthContext = createContext();
@@ -12,6 +12,8 @@ export const AuthProvider = ({ children }) => {
   const [countdown, setCountdown] = useState(0);
 
   const logout = useCallback(() => {
+    // 清理伺服器端 cookie 與本地 access 狀態
+    try { apiLogout() } catch {}
     clearAccessToken()
     setCurrentUser(null)
     setSessionWarning(false)

@@ -1,0 +1,23 @@
+{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Marelle API on Cloudflare Workers (Hono + Supabase Auth)",
+  "main": "backend/API/index.ts",
+  "scripts": {
+    "dev": "wrangler dev --config ./Config/wrangler.toml",
+    "start": "wrangler dev --config ./Config/wrangler.toml",
+    "deploy": "wrangler deploy --config ./Config/wrangler.toml",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.75.0",
+    "hono": "^4.9.10"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241022.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.42.2"
+  }
+}

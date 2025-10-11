@@ -5,6 +5,25 @@ const setToken = (t) => { accessToken = t }
 export function getAccessToken() { return accessToken }
 export function clearAccessToken() { accessToken = undefined }
 
+// 後端 API 基底（依部署環境調整）；開發時可改為 http://localhost:8787
+const API_BASE = (typeof window !== 'undefined' && window.__MARELLE_API_BASE__) || '/'
+
+async function fetchJSON(path, options = {}) {
+  const res = await fetch(path.startsWith('http') ? path : (API_BASE.replace(/\/$/, '') + path), {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options
+  })
+  const text = await res.text()
+  const data = text ? JSON.parse(text) : undefined
+  if (!res.ok) {
+    const err = new Error(data?.error || `HTTP ${res.status}`)
+    err.status = res.status
+    throw err
+  }
+  return data
+}
+
 // 簡單的本地資料存放（記憶體）
 const db = {
   admins: [
@@ -32,37 +51,34 @@ const db = {
 const delay = (ms = 200) => new Promise(res => setTimeout(res, ms))
 
 // Auth
-export async function login(email) {
-  await delay()
-  // 任意帳密都通過，用於前端頁面開發
-  const token = `mock-token-${Date.now()}`
-  setToken(token)
-  // 若新帳號不存在，幫忙掛一個临时帳號
-  if (!db.admins.find(a => a.email === email)) {
-    db.admins.push({ id: String(db.admins.length + 1), email, name: email.split('@')[0] })
-    db.adminModules[String(db.admins.length)] = ['dashboard']
-  }
-  return token
+export async function login(email, password = 'placeholder') {
+  // 僅透過後端 API，禁止本地 fallback 或寫入本地 db
+  const result = await fetchJSON('/backend/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
+  setToken('cookie')
+  return 'cookie'
 }
 
 export async function refreshAccessToken() {
-  await delay(50)
-  if (!accessToken) return undefined
-  const token = `mock-token-${Date.now()}`
-  setToken(token)
-  return token
+  try {
+    await fetchJSON('/backend/auth/refresh', { method: 'POST' })
+    setToken('cookie')
+    return 'cookie'
+  } catch (e) {
+    // 僅回傳 undefined，不做本地 mock 續期
+    return undefined
+  }
 }
 
 export async function me() {
-  await delay(50)
-  if (!accessToken) {
-    const err = new Error('Unauthorized')
-    err.status = 401
-    throw err
-  }
-  // 取第一個 admin 當目前使用者（僅供頁面串接）
-  const user = db.admins[0]
-  return { id: user.id, email: user.email, name: user.name }
+  // 僅透過後端 API，失敗直接丟錯
+  const data = await fetchJSON('/backend/auth/me', { method: 'GET' })
+  return { id: data.id, email: data.email, name: data.email?.split('@')[0] || 'Admin' }
+}
+
+// 後端登出：清除伺服器端 session 與 refresh cookie
+export async function logout() {
+  try { await fetchJSON('/backend/auth/logout', { method: 'POST' }) } catch (e) {}
+  clearAccessToken()
 }
 
 // Admin management helpers
@@ -90,8 +106,13 @@ export async function listAdminsFull() {
 
 // Admin permissions helpers
 export async function getAdminModules(id) {
-  await delay(50)
-  return db.adminModules[String(id)] || []
+  // 若後端呼叫失敗一律回傳空陣列，不再讀本地 mock
+  try {
+    const modules = await fetchJSON('/backend/auth/modules', { method: 'GET' })
+    return Array.isArray(modules) ? modules : []
+  } catch (e) {
+    return []
+  }
 }
 export async function setAdminModules(id, modules) {
   await delay(50)
