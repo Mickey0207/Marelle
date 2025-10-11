@@ -75,9 +75,7 @@ const AdminLogin = () => {
                 {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
               </button>
             </div>
-            <div className="flex justify-end">
-              <button type="button" className="text-xs text-[#bfae9b] hover:underline font-serif">忘記密碼？</button>
-            </div>
+            {/* 移除忘記密碼按鈕 */}
             {error && (
               <div className="text-red-600 text-sm font-serif text-center">{error}</div>
             )}
@@ -101,16 +99,7 @@ const AdminLogin = () => {
             <span>LINE 登入</span>
           </button>
         </div>
-        
-        {/* 預設帳號提示 */}
-        <div className="w-full max-w-md mx-auto mt-8 p-4 bg-[#f7f2e8] border border-[#e5ded6] rounded">
-          <h4 className="text-sm font-bold text-[#2d1e0f] mb-2 font-serif">預設管理員帳號</h4>
-          <div className="text-xs text-[#666] space-y-1 font-serif">
-            <p>帳號：admin@example.com</p>
-            <p>密碼：admin12345678</p>
-            <p className="text-[#cc824d] mt-2">建議首次登入後立即修改密碼</p>
-          </div>
-        </div>
+        {/* 已移除預設帳號提示區塊 */}
       </main>
     </div>
   );

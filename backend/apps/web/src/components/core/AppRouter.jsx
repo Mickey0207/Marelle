@@ -5,6 +5,9 @@ import { AppStateProvider } from './AppStateContext';
 import LoadingSpinner from '../ui/LoadingSpinner';
 const ManagementLayout = lazy(() => import('../layouts/ManagementLayout'));
 const AdminLogin = lazy(() => import('../../Pages/auth/AdminLogin'));
+const AccountSettingProfile = lazy(() => import('../../Pages/accountsetting/Profile'));
+const AccountSettingOAuth = lazy(() => import('../../Pages/accountsetting/OAuth'));
+const AccountSettingPermissions = lazy(() => import('../../Pages/accountsetting/Permissions'));
 
 // Management 模組頁面 - Dashboard
 const AdminOverview = lazy(() => import('../../Pages/dashboard/Overview'));
@@ -219,6 +222,12 @@ const AppRouter = () => {
             <Route path="settings/notifications" element={<NotificationSettings />} />
             <Route path="settings/payment" element={<PaymentSettings />} />
             <Route path="settings/shipping" element={<ShippingSettings />} />
+
+            {/* 帳號設定：直接掛載子頁，index 轉址 */}
+            <Route path="accountsetting" element={<Navigate to="/accountsetting/profile" replace />} />
+            <Route path="accountsetting/profile" element={<AccountSettingProfile />} />
+            <Route path="accountsetting/oauth" element={<AccountSettingOAuth />} />
+            <Route path="accountsetting/permissions" element={<AccountSettingPermissions />} />
 
             {/* Admin 模組路由 */}
             <Route path="admin" element={<AdminManagement />} />

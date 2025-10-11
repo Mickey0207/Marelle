@@ -11,6 +11,17 @@ export const AuthProvider = ({ children }) => {
   const [sessionWarning, setSessionWarning] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
+  // 映射登入錯誤訊息（友善中文）
+  const mapLoginErrorMessage = (msg) => {
+    const s = (msg || '').toLowerCase()
+    if (s.includes('invalid login credentials') || s.includes('invalid credentials')) return '信箱或密碼錯誤'
+    if (s.includes('email not confirmed') || s.includes('not confirmed')) return 'E-mail 尚未驗證，請先至信箱完成驗證'
+    if (s.includes('invalid email')) return '信箱格式不正確'
+    if (s.includes('user not found')) return '找不到該帳號'
+    if (s.includes('too many requests') || s.includes('rate limit')) return '嘗試次數過多，請稍後再試'
+    return '登入失敗，請稍後再試'
+  }
+
   const logout = useCallback(() => {
     // 清理伺服器端 cookie 與本地 access 狀態
     try { apiLogout() } catch {}
@@ -110,7 +121,7 @@ export const AuthProvider = ({ children }) => {
       setupPeriodicRefresh()
       return { success: true }
     } catch (e) {
-      return { success: false, message: e?.message || 'Login failed' }
+      return { success: false, message: mapLoginErrorMessage(e?.message) }
     }
   };
 

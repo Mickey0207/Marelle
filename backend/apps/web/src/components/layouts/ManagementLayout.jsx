@@ -13,6 +13,7 @@ import {
   ChartBarIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
+  UserCircleIcon,
   CubeIcon,
   BellIcon,
   ShoppingCartIcon,
@@ -230,6 +231,15 @@ const ManagementLayout = () => {
                     {notifCount}
                   </span>
                 )}
+              </button>
+
+              {/* 管理員帳號設定 */}
+              <button
+                onClick={() => navigate('/accountsetting')}
+                className="p-2 rounded-lg text-[#2d1e0f] hover:bg-[#f7ede3] hover:text-[#cc824d] transition-colors duration-200"
+                title="帳號設定"
+              >
+                <UserCircleIcon className="w-5 h-5" />
               </button>
 
               {/* 登出按鈕 */}

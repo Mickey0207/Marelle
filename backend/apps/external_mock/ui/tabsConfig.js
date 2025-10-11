@@ -25,6 +25,15 @@ export function getTabsForPath(pathname) {
     ]
   }
 
+  // Account Setting
+  if (p.startsWith('/accountsetting')) {
+    return [
+      { id: 'profile', label: '個人資料', href: '/accountsetting/profile' },
+      { id: 'oauth', label: '第三方登入', href: '/accountsetting/oauth' },
+      { id: 'permissions', label: '權限管理', href: '/accountsetting/permissions' },
+    ]
+  }
+
   // Marketing
   if (p.startsWith('/marketing')) {
     return [

@@ -7,6 +7,11 @@
 - id (uuid, PK)：對應 Supabase Auth 的 user.id
 - email (text, not null)：管理員 Email
 - display_name (text, nullable)：顯示名稱
+- role (text, default 'Staff')：角色，限定為 'Admin' | 'Manager' | 'Staff'
+- phone (text, nullable)：電話（個人資料 Profile 頁面）
+- line_user_id (text, nullable)：LINE 使用者 ID（第三方登入 OAuth 頁面）
+- line_display_name (text, nullable)：LINE 暱稱（第三方登入 OAuth 頁面）
+- line_bound_at (timestamptz, nullable)：LINE 綁定時間（第三方登入 OAuth 頁面）
 - is_active (boolean, default true)：是否啟用
 - created_at (timestamptz, default now())：建立時間
 - updated_at (timestamptz, default now())：更新時間（由 trigger 維護）
