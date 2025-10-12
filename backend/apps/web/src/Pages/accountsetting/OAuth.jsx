@@ -1,20 +1,78 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ADMIN_STYLES } from '../../Style/adminStyles'
 
 const OAuth = () => {
-  const [linked, _setLinked] = useState(false)
+  const [linked, setLinked] = useState(false)
   const [lineName, setLineName] = useState('')
   const [lineId, setLineId] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState('')
+  const [avatar, setAvatar] = useState('')
+
+  useEffect(() => {
+    let ignore = false
+    const params = new URLSearchParams(window.location.search)
+    const bindStatus = params.get('bind')
+    if (bindStatus === 'success') {
+      setMessage('已成功綁定 LINE')
+      // 清理 URL 上的 bind 參數
+      const url = new URL(window.location.href)
+      url.searchParams.delete('bind')
+      window.history.replaceState({}, '', url.toString())
+    } else if (bindStatus === 'error') {
+      const reason = params.get('reason') || 'unknown'
+      const map = {
+        line_id_taken: '此 LINE 帳號已被其他管理員綁定',
+        missing_service_key: '伺服器設定不足（缺少 Service Role Key）',
+        update_failed: '更新資料失敗',
+        not_logged_in_for_bind: '請先登入再進行綁定'
+      }
+      setMessage(`綁定失敗：${map[reason] || reason}`)
+    }
+    ;(async () => {
+      try {
+        const res = await fetch('/backend/account/line/profile', { credentials: 'include' })
+        if (!res.ok) throw new Error('載入失敗')
+        const data = await res.json()
+        if (!ignore) {
+          setLinked(!!data.linked)
+          setLineName(data.line_display_name || '')
+          setLineId(data.line_user_id || '')
+          setAvatar(data.line_picture_url || '')
+        }
+      } catch (e) {
+        if (!ignore) setMessage('載入綁定資訊失敗')
+      } finally {
+        if (!ignore) setLoading(false)
+      }
+    })()
+    return () => { ignore = true }
+  }, [])
 
   const handleBindLine = () => {
-    // 待後端 API：導向 LINE 授權流程
-    alert('LINE 綁定流程即將支援')
-    // setLinked(true)
+    // 透過後端啟動 LINE 授權，模式為 bind
+    const next = window.location.pathname + window.location.search
+    const url = new URL('/backend/auth/line/start', window.location.origin)
+    url.searchParams.set('mode', 'bind')
+    url.searchParams.set('next', next)
+    window.location.href = url.toString()
   }
 
-  const handleUnbindLine = () => {
-    alert('解除綁定即將支援')
-    // setLinked(false)
+  const handleUnbindLine = async () => {
+    try {
+      const res = await fetch('/backend/account/line/unbind', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      if (!res.ok) throw new Error('解除綁定失敗')
+      setLinked(false)
+      setLineName('')
+      setLineId('')
+      setMessage('已解除綁定')
+    } catch (e) {
+      setMessage('解除綁定失敗')
+    }
   }
 
   return (
@@ -26,9 +84,16 @@ const OAuth = () => {
         </div>
 
         <div className="bg-white/40 backdrop-blur-sm rounded-lg p-6 space-y-6">
+          {message && (
+            <div className="text-sm text-[#2d1e0f] bg-white/60 border border-[#e5ded6] rounded px-3 py-2">{message}</div>
+          )}
           <div className="flex items-center justify-between bg-white border border-[#e5ded6] rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-[#00c300] text-white flex items-center justify-center font-bold">L</div>
+              {avatar ? (
+                <img src={avatar} alt="LINE Avatar" className="w-8 h-8 rounded object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded bg-[#00c300] text-white flex items-center justify-center font-bold">L</div>
+              )}
               <div className="font-chinese text-sm text-[#2d1e0f]">LINE</div>
             </div>
             {linked ? (

@@ -115,6 +115,7 @@ export function getTabsForPath(pathname) {
   if (p.startsWith('/admin')) {
     return [
       { id: 'admin', label: '管理員管理', href: '/admin' },
+      { id: 'roles', label: '角色管理', href: '/admin/roles' },
     ]
   }
 

@@ -1,21 +1,65 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../components/auth/AuthComponents'
 import { ADMIN_STYLES } from '../../Style/adminStyles'
+import GlassModal from '../../components/ui/GlassModal'
+import { listAdmins as apiListAdmins, updateAdmin as apiUpdateAdmin, sendResetEmail as apiSendResetEmail } from '../../../../API/admin/index.ts'
 
 const Profile = () => {
   const { currentUser } = useAuth()
   const [nickname, setNickname] = useState('')
-  const [phone, setPhone] = useState('')
+  const [department, setDepartment] = useState('')
+  const [phone, setPhone] = useState('') // 目前僅顯示，等待後端 API 支援再開放儲存
+  const [loading, setLoading] = useState(false)
+  const [modal, setModal] = useState({ open: false, message: '' })
 
-  const handleSaveBasic = (e) => {
+  // 初始化載入目前管理員的個人資料（暱稱、部門等）
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      if (!currentUser?.id) return
+      try {
+        setLoading(true)
+        const list = await apiListAdmins()
+        const me = (list || []).find(a => a.id === currentUser.id || a.email === currentUser.email)
+        if (mounted && me) {
+          setNickname(me.display_name || '')
+          setDepartment(me.department || '')
+          // phone 欄位目前後端未回傳，保留佔位
+        }
+      } catch (e) {
+        setModal({ open: true, message: e?.message || '載入個人資料失敗' })
+      } finally {
+        setLoading(false)
+      }
+    })()
+    return () => { mounted = false }
+  }, [currentUser])
+
+  const handleSaveBasic = async (e) => {
     e.preventDefault()
-    // 待後端 API：更新暱稱（例如 /backend/account/profile）
-    alert('暱稱儲存功能即將支援')
+    if (!currentUser?.id) return
+    try {
+      setLoading(true)
+      await apiUpdateAdmin(currentUser.id, { display_name: nickname, department })
+      setModal({ open: true, message: '已儲存變更' })
+    } catch (err) {
+      setModal({ open: true, message: err?.message || '儲存失敗' })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleChangePassword = () => {
-    // 待後端 API：觸發變更密碼流程（寄送重設信或開啟變更密碼模態）
-    alert('變更密碼功能即將支援')
+  const handleChangePassword = async () => {
+    if (!currentUser?.id) return
+    try {
+      setLoading(true)
+      await apiSendResetEmail(currentUser.id)
+      setModal({ open: true, message: '已寄出重設密碼信，請至信箱收信完成變更。' })
+    } catch (err) {
+      setModal({ open: true, message: err?.message || '寄送失敗' })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -73,6 +117,16 @@ const Profile = () => {
             <h3 className="text-lg font-semibold text-gray-800 mb-4 font-chinese">個人資訊</h3>
             <div className="grid grid-cols-2 gap-6">
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">部門</label>
+                <input
+                  type="text"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  placeholder="輸入部門"
+                  className="w-full p-3 border rounded-lg bg-white/50 backdrop-blur-sm placeholder-gray-400"
+                />
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-chinese">暱稱</label>
                 <input
                   type="text"
@@ -100,10 +154,20 @@ const Profile = () => {
               type="submit"
               className="bg-[#cc824d] text-white px-6 py-3 rounded-lg hover:bg-[#b86c37] transition-colors font-chinese"
             >
-              儲存變更
+              {loading ? '儲存中…' : '儲存變更'}
             </button>
           </div>
         </form>
+
+        {/* 統一訊息模態框 */}
+        <GlassModal isOpen={modal.open} onClose={() => setModal({ open: false, message: '' })} title="通知" size="max-w-md">
+          <div className="pt-0 px-6 pb-6 space-y-4">
+            <p className="text-gray-700 font-chinese">{modal.message}</p>
+            <div className="flex justify-end">
+              <button className={ADMIN_STYLES.btnPrimary} onClick={() => setModal({ open: false, message: '' })}>關閉</button>
+            </div>
+          </div>
+        </GlassModal>
       </div>
     </div>
   )

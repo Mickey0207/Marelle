@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useMemo } from 'react';
 import { createBrowserRouter, createRoutesFromElements, RouterProvider, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, ProtectedRoute } from '../auth/AuthComponents';
+import { AuthProvider, ProtectedRoute, useAuth } from '../auth/AuthComponents';
 import { AppStateProvider } from './AppStateContext';
 import LoadingSpinner from '../ui/LoadingSpinner';
 const ManagementLayout = lazy(() => import('../layouts/ManagementLayout'));
@@ -91,6 +91,7 @@ const ShippingSettings = lazy(() => import('../../Pages/settings/ShippingSetting
 
 // Admin 模組
 const AdminManagement = lazy(() => import('../../Pages/admin/AdminManagement'));
+const AdminRoleManagement = lazy(() => import('../../Pages/admin/AdminRoleManagement'));
 
 // Marketing 模組 Pages
 const MarketingOverviewPage = lazy(() => import('../../Pages/marketing/MarketingMange'));
@@ -108,6 +109,13 @@ const FunnelsPage = lazy(() => import('../../Pages/user-tracking/Funnels'));
 const RetentionPage = lazy(() => import('../../Pages/user-tracking/Retention'));
 
 const AppRouter = () => {
+  const RequireModule = ({ module, children }) => {
+    const { currentUser } = useAuth()
+    const has = currentUser && Array.isArray(currentUser.permissions) && currentUser.permissions.includes(module)
+    if (!has) return <Navigate to="/accountsetting/permissions" replace />
+    return children
+  }
+
   const router = useMemo(() =>
     createBrowserRouter(
       createRoutesFromElements(
@@ -125,7 +133,7 @@ const AppRouter = () => {
           >
             {/* Dashboard 模組路由 */}
             <Route index element={<Navigate to="dashboard/overview" replace />} />
-            <Route path="dashboard/overview" element={<AdminOverview />} />
+            <Route path="dashboard/overview" element={<RequireModule module="dashboard"><AdminOverview /></RequireModule>} />
             <Route path="dashboard/sales-analytics" element={<SalesAnalytics />} />
             <Route path="dashboard/operations" element={<OperationsManagement />} />
             <Route path="dashboard/finance" element={<FinanceReports />} />
@@ -135,33 +143,33 @@ const AppRouter = () => {
             <Route path="dashboard/realtime" element={<RealTimeMonitoringDashboard />} />
 
             {/* Products 模組路由 */}
-            <Route path="products" element={<AdminProducts />} />
+            <Route path="products" element={<RequireModule module="products"><AdminProducts /></RequireModule>} />
             <Route path="products/add" element={<AddProductAdvanced />} />
             <Route path="products/edit/:sku" element={<EditProduct />} />
             <Route path="products/categories" element={<CategoryManagement />} />
 
             {/* Orders 模組路由（統一路徑） */}
-            <Route path="orders" element={<OrderList />} />
+            <Route path="orders" element={<RequireModule module="orders"><OrderList /></RequireModule>} />
             <Route path="orders/management" element={<Navigate to="/orders" replace />} />
             <Route path="orders/details/:id" element={<OrderDetails />} />
             {/* 新增訂單頁已移除 */}
 
             {/* Members 模組路由 */}
-            <Route path="members" element={<MemberManagement />} />
+            <Route path="members" element={<RequireModule module="members"><MemberManagement /></RequireModule>} />
             <Route path="members/edit/:id" element={<EditMember />} />
 
             {/* Gifts 模組路由（整合後導向行銷管理） */}
             <Route path="gifts" element={<Navigate to="/marketing" replace />} />
 
             {/* Suppliers 模組路由（集中於採購模組的子頁 /procurement/suppliers） */}
-            <Route path="suppliers" element={<SupplierList />} />
+            <Route path="suppliers" element={<RequireModule module="procurement"><SupplierList /></RequireModule>} />
 
             {/* Procurement 模組路由 */}
-            <Route path="procurement" element={<ProcurementOverview />} />
+            <Route path="procurement" element={<RequireModule module="procurement"><ProcurementOverview /></RequireModule>} />
             <Route path="procurement/suppliers" element={<SupplierList />} />
 
             {/* Logistics 模組路由 */}
-            <Route path="logistics" element={<LogisticsTracking />} />
+            <Route path="logistics" element={<RequireModule module="logistics"><LogisticsTracking /></RequireModule>} />
             {/* 移除 logistics/notifications 與 logistics/reverse-notifications */}
 
             {/* Coupons 模組路由（整合後導向行銷管理） */}
@@ -170,7 +178,7 @@ const AppRouter = () => {
             <Route path="coupons/stacking-rules" element={<Navigate to="/marketing" replace />} />
 
             {/* Notifications 模組（對外發送）路由 */}
-            <Route path="notifications" element={<NotificationHistory />} />
+            <Route path="notifications" element={<RequireModule module="notifications"><NotificationHistory /></RequireModule>} />
             <Route path="notifications/line-text" element={<LineTextMessage />} />
             <Route path="notifications/line-flex" element={<LineFlexMessage />} />
             <Route path="notifications/mail-text" element={<MailTextMessage />} />
@@ -179,15 +187,15 @@ const AppRouter = () => {
             <Route path="notifications/web" element={<WebNotification />} />
 
             {/* Notification Center（對內接收）獨立模組路由，不在側邊欄顯示 */}
-            <Route path="notification-center" element={<NotificationCenter />} />
-            <Route path="notification-center/orders" element={<OrdersInbox />} />
-            <Route path="notification-center/ecpay/payments" element={<ECPayPayments />} />
-            <Route path="notification-center/ecpay/subscriptions" element={<ECPaySubscriptions />} />
-            <Route path="notification-center/ecpay/codes" element={<ECPayCodes />} />
-            <Route path="notification-center/ecpay/cardless-installments" element={<ECPayCardlessInstallments />} />
+            <Route path="notification-center" element={<RequireModule module="notification-center"><NotificationCenter /></RequireModule>} />
+            <Route path="notification-center/orders" element={<RequireModule module="notification-center"><OrdersInbox /></RequireModule>} />
+            <Route path="notification-center/ecpay/payments" element={<RequireModule module="notification-center"><ECPayPayments /></RequireModule>} />
+            <Route path="notification-center/ecpay/subscriptions" element={<RequireModule module="notification-center"><ECPaySubscriptions /></RequireModule>} />
+            <Route path="notification-center/ecpay/codes" element={<RequireModule module="notification-center"><ECPayCodes /></RequireModule>} />
+            <Route path="notification-center/ecpay/cardless-installments" element={<RequireModule module="notification-center"><ECPayCardlessInstallments /></RequireModule>} />
 
             {/* Marketing 模組路由（整合入口 + 子頁） */}
-            <Route path="marketing" element={<MarketingOverviewPage />}>
+            <Route path="marketing" element={<RequireModule module="marketing"><MarketingOverviewPage /></RequireModule>}>
               <Route index element={<Navigate to="coupons" replace />} />
               <Route path="coupons" element={<CouponManagement />} />
               <Route path="festivals" element={<FestivalManagement />} />
@@ -198,30 +206,30 @@ const AppRouter = () => {
             <Route path="festivals/manage" element={<Navigate to="/marketing" replace />} />
 
             {/* 表單審批 模組路由 */}
-            <Route path="fromsigning" element={<FormApprovals />} />
+            <Route path="fromsigning" element={<RequireModule module="fromsigning"><FormApprovals /></RequireModule>} />
 
             {/* 新增：會計管理與評價管理 */}
             <Route path="accounting" element={<Navigate to="/accounting/journal" replace />} />
-            <Route path="accounting/journal" element={<AccountingManagement />} />
-            <Route path="accounting/balance-sheet" element={<BalanceSheet />} />
-            <Route path="accounting/accounts" element={<ChartOfAccounts />} />
-            <Route path="reviews" element={<ReviewsManagement />} />
+            <Route path="accounting/journal" element={<RequireModule module="accounting"><AccountingManagement /></RequireModule>} />
+            <Route path="accounting/balance-sheet" element={<RequireModule module="accounting"><BalanceSheet /></RequireModule>} />
+            <Route path="accounting/accounts" element={<RequireModule module="accounting"><ChartOfAccounts /></RequireModule>} />
+            <Route path="reviews" element={<RequireModule module="reviews"><ReviewsManagement /></RequireModule>} />
 
             {/* Analytics 模組路由 */}
-            <Route path="analytics" element={<AdminAnalyticsOverview />} />
-            <Route path="analytics/sales" element={<SalesAnalyticsPage />} />
-            <Route path="analytics/customers" element={<CustomerAnalytics />} />
-            <Route path="analytics/products" element={<ProductAnalytics />} />
-            <Route path="analytics/operations" element={<OperationalAnalytics />} />
-            <Route path="analytics/ai-insights" element={<AIInsights />} />
+            <Route path="analytics" element={<RequireModule module="analytics"><AdminAnalyticsOverview /></RequireModule>} />
+            <Route path="analytics/sales" element={<RequireModule module="analytics"><SalesAnalyticsPage /></RequireModule>} />
+            <Route path="analytics/customers" element={<RequireModule module="analytics"><CustomerAnalytics /></RequireModule>} />
+            <Route path="analytics/products" element={<RequireModule module="analytics"><ProductAnalytics /></RequireModule>} />
+            <Route path="analytics/operations" element={<RequireModule module="analytics"><OperationalAnalytics /></RequireModule>} />
+            <Route path="analytics/ai-insights" element={<RequireModule module="analytics"><AIInsights /></RequireModule>} />
 
             {/* Settings 模組路由 */}
-            <Route path="settings" element={<SystemSettingsOverview />} />
-            <Route path="settings/general" element={<GeneralSettings />} />
-            <Route path="settings/security" element={<SecuritySettings />} />
-            <Route path="settings/notifications" element={<NotificationSettings />} />
-            <Route path="settings/payment" element={<PaymentSettings />} />
-            <Route path="settings/shipping" element={<ShippingSettings />} />
+            <Route path="settings" element={<RequireModule module="settings"><SystemSettingsOverview /></RequireModule>} />
+            <Route path="settings/general" element={<RequireModule module="settings"><GeneralSettings /></RequireModule>} />
+            <Route path="settings/security" element={<RequireModule module="settings"><SecuritySettings /></RequireModule>} />
+            <Route path="settings/notifications" element={<RequireModule module="settings"><NotificationSettings /></RequireModule>} />
+            <Route path="settings/payment" element={<RequireModule module="settings"><PaymentSettings /></RequireModule>} />
+            <Route path="settings/shipping" element={<RequireModule module="settings"><ShippingSettings /></RequireModule>} />
 
             {/* 帳號設定：直接掛載子頁，index 轉址 */}
             <Route path="accountsetting" element={<Navigate to="/accountsetting/profile" replace />} />
@@ -230,19 +238,20 @@ const AppRouter = () => {
             <Route path="accountsetting/permissions" element={<AccountSettingPermissions />} />
 
             {/* Admin 模組路由 */}
-            <Route path="admin" element={<AdminManagement />} />
+            <Route path="admin" element={<RequireModule module="admin"><AdminManagement /></RequireModule>} />
+            <Route path="admin/roles" element={<RequireModule module="admin"><AdminRoleManagement /></RequireModule>} />
 
             {/* Inventory 模組路由 (獨立模組) */}
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="inventory/warehouses" element={<WarehouseManagement />} />
+            <Route path="inventory" element={<RequireModule module="inventory"><Inventory /></RequireModule>} />
+            <Route path="inventory/warehouses" element={<RequireModule module="inventory"><WarehouseManagement /></RequireModule>} />
 
             {/* User Tracking 模組路由 */}
-            <Route path="user-tracking" element={<Navigate to="/user-tracking/events" replace />} />
-            <Route path="user-tracking/events" element={<EventsPage />} />
-            <Route path="user-tracking/sessions" element={<SessionsPage />} />
-            <Route path="user-tracking/segments" element={<SegmentsPage />} />
-            <Route path="user-tracking/funnels" element={<FunnelsPage />} />
-            <Route path="user-tracking/retention" element={<RetentionPage />} />
+            <Route path="user-tracking" element={<RequireModule module="user-tracking"><Navigate to="/user-tracking/events" replace /></RequireModule>} />
+            <Route path="user-tracking/events" element={<RequireModule module="user-tracking"><EventsPage /></RequireModule>} />
+            <Route path="user-tracking/sessions" element={<RequireModule module="user-tracking"><SessionsPage /></RequireModule>} />
+            <Route path="user-tracking/segments" element={<RequireModule module="user-tracking"><SegmentsPage /></RequireModule>} />
+            <Route path="user-tracking/funnels" element={<RequireModule module="user-tracking"><FunnelsPage /></RequireModule>} />
+            <Route path="user-tracking/retention" element={<RequireModule module="user-tracking"><RetentionPage /></RequireModule>} />
           </Route>
         </>
       ),
@@ -258,7 +267,9 @@ const AppRouter = () => {
   return (
     <AuthProvider>
       <AppStateProvider>
-        <RouterProvider router={router} fallbackElement={<LoadingSpinner fullPage />} />
+        <Suspense fallback={<LoadingSpinner fullPage />}> 
+          <RouterProvider router={router} fallbackElement={<LoadingSpinner fullPage />} />
+        </Suspense>
       </AppStateProvider>
     </AuthProvider>
   );

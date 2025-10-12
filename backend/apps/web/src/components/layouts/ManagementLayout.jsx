@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, startTransition } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthComponents';
 import TabNavigation from '../ui/TabNavigation';
@@ -27,7 +27,7 @@ import {
 const ManagementLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user: _user, logout } = useAuth();
+  const { currentUser, logout } = useAuth();
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [notifCount, setNotifCount] = useState(0);
   const sidebarRef = useRef(null);
@@ -86,28 +86,33 @@ const ManagementLayout = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    startTransition(() => navigate('/login'));
   };
 
   const navigation = [
-    { name: '總覽', href: '/dashboard/overview', icon: HomeIcon },
-    { name: '商品管理', href: '/products', icon: ShoppingBagIcon },
-    { name: '庫存管理', href: '/inventory', icon: CubeIcon },
-    { name: '訂單管理', href: '/orders', icon: ClipboardDocumentListIcon },
-    { name: '物流管理', href: '/logistics', icon: MapPinIcon },
-    { name: '通知管理', href: '/notifications', icon: BellIcon },
-    { name: '行銷管理', href: '/marketing', icon: ChartBarIcon },
-    { name: '會員管理', href: '/members', icon: UsersIcon },
-    { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon },
-  { name: '會計管理', href: '/accounting/balance-sheet', icon: CurrencyDollarIcon },
-    { name: '評價管理', href: '/reviews', icon: StarIcon },
-    { name: '表單審批', href: '/fromsigning', icon: DocumentTextIcon },
+    { name: '總覽', href: '/dashboard/overview', icon: HomeIcon, module: 'dashboard' },
+    { name: '商品管理', href: '/products', icon: ShoppingBagIcon, module: 'products' },
+    { name: '庫存管理', href: '/inventory', icon: CubeIcon, module: 'inventory' },
+    { name: '訂單管理', href: '/orders', icon: ClipboardDocumentListIcon, module: 'orders' },
+    { name: '物流管理', href: '/logistics', icon: MapPinIcon, module: 'logistics' },
+    { name: '通知管理', href: '/notifications', icon: BellIcon, module: 'notifications' },
+    { name: '行銷管理', href: '/marketing', icon: ChartBarIcon, module: 'marketing' },
+    { name: '會員管理', href: '/members', icon: UsersIcon, module: 'members' },
+    { name: '採購管理', href: '/procurement', icon: ShoppingCartIcon, module: 'procurement' },
+    { name: '會計管理', href: '/accounting/balance-sheet', icon: CurrencyDollarIcon, module: 'accounting' },
+    { name: '評價管理', href: '/reviews', icon: StarIcon, module: 'reviews' },
+    { name: '表單審批', href: '/fromsigning', icon: DocumentTextIcon, module: 'fromsigning' },
     // 通知中心從頂部鈴鐺進入，不在側邊欄顯示
-  { name: '管理員管理', href: '/admin', icon: ShieldCheckIcon },
-  { name: '用戶追蹤', href: '/user-tracking', icon: ChartBarIcon },
-    { name: '數據分析', href: '/analytics', icon: ChartBarIcon },
-    { name: '系統設定', href: '/settings', icon: Cog6ToothIcon },
+    { name: '管理員管理', href: '/admin', icon: ShieldCheckIcon, module: 'admin' },
+    { name: '用戶追蹤', href: '/user-tracking', icon: ChartBarIcon, module: 'user-tracking' },
+    { name: '數據分析', href: '/analytics', icon: ChartBarIcon, module: 'analytics' },
+    { name: '系統設定', href: '/settings', icon: Cog6ToothIcon, module: 'settings' },
   ];
+
+  const visibleNavigation = navigation.filter(item => {
+    const perms = (currentUser && Array.isArray(currentUser.permissions)) ? currentUser.permissions : []
+    return perms.includes(item.module)
+  })
 
   const isActive = (path) => {
     if (path === '/dashboard/overview') {
@@ -170,7 +175,7 @@ const ManagementLayout = () => {
 
           {/* Navigation */}
           <nav className="flex-1 px-3 py-6 space-y-1" aria-hidden={!isExpanded}>
-            {navigation.map((item) => (
+            {visibleNavigation.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
@@ -221,7 +226,7 @@ const ManagementLayout = () => {
             <div className="flex items-center space-x-4">
               {/* 通知按鈕：導向 Notification Center（對內接收），不顯示於側邊欄 */}
               <button
-                onClick={() => navigate('/notification-center')}
+                onClick={() => startTransition(() => navigate('/notification-center'))}
                 className="p-2 rounded-lg text-[#2d1e0f] hover:bg-[#f7ede3] hover:text-[#cc824d] transition-colors duration-200 relative"
                 title="通知中心"
               >
@@ -235,7 +240,7 @@ const ManagementLayout = () => {
 
               {/* 管理員帳號設定 */}
               <button
-                onClick={() => navigate('/accountsetting')}
+                onClick={() => startTransition(() => navigate('/accountsetting'))}
                 className="p-2 rounded-lg text-[#2d1e0f] hover:bg-[#f7ede3] hover:text-[#cc824d] transition-colors duration-200"
                 title="帳號設定"
               >

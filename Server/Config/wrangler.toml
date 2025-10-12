@@ -6,5 +6,14 @@ compatibility_date = "2024-10-01"
 # Set these in Cloudflare dashboard or .dev.vars for local dev
 SUPABASE_URL = ""
 SUPABASE_ANON_KEY = ""
+# LINE Login
+LINE_CHANNEL_ID = ""
+LINE_CHANNEL_SECRET = ""
+# Optional: if omitted we'll infer from request origin
+LINE_REDIRECT_URI = ""
+# Optional: enables server-side lookups for bound accounts
+SUPABASE_SERVICE_ROLE_KEY = ""
+# For HMAC-signed admin session cookie (LINE direct login)
+ADMIN_SESSION_SECRET = ""
 
 

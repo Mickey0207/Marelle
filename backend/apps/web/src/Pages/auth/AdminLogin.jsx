@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuth, LoginAttemptWarning } from '../../components/auth/AuthComponents';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -13,6 +14,23 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lineMsg, setLineMsg] = useState('');
+
+  useEffect(() => {
+    // 解析 LINE callback 回來的狀態
+    const params = new URLSearchParams(location.search);
+    const status = params.get('line_status');
+    const bound = params.get('bound');
+    const reason = params.get('reason');
+    if (!status) return;
+    if (status === 'success') {
+      if (bound === '1') setLineMsg('已綁定 LINE，後續可直接使用 LINE 登入');
+      else setLineMsg('尚未綁定任何帳號，請先以 Email/密碼登入後至「第三方登入」完成綁定');
+    } else if (status === 'error') {
+      const r = reason || '未知錯誤';
+      setLineMsg(`LINE 登入失敗：${decodeURIComponent(r)}`);
+    }
+  }, [location.search]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -94,7 +112,20 @@ const AdminLogin = () => {
           </div>
         </form>
         <div className="w-full max-w-md mx-auto mb-8">
-          <button type="button" className="w-full bg-[#00c300] hover:bg-[#00b300] text-white text-base font-bold py-3 rounded transition-colors font-serif tracking-wider flex items-center justify-center gap-3">
+          {lineMsg && (
+            <div className="mb-3 text-sm text-[#2d1e0f] bg-[#fff2c2] border border-[#f1d48a] rounded p-3 font-serif text-center">
+              {lineMsg}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              const url = new URL('/backend/auth/line/start', window.location.origin)
+              url.searchParams.set('next', `${window.location.origin}/`)
+              window.location.href = url.toString()
+            }}
+            className="w-full bg-[#00c300] hover:bg-[#00b300] text-white text-base font-bold py-3 rounded transition-colors font-serif tracking-wider flex items-center justify-center gap-3"
+          >
             <i className="fa-brands fa-line text-xl" />
             <span>LINE 登入</span>
           </button>

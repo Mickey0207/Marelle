@@ -27,7 +27,8 @@ async function fetchJSON(path, options = {}) {
 // 簡單的本地資料存放（記憶體）
 const db = {
   admins: [
-    { id: '1', email: 'admin@example.com', name: 'Admin User' },
+    { id: '1', email: 'admin@example.com', name: 'Admin User', role: 'Admin', line_user_id: 'Uxxxxxxxx', line_display_name: '小馬', line_picture_url: 'https://picsum.photos/seed/line1/64' },
+    { id: '2', email: 'staff@example.com', name: 'Staff User', role: 'Staff', line_user_id: null, line_display_name: null, line_picture_url: null },
   ],
   modules: [
     { id: 'm1', name: 'dashboard' },
@@ -35,15 +36,23 @@ const db = {
     { id: 'm3', name: 'products' },
   ],
   roles: [
-    { id: 'r1', name: 'manager' },
-    { id: 'r2', name: 'staff' },
+    { id: 'r1', name: 'Admin' },
+    { id: 'r2', name: 'Manager' },
+    { id: 'r3', name: 'Staff' },
   ],
   departments: [
     { id: 'd1', name: '營運部' },
     { id: 'd2', name: '行銷部' },
   ],
   adminModules: {
-    '1': ['dashboard', 'settings', 'products']
+    '1': ['dashboard', 'settings', 'products'],
+    '2': ['dashboard']
+  },
+  // role -> modules mapping (mock)
+  roleModules: {
+    'Admin': ['dashboard','settings','products'],
+    'Manager': ['dashboard','products'],
+    'Staff': ['dashboard']
   }
 }
 
@@ -188,4 +197,21 @@ export async function deleteModule(id) {
 export async function bindLine(line_user_id, line_display_name) {
   await delay(50)
   return { line_user_id, line_display_name, bound: true }
+}
+
+// Role matrix helpers (mock)
+export async function getRoleModules(roleName) {
+  await delay(50)
+  const all = db.modules.map(m => m.name)
+  const mods = Array.isArray(db.roleModules[roleName]) ? db.roleModules[roleName] : []
+  // filter unknowns
+  return mods.filter(m => all.includes(m))
+}
+
+export async function setRoleModules(roleName, modules) {
+  await delay(50)
+  const all = db.modules.map(m => m.name)
+  const cleaned = Array.isArray(modules) ? Array.from(new Set(modules)).filter(m => all.includes(m)) : []
+  db.roleModules[roleName] = cleaned
+  return { role: roleName, modules: cleaned }
 }

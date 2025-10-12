@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, createContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, createContext, useCallback, startTransition } from 'react';
 import { Navigate } from 'react-router-dom';
 import { login as apiLogin, me as apiMe, refresh as refreshAccessToken, clearAccessFlag as clearAccessToken, getAdminModules, logout as apiLogout } from '../../../../API/auth'
 
@@ -8,6 +8,7 @@ const AuthContext = createContext();
 // 認證提供者組件
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [initialized, setInitialized] = useState(false);
   const [sessionWarning, setSessionWarning] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }) => {
 
   const handleSessionExpired = useCallback(() => {
     logout();
-    alert('會話已到期，請重新登入');
+    try { alert('會話已到期，請重新登入'); } catch {}
   }, [logout]);
 
   const showSessionWarning = useCallback(() => {
@@ -71,23 +72,35 @@ export const AuthProvider = ({ children }) => {
   }, [showSessionWarning]);
 
   useEffect(() => {
-    // 嘗試使用 refresh cookie 自動取得 access token 並獲取使用者資訊
+    // 啟動時先嘗試直接讀取 /auth/me（支援 admin-session），失敗再嘗試 refresh
     (async () => {
       try {
-        const token = await refreshAccessToken()
-        if (token) {
-          const profile = await apiMe()
-          let modules = []
-          try { modules = await getAdminModules(profile.id) } catch (e) {
-            console.debug('getAdminModules failed', e)
-          }
-          setCurrentUser({ id: profile.id, email: profile.email, permissions: modules })
-          setupSessionWarning({ lastActivity: new Date().toISOString() })
-          setupPeriodicRefresh()
+        const profile = await apiMe()
+        let modules = []
+        try { modules = await getAdminModules(profile.id) } catch (e) {
+          console.debug('getAdminModules failed', e)
         }
-      } catch (e) {
-        // ignore refresh failure at startup; user will see login screen
-        console.debug('refreshAccessToken at mount failed', e)
+        setCurrentUser({ id: profile.id, email: profile.email, permissions: modules })
+        setupSessionWarning({ lastActivity: new Date().toISOString() })
+        setupPeriodicRefresh()
+      } catch (e1) {
+        try {
+          const token = await refreshAccessToken()
+          if (token) {
+            const profile = await apiMe()
+            let modules = []
+            try { modules = await getAdminModules(profile.id) } catch (e) {
+              console.debug('getAdminModules failed', e)
+            }
+            setCurrentUser({ id: profile.id, email: profile.email, permissions: modules })
+            setupSessionWarning({ lastActivity: new Date().toISOString() })
+            setupPeriodicRefresh()
+          }
+        } catch (e2) {
+          console.debug('auth bootstrap failed', e1, e2)
+        }
+      } finally {
+        setInitialized(true)
       }
     })()
     return () => {
@@ -143,7 +156,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     checkPermission,
-    isAuthenticated: !!currentUser
+    isAuthenticated: !!currentUser,
+    initialized
   };
 
   return (
@@ -200,7 +214,8 @@ export const useAuth = () => {
 
 // 受保護的路由組件
 export const ProtectedRoute = ({ children }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, initialized } = useAuth();
+  if (!initialized) return null;
   
   // 如果用戶未登入，重定向到登入頁面
   if (!currentUser) {

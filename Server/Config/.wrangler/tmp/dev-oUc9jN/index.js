@@ -1307,16 +1307,13 @@ var require_cjs = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-nbbbgo/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-w9UJsO/middleware-loader.entry.ts
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-nbbbgo/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-w9UJsO/middleware-insertion-facade.js
 init_modules_watch_stub();
 
 // ../backend/API/index.ts
-init_modules_watch_stub();
-
-// ../backend/API/auth/index.ts
 init_modules_watch_stub();
 
 // ../node_modules/hono/dist/index.js
@@ -2093,14 +2090,14 @@ var Hono = class {
   }
   #notFoundHandler = notFoundHandler;
   errorHandler = errorHandler;
-  route(path, app2) {
+  route(path, app4) {
     const subApp = this.basePath(path);
-    app2.routes.map((r) => {
+    app4.routes.map((r) => {
       let handler;
-      if (app2.errorHandler === errorHandler) {
+      if (app4.errorHandler === errorHandler) {
         handler = r.handler;
       } else {
-        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app2.errorHandler)(c, () => r.handler(c, next))).res, "handler");
+        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app4.errorHandler)(c, () => r.handler(c, next))).res, "handler");
         handler[COMPOSED_HANDLER] = r.handler;
       }
       subApp.#addRoute(r.method, r.path, handler);
@@ -2892,6 +2889,9 @@ var Hono2 = class extends Hono {
     });
   }
 };
+
+// ../backend/API/auth/index.ts
+init_modules_watch_stub();
 
 // ../node_modules/hono/dist/middleware/cors/index.js
 init_modules_watch_stub();
@@ -7138,9 +7138,9 @@ function generatePKCEVerifier() {
   return Array.from(array, dec2hex).join("");
 }
 __name(generatePKCEVerifier, "generatePKCEVerifier");
-async function sha256(randomString) {
+async function sha256(randomString2) {
   const encoder = new TextEncoder();
-  const encodedData = encoder.encode(randomString);
+  const encodedData = encoder.encode(randomString2);
   const hash = await crypto.subtle.digest("SHA-256", encodedData);
   const bytes = new Uint8Array(hash);
   return Array.from(bytes).map((c) => String.fromCharCode(c)).join("");
@@ -11305,6 +11305,10 @@ function makeSupabase(c, accessToken) {
 __name(makeSupabase, "makeSupabase");
 var ACCESS_COOKIE = "sb-access-token";
 var REFRESH_COOKIE = "sb-refresh-token";
+var LINE_STATE_COOKIE = "line-oauth-state";
+var ADMIN_SESSION_COOKIE = "admin-session";
+var LINE_MODE_COOKIE = "line-oauth-mode";
+var LINE_NEXT_COOKIE = "line-oauth-next";
 function isLocalRequest(c) {
   try {
     const u = new URL(c.req.url);
@@ -11337,6 +11341,140 @@ function clearAuthCookies(c) {
   deleteCookie(c, REFRESH_COOKIE, { path: "/" });
 }
 __name(clearAuthCookies, "clearAuthCookies");
+async function hmacSign(secret, data) {
+  const enc = new TextEncoder();
+  const keyBytes = enc.encode(secret);
+  const key = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
+  return bufferToBase64Url(sig);
+}
+__name(hmacSign, "hmacSign");
+function bufferToBase64Url(buf) {
+  const bytes = new Uint8Array(buf);
+  let str = "";
+  for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
+  const b64 = btoa(str);
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+__name(bufferToBase64Url, "bufferToBase64Url");
+function base64UrlEncode(str) {
+  const b64 = btoa(unescape(encodeURIComponent(str)));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+__name(base64UrlEncode, "base64UrlEncode");
+function base64UrlDecodeToString(b64url) {
+  const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = b64.length % 4 === 2 ? "==" : b64.length % 4 === 3 ? "=" : "";
+  const s = atob(b64 + pad);
+  const bytes = new Uint8Array([...s].map((ch) => ch.charCodeAt(0)));
+  const dec = new TextDecoder();
+  return dec.decode(bytes);
+}
+__name(base64UrlDecodeToString, "base64UrlDecodeToString");
+async function createAdminSessionToken(secret, uid, ttlSec = 60 * 60 * 24) {
+  const payload = { uid, exp: Math.floor(Date.now() / 1e3) + ttlSec };
+  const payloadB64 = base64UrlEncode(JSON.stringify(payload));
+  const sig = await hmacSign(secret, payloadB64);
+  return `${payloadB64}.${sig}`;
+}
+__name(createAdminSessionToken, "createAdminSessionToken");
+async function verifyAdminSessionToken(secret, token) {
+  const [payloadB64, sig] = token.split(".");
+  if (!payloadB64 || !sig) return null;
+  const expected = await hmacSign(secret, payloadB64);
+  if (expected !== sig) return null;
+  try {
+    const payload = JSON.parse(base64UrlDecodeToString(payloadB64));
+    if (!payload?.uid || !payload?.exp) return null;
+    if (payload.exp < Math.floor(Date.now() / 1e3)) return null;
+    return { uid: String(payload.uid) };
+  } catch {
+    return null;
+  }
+}
+__name(verifyAdminSessionToken, "verifyAdminSessionToken");
+function setAdminSessionCookie(c, token, ttlSec = 60 * 60 * 24) {
+  const isLocal = isLocalRequest(c);
+  setCookie(c, ADMIN_SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: !isLocal,
+    sameSite: "Lax",
+    path: "/",
+    maxAge: ttlSec
+  });
+}
+__name(setAdminSessionCookie, "setAdminSessionCookie");
+function clearAdminSessionCookie(c) {
+  deleteCookie(c, ADMIN_SESSION_COOKIE, { path: "/" });
+}
+__name(clearAdminSessionCookie, "clearAdminSessionCookie");
+function requiredEnv(c, key) {
+  const v = c.env[key];
+  if (!v) throw new Error(`Missing env: ${String(key)}`);
+  return v;
+}
+__name(requiredEnv, "requiredEnv");
+function getRedirectUri(c) {
+  const configured = c.env.LINE_REDIRECT_URI;
+  if (configured) return configured;
+  try {
+    const u = new URL(c.req.url);
+    return `${u.origin}/backend/auth/line/callback`;
+  } catch {
+    throw new Error("Unable to resolve LINE_REDIRECT_URI");
+  }
+}
+__name(getRedirectUri, "getRedirectUri");
+function randomString(len = 32) {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let s = "";
+  for (let i = 0; i < len; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+__name(randomString, "randomString");
+function setStateCookie(c, state) {
+  const isLocal = isLocalRequest(c);
+  setCookie(c, LINE_STATE_COOKIE, state, {
+    httpOnly: true,
+    secure: !isLocal,
+    sameSite: "Lax",
+    path: "/",
+    maxAge: 60 * 10
+    // 10 minutes
+  });
+}
+__name(setStateCookie, "setStateCookie");
+function getStateCookie(c) {
+  return getCookie(c, LINE_STATE_COOKIE);
+}
+__name(getStateCookie, "getStateCookie");
+async function exchangeLineToken(c, code) {
+  const clientId = requiredEnv(c, "LINE_CHANNEL_ID");
+  const clientSecret = requiredEnv(c, "LINE_CHANNEL_SECRET");
+  const redirectUri = getRedirectUri(c);
+  const body = new URLSearchParams();
+  body.set("grant_type", "authorization_code");
+  body.set("code", code);
+  body.set("redirect_uri", redirectUri);
+  body.set("client_id", clientId);
+  body.set("client_secret", clientSecret);
+  const resp = await fetch("https://api.line.me/oauth2/v2.1/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body
+  });
+  if (!resp.ok) throw new Error(`LINE token exchange failed: ${resp.status}`);
+  return resp.json();
+}
+__name(exchangeLineToken, "exchangeLineToken");
+async function fetchLineProfile(accessToken) {
+  const resp = await fetch("https://api.line.me/v2/profile", {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  if (!resp.ok) throw new Error(`LINE profile failed: ${resp.status}`);
+  return resp.json();
+}
+__name(fetchLineProfile, "fetchLineProfile");
 app.post("/backend/auth/login", async (c) => {
   try {
     const body = await c.req.json();
@@ -11371,21 +11509,35 @@ app.post("/backend/auth/logout", async (c) => {
     } catch {
     }
     clearAuthCookies(c);
+    clearAdminSessionCookie(c);
     return c.json({ ok: true });
   } catch (e) {
     clearAuthCookies(c);
+    clearAdminSessionCookie(c);
     return c.json({ ok: true });
   }
 });
 app.get("/backend/auth/me", async (c) => {
   try {
     const access = getCookie(c, ACCESS_COOKIE);
-    if (!access) return c.json({ error: "Unauthorized" }, 401);
-    const supabase = makeSupabase(c);
-    const { data, error } = await supabase.auth.getUser(access);
-    if (error || !data?.user) return c.json({ error: "Unauthorized" }, 401);
-    const user = data.user;
-    return c.json({ id: user.id, email: user.email });
+    if (access) {
+      const supabase = makeSupabase(c);
+      const { data, error } = await supabase.auth.getUser(access);
+      if (error || !data?.user) return c.json({ error: "Unauthorized" }, 401);
+      const user = data.user;
+      return c.json({ id: user.id, email: user.email });
+    }
+    const adminToken = getCookie(c, ADMIN_SESSION_COOKIE);
+    const secret = c.env.ADMIN_SESSION_SECRET;
+    if (!adminToken || !secret) return c.json({ error: "Unauthorized" }, 401);
+    const parsed = await verifyAdminSessionToken(secret, adminToken);
+    if (!parsed) return c.json({ error: "Unauthorized" }, 401);
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ id: parsed.uid });
+    const admin = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const { data: rows } = await admin.from("backend_admins").select("email").eq("id", parsed.uid).limit(1);
+    const email = Array.isArray(rows) && rows[0]?.email ? rows[0].email : void 0;
+    return c.json({ id: parsed.uid, email });
   } catch (e) {
     return c.json({ error: e?.message || "Internal server error" }, 500);
   }
@@ -11406,16 +11558,37 @@ app.post("/backend/auth/refresh", async (c) => {
 });
 app.get("/backend/auth/modules", async (c) => {
   try {
+    let adminId = null;
+    let role = null;
     const access = getCookie(c, ACCESS_COOKIE);
-    if (!access) return c.json({ error: "Unauthorized" }, 401);
-    const supabase = makeSupabase(c, access);
-    const { data: rows, error: mapErr } = await supabase.from("backend_admin_modules").select("module_key");
-    if (mapErr) return c.json({ error: "Failed to load modules" }, 500);
-    const keys = (rows || []).map((r) => r.module_key);
-    if (keys.length === 0) return c.json([]);
-    const { data: modules, error: modErr } = await supabase.from("backend_modules").select("key").in("key", keys).eq("is_active", true);
+    if (access) {
+      const supabase = makeSupabase(c);
+      const { data, error } = await supabase.auth.getUser(access);
+      if (!error && data?.user?.id) {
+        adminId = String(data.user.id);
+      }
+    }
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!adminId) {
+      const adminToken = getCookie(c, ADMIN_SESSION_COOKIE);
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      if (!adminToken || !secret) return c.json({ error: "Unauthorized" }, 401);
+      const parsed = await verifyAdminSessionToken(secret, adminToken);
+      if (!parsed) return c.json({ error: "Unauthorized" }, 401);
+      adminId = parsed.uid;
+    }
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const { data: adminRow, error: adminErr } = await svc.from("backend_admins").select("role").eq("id", adminId).single();
+    if (adminErr) return c.json({ error: "Failed to load admin role" }, 500);
+    role = adminRow?.role || "Staff";
+    const { data: roleRow, error: roleErr } = await svc.from("backend_role_modules").select("*").eq("role", role).single();
+    if (roleErr || !roleRow) return c.json([]);
+    const { data: modules, error: modErr } = await svc.from("backend_modules").select("key").eq("is_active", true);
     if (modErr) return c.json({ error: "Failed to load modules" }, 500);
-    return c.json((modules || []).map((m) => m.key));
+    const toColumn = /* @__PURE__ */ __name((k) => k.replace(/-/g, "_"), "toColumn");
+    const allowed = (modules || []).map((m) => m.key).filter((k) => !!roleRow[toColumn(k)]);
+    return c.json(allowed);
   } catch (e) {
     return c.json({ error: e?.message || "Internal server error" }, 500);
   }
@@ -11432,9 +11605,393 @@ app.get("/backend/_diag/env", (c) => {
   return c.json({ supabaseUrlHost: host });
 });
 var auth_default = app;
+app.get("/backend/auth/line/start", async (c) => {
+  try {
+    const clientId = requiredEnv(c, "LINE_CHANNEL_ID");
+    const redirectUri = getRedirectUri(c);
+    const state = randomString(32);
+    const nonce = randomString(16);
+    setStateCookie(c, state);
+    const isLocal = isLocalRequest(c);
+    const u = new URL(c.req.url);
+    const mode = u.searchParams.get("mode") || "login";
+    const next = u.searchParams.get("next") || (mode === "bind" ? "/accountsetting/oauth" : "/");
+    setCookie(c, LINE_MODE_COOKIE, mode, { httpOnly: true, secure: !isLocal, sameSite: "Lax", path: "/", maxAge: 600 });
+    setCookie(c, LINE_NEXT_COOKIE, next, { httpOnly: true, secure: !isLocal, sameSite: "Lax", path: "/", maxAge: 600 });
+    const params = new URLSearchParams();
+    params.set("response_type", "code");
+    params.set("client_id", clientId);
+    params.set("redirect_uri", redirectUri);
+    params.set("state", state);
+    params.set("scope", "openid profile");
+    params.set("nonce", nonce);
+    const url = `https://access.line.me/oauth2/v2.1/authorize?${params.toString()}`;
+    return c.redirect(url, 302);
+  } catch (e) {
+    return c.json({ error: e?.message || "LINE start failed" }, 500);
+  }
+});
+app.get("/backend/auth/line/callback", async (c) => {
+  try {
+    const u = new URL(c.req.url);
+    const code = u.searchParams.get("code");
+    const state = u.searchParams.get("state");
+    const error = u.searchParams.get("error");
+    if (error) return c.redirect(`/login?line_status=error&reason=${encodeURIComponent(error)}`, 302);
+    if (!code || !state) return c.redirect("/login?line_status=error&reason=missing_code_or_state", 302);
+    const expected = getStateCookie(c);
+    if (!expected || expected !== state) return c.redirect("/login?line_status=error&reason=state_mismatch", 302);
+    const tokenRes = await exchangeLineToken(c, code);
+    const accessToken = tokenRes?.access_token;
+    if (!accessToken) return c.redirect("/login?line_status=error&reason=no_access_token", 302);
+    const profile = await fetchLineProfile(accessToken);
+    const lineUserId = profile?.userId;
+    const lineName = profile?.displayName;
+    const linePicture = profile?.pictureUrl || null;
+    if (!lineUserId) return c.redirect("/login?line_status=error&reason=no_line_user", 302);
+    const mode = getCookie(c, LINE_MODE_COOKIE) || "login";
+    const next = getCookie(c, LINE_NEXT_COOKIE) || (mode === "bind" ? "/accountsetting/oauth" : "/login");
+    deleteCookie(c, LINE_MODE_COOKIE, { path: "/" });
+    deleteCookie(c, LINE_NEXT_COOKIE, { path: "/" });
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    let bound = false;
+    let uid = null;
+    if (serviceKey) {
+      const admin = createClient(requiredEnv(c, "SUPABASE_URL"), serviceKey, { auth: { persistSession: false } });
+      const { data: rows } = await admin.from("backend_admins").select("id").eq("line_user_id", lineUserId).limit(1);
+      bound = Array.isArray(rows) && rows.length > 0;
+      uid = bound ? String(rows[0].id) : null;
+    }
+    if (mode === "bind") {
+      const currentUid = await (async () => {
+        const access = getCookie(c, ACCESS_COOKIE);
+        if (access) {
+          try {
+            const supabase = makeSupabase(c);
+            const { data, error: error2 } = await supabase.auth.getUser(access);
+            if (!error2 && data?.user?.id) return String(data.user.id);
+          } catch {
+          }
+        }
+        const adminToken = getCookie(c, ADMIN_SESSION_COOKIE);
+        const secret = c.env.ADMIN_SESSION_SECRET;
+        if (adminToken && secret) {
+          const parsed = await verifyAdminSessionToken(secret, adminToken);
+          if (parsed?.uid) return parsed.uid;
+        }
+        return null;
+      })();
+      if (!currentUid) {
+        return c.redirect(`/login?line_status=error&reason=${encodeURIComponent("not_logged_in_for_bind")}`, 302);
+      }
+      if (!serviceKey) {
+        return c.redirect(`/accountsetting/oauth?bind=error&reason=${encodeURIComponent("missing_service_key")}`, 302);
+      }
+      const admin = createClient(requiredEnv(c, "SUPABASE_URL"), serviceKey, { auth: { persistSession: false } });
+      const { data: existRows } = await admin.from("backend_admins").select("id").eq("line_user_id", lineUserId).limit(1);
+      const occupied = Array.isArray(existRows) && existRows.length > 0 && String(existRows[0].id) !== String(currentUid);
+      if (occupied) {
+        return c.redirect(`/accountsetting/oauth?bind=error&reason=${encodeURIComponent("line_id_taken")}`, 302);
+      }
+      const { error: updErr } = await admin.from("backend_admins").update({ line_user_id: lineUserId, line_display_name: lineName || null, line_picture_url: linePicture, line_bound_at: (/* @__PURE__ */ new Date()).toISOString() }).eq("id", currentUid);
+      if (updErr) {
+        return c.redirect(`/accountsetting/oauth?bind=error&reason=${encodeURIComponent("update_failed")}`, 302);
+      }
+      const sep = next.includes("?") ? "&" : "?";
+      return c.redirect(`${next}${sep}bind=success`, 302);
+    }
+    if (bound && uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      if (!secret) {
+        const q2 = new URLSearchParams({ line_status: "success", bound: "1", name: lineName || "" });
+        return c.redirect(`/login?${q2.toString()}`, 302);
+      }
+      const token = await createAdminSessionToken(secret, uid, 60 * 60 * 12);
+      setAdminSessionCookie(c, token, 60 * 60 * 12);
+      let target = "/";
+      if (next && /^https?:\/\//i.test(next)) {
+        target = next;
+      } else if (c.env.ALLOWED_ORIGIN) {
+        const base = c.env.ALLOWED_ORIGIN.replace(/\/$/, "");
+        const path = next || "/";
+        target = `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+      } else if (next) {
+        target = next;
+      }
+      return c.redirect(target, 302);
+    }
+    const q = new URLSearchParams({ line_status: "success", bound: "0", name: lineName || "" });
+    let loginUrl = `/login?${q.toString()}`;
+    if (next && /^https?:\/\//i.test(next)) {
+      const sep = next.endsWith("/") ? "" : "/";
+      loginUrl = `${next}${sep}login?${q.toString()}`;
+    } else if (c.env.ALLOWED_ORIGIN) {
+      const sep = c.env.ALLOWED_ORIGIN.endsWith("/") ? "" : "/";
+      loginUrl = `${c.env.ALLOWED_ORIGIN}${sep}login?${q.toString()}`;
+    }
+    return c.redirect(loginUrl, 302);
+  } catch (e) {
+    return c.redirect(`/login?line_status=error&reason=${encodeURIComponent(e?.message || "callback_failed")}`, 302);
+  }
+});
+app.get("/backend/account/line/profile", async (c) => {
+  try {
+    const access = getCookie(c, ACCESS_COOKIE);
+    let adminId = null;
+    if (access) {
+      try {
+        const supabase = makeSupabase(c);
+        const { data: data2, error: error2 } = await supabase.auth.getUser(access);
+        if (!error2 && data2?.user?.id) adminId = String(data2.user.id);
+      } catch {
+      }
+    }
+    if (!adminId) {
+      const adminToken = getCookie(c, ADMIN_SESSION_COOKIE);
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      if (adminToken && secret) {
+        const parsed = await verifyAdminSessionToken(secret, adminToken);
+        if (parsed?.uid) adminId = parsed.uid;
+      }
+    }
+    if (!adminId) return c.json({ error: "Unauthorized" }, 401);
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const admin = createClient(requiredEnv(c, "SUPABASE_URL"), serviceKey, { auth: { persistSession: false } });
+    const { data, error } = await admin.from("backend_admins").select("line_user_id,line_display_name,line_picture_url").eq("id", adminId).single();
+    if (error) return c.json({ error: "Failed to load" }, 500);
+    const linked = !!data?.line_user_id;
+    return c.json({ linked, line_user_id: data?.line_user_id || null, line_display_name: data?.line_display_name || null, line_picture_url: data?.line_picture_url || null });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal server error" }, 500);
+  }
+});
+app.post("/backend/account/line/unbind", async (c) => {
+  try {
+    const access = getCookie(c, ACCESS_COOKIE);
+    let adminId = null;
+    if (access) {
+      try {
+        const supabase = makeSupabase(c);
+        const { data, error: error2 } = await supabase.auth.getUser(access);
+        if (!error2 && data?.user?.id) adminId = String(data.user.id);
+      } catch {
+      }
+    }
+    if (!adminId) {
+      const adminToken = getCookie(c, ADMIN_SESSION_COOKIE);
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      if (adminToken && secret) {
+        const parsed = await verifyAdminSessionToken(secret, adminToken);
+        if (parsed?.uid) adminId = parsed.uid;
+      }
+    }
+    if (!adminId) return c.json({ error: "Unauthorized" }, 401);
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const admin = createClient(requiredEnv(c, "SUPABASE_URL"), serviceKey, { auth: { persistSession: false } });
+    const { error } = await admin.from("backend_admins").update({ line_user_id: null, line_display_name: null, line_picture_url: null, line_bound_at: null }).eq("id", adminId);
+    if (error) return c.json({ error: "Failed to unbind" }, 500);
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal server error" }, 500);
+  }
+});
+
+// ../backend/API/admin/index.ts
+init_modules_watch_stub();
+var app2 = new Hono2();
+var ACCESS_COOKIE2 = "sb-access-token";
+var ADMIN_SESSION_COOKIE2 = "admin-session";
+function makeSvc(c) {
+  const url = c.env.SUPABASE_URL;
+  const key = c.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Server misconfigured");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+__name(makeSvc, "makeSvc");
+async function requireAuth(c) {
+  const access = getCookie(c, ACCESS_COOKIE2);
+  if (access) return true;
+  const sess = getCookie(c, ADMIN_SESSION_COOKIE2);
+  return !!sess;
+}
+__name(requireAuth, "requireAuth");
+app2.get("/backend/admins", async (c) => {
+  if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const svc = makeSvc(c);
+    const { data, error } = await svc.from("backend_admins").select("id,email,display_name,role,department,line_user_id,line_display_name,line_picture_url,is_active,created_at").order("created_at", { ascending: false });
+    if (error) return c.json({ error: "Failed to list" }, 500);
+    const list = (data || []).map((a) => ({
+      id: a.id,
+      email: a.email,
+      display_name: a.display_name,
+      role: a.role,
+      department: a.department || null,
+      line_user_id: a.line_user_id,
+      line_display_name: a.line_display_name,
+      line_picture_url: a.line_picture_url,
+      is_active: a.is_active
+    }));
+    return c.json(list);
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app2.patch("/backend/admins/:id", async (c) => {
+  if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const id = c.req.param("id");
+    const body = await c.req.json();
+    const allowed = {};
+    if (typeof body.display_name === "string") allowed.display_name = body.display_name;
+    if (typeof body.role === "string") allowed.role = body.role;
+    if (typeof body.is_active === "boolean") allowed.is_active = body.is_active;
+    if (typeof body.department === "string") allowed.department = body.department;
+    if (Object.keys(allowed).length === 0) return c.json({ error: "No fields" }, 400);
+    const svc = makeSvc(c);
+    const { error } = await svc.from("backend_admins").update(allowed).eq("id", id);
+    if (error) return c.json({ error: "Update failed" }, 500);
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app2.get("/backend/roles", async (c) => {
+  if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const svc = makeSvc(c);
+    const { data, error } = await svc.from("backend_role_modules").select("role").order("role");
+    if (error) return c.json({ error: "Failed to list" }, 500);
+    const list = (data || []).map((r, idx) => ({ id: `r${idx}`, name: r.role }));
+    return c.json(list);
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app2.post("/backend/roles", async (c) => {
+  if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const body = await c.req.json();
+    const role = String(body?.name || "").trim();
+    if (!role) return c.json({ error: "Missing role name" }, 400);
+    const svc = makeSvc(c);
+    const { error } = await svc.from("backend_role_modules").insert({ role });
+    if (error) return c.json({ error: "Create failed" }, 500);
+    return c.json({ id: role, name: role });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app2.get("/backend/roles/:role/modules", async (c) => {
+  if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const role = c.req.param("role");
+    const svc = makeSvc(c);
+    const { data, error } = await svc.from("backend_role_modules").select("*").eq("role", role).single();
+    if (error || !data) return c.json([]);
+    const { role: _r, created_at: _ca, updated_at: _ua, ...flags } = data;
+    const keys = Object.entries(flags).filter(([, v]) => !!v).map(([k]) => k.replace(/_/g, "-"));
+    const { data: mods } = await svc.from("backend_modules").select("key").eq("is_active", true);
+    const active = new Set((mods || []).map((m) => m.key));
+    return c.json(keys.filter((k) => active.has(k)));
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app2.put("/backend/roles/:role/modules", async (c) => {
+  if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const role = c.req.param("role");
+    const body = await c.req.json();
+    const modules = Array.isArray(body?.modules) ? body.modules : [];
+    const svc = makeSvc(c);
+    const { data: mods } = await svc.from("backend_modules").select("key").eq("is_active", true);
+    const active = new Set((mods || []).map((m) => m.key));
+    const safe = Array.from(new Set(modules)).filter((k) => active.has(k));
+    const { data: row, error: getErr } = await svc.from("backend_role_modules").select("*").eq("role", role).single();
+    if (getErr || !row) return c.json({ error: "Role not found" }, 404);
+    const patch = {};
+    Object.keys(row).forEach((col) => {
+      if (["role", "created_at", "updated_at"].includes(col)) return;
+      const key = col.replace(/_/g, "-");
+      patch[col] = safe.includes(key);
+    });
+    const { error: updErr } = await svc.from("backend_role_modules").update(patch).eq("role", role);
+    if (updErr) return c.json({ error: "Update failed" }, 500);
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app2.get("/backend/modules", async (c) => {
+  if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const svc = makeSvc(c);
+    const { data, error } = await svc.from("backend_modules").select("key,name,is_active").eq("is_active", true).order("name", { ascending: true });
+    if (error) return c.json({ error: "Failed to list" }, 500);
+    const list = (data || []).map((m) => ({ key: m.key, label: m.name || m.key }));
+    return c.json(list);
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app2.post("/backend/admins", async (c) => {
+  if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const body = await c.req.json();
+    const email = String(body?.email || "").trim().toLowerCase();
+    const password = String(body?.password || "");
+    const display_name = String(body?.display_name || "").trim();
+    const role = String(body?.role || "Staff");
+    const department = typeof body?.department === "string" ? String(body.department) : null;
+    if (!email || !password) return c.json({ error: "Missing email or password" }, 400);
+    const svc = makeSvc(c);
+    const { data: created, error: createErr } = await svc.auth.admin.createUser({ email, password, email_confirm: true });
+    if (createErr || !created?.user) return c.json({ error: "Create user failed" }, 500);
+    const uid = created.user.id;
+    const insertRow = { id: uid, email, is_active: true };
+    if (display_name) insertRow.display_name = display_name;
+    if (role) insertRow.role = role;
+    if (department) insertRow.department = department;
+    const { error: insErr } = await svc.from("backend_admins").insert(insertRow);
+    if (insErr) {
+      try {
+        await svc.auth.admin.deleteUser(uid);
+      } catch {
+      }
+      return c.json({ error: "Create admin row failed" }, 500);
+    }
+    return c.json({ id: uid, email, display_name: display_name || null, role, department: department || null });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app2.post("/backend/admins/:id/send-reset-email", async (c) => {
+  if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const id = c.req.param("id");
+    const svc = makeSvc(c);
+    const { data: row, error } = await svc.from("backend_admins").select("email").eq("id", id).single();
+    if (error || !row?.email) return c.json({ error: "User not found" }, 404);
+    const site = c.env.SITE_URL || "http://localhost:3001";
+    const { error: mailErr } = await svc.auth.resetPasswordForEmail(row.email, {
+      redirectTo: `${site.replace(/\/$/, "")}/auth/reset-password`
+    });
+    if (mailErr) return c.json({ error: "Send reset email failed" }, 500);
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+var admin_default = app2;
 
 // ../backend/API/index.ts
-var API_default = auth_default;
+var app3 = new Hono2();
+app3.route("/", auth_default);
+app3.route("/", admin_default);
+var API_default = app3;
 
 // ../node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
 init_modules_watch_stub();
@@ -11479,7 +12036,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-nbbbgo/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-w9UJsO/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -11512,7 +12069,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-nbbbgo/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-w9UJsO/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
