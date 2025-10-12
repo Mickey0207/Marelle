@@ -1,0 +1,271 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { gsap } from 'gsap';
+import { ChevronDown, Search, Check, X } from 'lucide-react';
+
+const SearchableSelect = ({ 
+  options = [], 
+  value = '', 
+  onChange = () => {}, 
+  placeholder = '請選擇...',
+  searchPlaceholder = '搜尋選項...',
+  className = '',
+  disabled = false,
+  allowClear = false,
+  multiple = false,
+  maxDisplayOptions = 10,
+  createNewOption = null // 函數，允許創建新選項
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredOptions, setFilteredOptions] = useState(options);
+  const [selectedValues, setSelectedValues] = useState(multiple ? (Array.isArray(value) ? value : []) : [value]);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, mode: 'fixed' });
+  const [portalTarget, setPortalTarget] = useState(null);
+  
+  const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
+  const listRef = useRef(null);
+
+  const formatOptions = (opts) => {
+    return opts.map(opt => {
+      if (typeof opt === 'string') {
+        return { value: opt, label: opt };
+      }
+      return opt;
+    });
+  };
+
+  const formattedOptions = useMemo(() => formatOptions(options), [options]);
+
+  useEffect(() => {
+    const filtered = formattedOptions.filter(option =>
+      option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      option.value.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredOptions(filtered);
+  }, [searchTerm, formattedOptions]);
+
+  useEffect(() => {
+    if (multiple) {
+      setSelectedValues(Array.isArray(value) ? value : []);
+    } else {
+      setSelectedValues([value]);
+    }
+  }, [value, multiple]);
+
+  const updateDropdownPosition = () => {
+    if (dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const dropdownHeight = 300;
+
+      let target = portalTarget;
+      if (!target) {
+        const modalRoot = dropdownRef.current.closest('.glass-modal-root');
+        const portalEl = modalRoot ? modalRoot.querySelector('.glass-modal-portal') : null;
+        target = portalEl || document.body;
+        setPortalTarget(target);
+      }
+
+      let top = rect.bottom + 2;
+      let left = rect.left;
+      let mode = 'fixed';
+
+      if (target && target !== document.body) {
+        const rootRect = target.getBoundingClientRect();
+        top = rect.bottom - rootRect.top + 2;
+        left = rect.left - rootRect.left;
+        mode = 'absolute';
+      } else {
+        if (top + dropdownHeight > viewportHeight) {
+          top = rect.top - dropdownHeight - 2;
+        }
+        if (left + rect.width > window.innerWidth) {
+          left = window.innerWidth - rect.width - 10;
+        }
+        if (left < 10) {
+          left = 10;
+        }
+        top = Math.max(top, 10);
+      }
+
+      setDropdownPosition({ top, left, width: rect.width, mode });
+    }
+  };
+
+  const handleToggle = () => {
+    if (!disabled) {
+      if (!isOpen) {
+        setIsOpen(true);
+        requestAnimationFrame(() => {
+          updateDropdownPosition();
+        });
+      } else {
+        setIsOpen(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && listRef.current) {
+      updateDropdownPosition();
+      let raf1 = requestAnimationFrame(updateDropdownPosition);
+      let raf2 = requestAnimationFrame(updateDropdownPosition);
+      const t = setTimeout(updateDropdownPosition, 200);
+      
+      gsap.fromTo(listRef.current, 
+        { opacity: 0, y: -10, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.2, ease: 'power2.out' }
+      );
+      return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); clearTimeout(t); };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
+          listRef.current && !listRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    };
+
+    const handleScroll = () => { if (isOpen) updateDropdownPosition(); };
+    const handleResize = () => { if (isOpen) updateDropdownPosition(); };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('scroll', handleScroll);
+      window.addEventListener('resize', handleResize);
+      requestAnimationFrame(updateDropdownPosition);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (option) => {
+    if (multiple) {
+      const newValues = selectedValues.includes(option.value)
+        ? selectedValues.filter(v => v !== option.value)
+        : [...selectedValues, option.value];
+      setSelectedValues(newValues);
+      onChange(newValues);
+    } else {
+      setSelectedValues([option.value]);
+      onChange(option.value);
+      setIsOpen(false);
+      setSearchTerm('');
+    }
+  };
+
+  const handleClear = (e) => {
+    e.stopPropagation();
+    if (multiple) {
+      setSelectedValues([]);
+      onChange([]);
+    } else {
+      setSelectedValues(['']);
+      onChange('');
+    }
+  };
+
+  const handleCreateNew = () => {
+    if (createNewOption && searchTerm.trim()) {
+      const newOption = createNewOption(searchTerm.trim());
+      if (newOption) {
+        handleSelect(newOption);
+        setSearchTerm('');
+      }
+    }
+  };
+
+  const getDisplayValue = () => {
+    if (multiple) {
+      if (selectedValues.length === 0) return placeholder;
+      if (selectedValues.length === 1) {
+        const option = formattedOptions.find(opt => opt.value === selectedValues[0]);
+        return option ? option.label : selectedValues[0];
+      }
+      return `已選擇 ${selectedValues.length} 項`;
+    } else {
+      if (!selectedValues[0]) return placeholder;
+      const option = formattedOptions.find(opt => opt.value === selectedValues[0]);
+      return option ? option.label : selectedValues[0];
+    }
+  };
+
+  const isSelected = (optionValue) => selectedValues.includes(optionValue);
+
+  const showCreateOption = createNewOption && searchTerm.trim() && 
+    !filteredOptions.some(opt => opt.label.toLowerCase() === searchTerm.toLowerCase());
+
+  return (
+    <div ref={dropdownRef} className={`relative ${className}`} style={{ zIndex: isOpen ? 9999 : 'auto' }}>
+      <div
+        onClick={handleToggle}
+        className={`relative w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg cursor-pointer transition-all duration-200 font-chinese glass-light hover:border-button-300 hover:shadow-md ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${isOpen ? 'border-button-500 shadow-lg ring-2 ring-button-100' : ''}`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 truncate">
+            <span className={`truncate ${!selectedValues[0] && !multiple ? 'text-gray-500' : 'text-gray-900'}`}>
+              {getDisplayValue()}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 ml-2">
+            {allowClear && (selectedValues[0] || (multiple && selectedValues.length > 0)) && (
+              <button onClick={handleClear} className="p-1 hover:bg-gray-100 rounded-full transition-colors" type="button">
+                <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+              </button>
+            )}
+            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} />
+          </div>
+        </div>
+      </div>
+
+      {isOpen && createPortal(
+        <div ref={listRef} className={`glass-dropdown ${dropdownPosition.mode === 'fixed' ? 'fixed' : 'absolute'} z-[200000] pointer-events-auto`} style={{ top: `${dropdownPosition.top}px`, left: `${dropdownPosition.left}px`, width: `${dropdownPosition.width}px`, zIndex: 200000, minWidth: '200px' }}>
+          <div className="glass-dropdown-search">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4 z-10" />
+              <input ref={inputRef} type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={searchPlaceholder} className="font-chinese" autoFocus />
+            </div>
+          </div>
+          <div className="max-h-60 overflow-y-auto">
+            {showCreateOption && (
+              <button onClick={handleCreateNew} className="glass-dropdown-create font-chinese group">
+                <div className="w-4 h-4 border-2 rounded-full flex items-center justify-center transition-colors" style={{ borderColor: '#CC824D' }}>
+                  <div className="w-1 h-1 rounded-full transition-colors" style={{ backgroundColor: '#CC824D' }}></div>
+                </div>
+                <span className="group-hover:text-orange-800">創建 &quot;{searchTerm}&quot;</span>
+              </button>
+            )}
+            {filteredOptions.map((option) => (
+              <button key={option.value} onClick={() => handleSelect(option)} className={`glass-dropdown-option font-chinese ${isSelected(option.value) ? 'selected' : ''}`}>
+                <span className="truncate flex items-center gap-2">
+                  <span className="truncate">{option.label}</span>
+                </span>
+                {isSelected(option.value) && (<Check className="w-4 h-4 flex-shrink-0 ml-2" style={{ color: '#CC824D' }} />)}
+              </button>
+            ))}
+            {filteredOptions.length === 0 && !showCreateOption && (
+              <div className="glass-dropdown-empty font-chinese">
+                <Search className="w-8 h-8 mx-auto mb-2 text-gray-4 00" />
+                <p className="text-sm">沒有找到符合的選項</p>
+              </div>
+            )}
+          </div>
+        </div>,
+        portalTarget || document.body
+      )}
+    </div>
+  );
+};
+
+export default SearchableSelect;

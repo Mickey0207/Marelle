@@ -1307,10 +1307,10 @@ var require_cjs = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-eyCMvL/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-1sWKvJ/middleware-loader.entry.ts
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-eyCMvL/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-1sWKvJ/middleware-insertion-facade.js
 init_modules_watch_stub();
 
 // ../backend/API/index.ts
@@ -12114,7 +12114,7 @@ __name(getFrontendRedirectLogin, "getFrontendRedirectLogin");
 app3.post("/frontend/auth/register", async (c) => {
   try {
     const body = await c.req.json();
-    const { email, password, display_name } = body || {};
+    const { email, password, display_name, newsletter, privacy_policy, gender } = body || {};
     if (!email || !password) return c.json({ error: "Missing email or password" }, 400);
     const supabase = makeSupabase2(c);
     const emailRedirectTo = getFrontendRedirectLogin(c);
@@ -12124,30 +12124,25 @@ app3.post("/frontend/auth/register", async (c) => {
       options: { emailRedirectTo }
     });
     if (error) {
-      const serviceKey2 = c.env.SUPABASE_SERVICE_ROLE_KEY;
-      if (!serviceKey2) return c.json({ error: "Server misconfigured" }, 500);
-      try {
-        const svc = createClient(c.env.SUPABASE_URL, serviceKey2, { auth: { persistSession: false } });
-        const { data: userByEmail } = await svc.auth.admin.getUserByEmail(email);
-        const uid = userByEmail?.user?.id;
-        if (uid) {
-          const payload = { id: uid, email };
-          if (display_name) payload.display_name = display_name;
-          await svc.from("fronted_users").upsert(payload, { onConflict: "id" });
-          return c.json({ ok: true, exists: true, confirmation_sent: false });
-        }
-      } catch (_) {
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("registered") || msg.includes("exists") || msg.includes("already")) {
+        return c.json({ ok: true, exists: true, confirmation_sent: false });
       }
       return c.json({ error: error.message || "Register failed" }, 400);
     }
     const userId = data?.user?.id;
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    if (userId) {
-      const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
-      const payload = { id: userId, email };
-      if (display_name) payload.display_name = display_name;
-      await svc.from("fronted_users").upsert(payload, { onConflict: "id" });
+    if (userId && serviceKey) {
+      try {
+        const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+        const payload = { id: userId, email };
+        if (display_name) payload.display_name = display_name;
+        if (newsletter !== void 0) payload.newsletter = !!newsletter;
+        if (privacy_policy !== void 0) payload.privacy_policy = !!privacy_policy;
+        if (gender !== void 0 && gender !== "") payload.gender = gender;
+        await svc.from("fronted_users").upsert(payload, { onConflict: "id" });
+      } catch (_) {
+      }
     }
     return c.json({ ok: true, confirmation_sent: true });
   } catch (e) {
@@ -12222,6 +12217,169 @@ app3.post("/frontend/auth/logout", async (c) => {
     return c.json({ error: e?.message || "Logout failed" }, 500);
   }
 });
+app3.get("/frontend/account/profile", async (c) => {
+  try {
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    let uid = null;
+    let email = null;
+    const access = getCookie(c, ACCESS_COOKIE3);
+    if (access) {
+      const supabase = makeSupabase2(c);
+      const { data } = await supabase.auth.getUser(access);
+      if (data?.user?.id) {
+        uid = data.user.id;
+        email = data.user.email ?? null;
+      }
+    }
+    if (!uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      const token = getCookie(c, FRONT_SESSION_COOKIE);
+      if (secret && token) {
+        const parsed = await verifyFrontSessionToken(secret, token);
+        if (parsed?.uid) uid = parsed.uid;
+      }
+    }
+    if (!uid) return c.json({ error: "Unauthorized" }, 401);
+    const { data: gotUser } = await svc.auth.admin.getUserById(uid);
+    const created_at = gotUser?.user?.created_at ?? null;
+    const last_sign_in_at = gotUser?.user?.last_sign_in_at ?? null;
+    const authEmail = gotUser?.user?.email ?? email;
+    let display_name = null;
+    let phone = null;
+    let gender = null;
+    let newsletter = false;
+    let privacy_policy = false;
+    try {
+      const { data: row } = await svc.from("fronted_users").select("display_name,email,phone,gender,newsletter,privacy_policy").eq("id", uid).single();
+      if (row) {
+        display_name = row.display_name ?? null;
+        if (!authEmail) email = row.email ?? null;
+        phone = row.phone ?? null;
+        gender = row.gender ?? null;
+        newsletter = !!row.newsletter;
+        privacy_policy = !!row.privacy_policy;
+      }
+    } catch {
+    }
+    return c.json({ id: uid, email: authEmail ?? email, display_name, phone, gender, newsletter, privacy_policy, created_at, last_sign_in_at });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app3.post("/frontend/auth/password/reset", async (c) => {
+  try {
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    let uid = null;
+    let email = null;
+    const access = getCookie(c, ACCESS_COOKIE3);
+    if (access) {
+      const supabase = makeSupabase2(c);
+      const { data } = await supabase.auth.getUser(access);
+      if (data?.user?.id) {
+        uid = data.user.id;
+        email = data.user.email ?? null;
+      }
+    }
+    if (!uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      const token = getCookie(c, FRONT_SESSION_COOKIE);
+      if (secret && token) {
+        const parsed = await verifyFrontSessionToken(secret, token);
+        if (parsed?.uid) uid = parsed.uid;
+      }
+    }
+    if (!uid) return c.json({ error: "Unauthorized" }, 401);
+    if (!email) {
+      const { data: gotUser } = await svc.auth.admin.getUserById(uid);
+      email = gotUser?.user?.email ?? null;
+    }
+    if (!email) return c.json({ error: "No email" }, 400);
+    const anon = c.env.SUPABASE_ANON_KEY;
+    const url = c.env.SUPABASE_URL;
+    if (!anon || !url) return c.json({ error: "Server misconfigured" }, 500);
+    const client = createClient(url, anon, { auth: { persistSession: false } });
+    const site = c.env.FRONTEND_SITE_URL;
+    let redirectTo = site ? `${String(site).replace(/\/$/, "")}/login` : void 0;
+    if (!redirectTo) {
+      try {
+        const u = new URL(c.req.url);
+        redirectTo = `${u.origin}/login`;
+      } catch {
+      }
+    }
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo
+    });
+    if (error) return c.json({ error: error.message || "Send failed" }, 400);
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app3.patch("/frontend/account/profile", async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    let uid = null;
+    const access = getCookie(c, ACCESS_COOKIE3);
+    if (access) {
+      const supabase = makeSupabase2(c);
+      const { data } = await supabase.auth.getUser(access);
+      if (data?.user?.id) uid = data.user.id;
+    }
+    if (!uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      const token = getCookie(c, FRONT_SESSION_COOKIE);
+      if (secret && token) {
+        const parsed = await verifyFrontSessionToken(secret, token);
+        if (parsed?.uid) uid = parsed.uid;
+      }
+    }
+    if (!uid) return c.json({ error: "Unauthorized" }, 401);
+    let next = {};
+    if (body.display_name !== void 0) {
+      const name = body.display_name === null ? null : String(body.display_name).trim();
+      if (name === null || name.length <= 50) {
+        next.display_name = name;
+      } else {
+        return c.json({ error: "Invalid display_name" }, 400);
+      }
+    }
+    if (body.phone !== void 0) {
+      if (body.phone === null || body.phone === "") {
+        next.phone = null;
+      } else if (/^09\d{8}$/.test(String(body.phone))) {
+        next.phone = String(body.phone);
+      } else {
+        return c.json({ error: "Invalid phone" }, 400);
+      }
+    }
+    if (body.gender !== void 0) {
+      const g = body.gender === null ? null : String(body.gender);
+      const allowed = ["\u7537", "\u5973", "\u4E0D\u9858\u900F\u6F0F"];
+      if (g === null || allowed.includes(g)) next.gender = g;
+      else return c.json({ error: "Invalid gender" }, 400);
+    }
+    if (body.newsletter !== void 0) {
+      next.newsletter = !!body.newsletter;
+    }
+    if (body.privacy_policy !== void 0) {
+      next.privacy_policy = !!body.privacy_policy;
+    }
+    if (Object.keys(next).length === 0) return c.json({ ok: true });
+    const { error } = await svc.from("fronted_users").update(next).eq("id", uid);
+    if (error) return c.json({ error: "Update failed" }, 500);
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
 app3.get("/frontend/account/line/status", async (c) => {
   try {
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -12250,6 +12408,34 @@ app3.get("/frontend/account/line/status", async (c) => {
     return c.json({ error: e?.message || "Internal error" }, 500);
   }
 });
+app3.post("/frontend/account/line/unbind", async (c) => {
+  try {
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    let uid = null;
+    const access = getCookie(c, ACCESS_COOKIE3);
+    if (access) {
+      const supabase = makeSupabase2(c);
+      const { data, error: error2 } = await supabase.auth.getUser(access);
+      if (!error2 && data?.user?.id) uid = data.user.id;
+    }
+    if (!uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      const token = getCookie(c, FRONT_SESSION_COOKIE);
+      if (secret && token) {
+        const parsed = await verifyFrontSessionToken(secret, token);
+        if (parsed?.uid) uid = parsed.uid;
+      }
+    }
+    if (!uid) return c.json({ error: "Unauthorized" }, 401);
+    const { error } = await svc.from("fronted_users").update({ line_user_id: null, line_display_name: null, line_picture_url: null }).eq("id", uid);
+    if (error) return c.json({ error: "Unbind failed" }, 500);
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
 function getRedirectBase(c) {
   const base = c.env.FRONTEND_LINE_REDIRECT_BASE;
   if (base) return String(base).replace(/\/$/, "");
@@ -12273,6 +12459,33 @@ function getFrontendSiteBase(c) {
   return base;
 }
 __name(getFrontendSiteBase, "getFrontendSiteBase");
+app3.get("/login", (c) => {
+  const base = getFrontendSiteBase(c);
+  const html = `<!DOCTYPE html>
+  <html lang="zh-Hant">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Redirecting\u2026</title>
+      <meta http-equiv="refresh" content="0;url=${base}/login" />
+      <script>
+        (function(){
+          try {
+            var h = window.location.hash || '';
+            var t = '${base}/login' + h;
+            window.location.replace(t);
+          } catch (_) {
+            window.location.href = '${base}/login';
+          }
+        })();
+      <\/script>
+    </head>
+    <body>
+      Redirecting to ${base}/login \u2026
+    </body>
+  </html>`;
+  return c.html(html);
+});
 app3.get("/frontend/account/line/start", async (c) => {
   const { clientId, clientSecret } = getFrontendLineCreds(c);
   if (!clientId || !clientSecret) return c.json({ error: "LINE not configured" }, 500);
@@ -12340,11 +12553,21 @@ app3.get("/frontend/line/callback", async (c) => {
     const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     const frontendBase = getFrontendSiteBase(c);
     if (flow === "bind") {
+      let userId = null;
       const access = getCookie(c, ACCESS_COOKIE3);
-      if (!access) return c.text("Unauthorized", 401);
-      const supabase = makeSupabase2(c);
-      const { data: userRes } = await supabase.auth.getUser(access);
-      const userId = userRes?.user?.id;
+      if (access) {
+        const supabase = makeSupabase2(c);
+        const { data: userRes } = await supabase.auth.getUser(access);
+        userId = userRes?.user?.id ?? null;
+      }
+      if (!userId) {
+        const secret = c.env.ADMIN_SESSION_SECRET;
+        const token = getCookie(c, FRONT_SESSION_COOKIE);
+        if (secret && token) {
+          const parsed = await verifyFrontSessionToken(secret, token);
+          if (parsed?.uid) userId = parsed.uid;
+        }
+      }
       if (!userId) return c.text("Unauthorized", 401);
       await svc.from("fronted_users").update({
         line_user_id: prof.userId,
@@ -12437,7 +12660,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-eyCMvL/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-1sWKvJ/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -12470,7 +12693,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-eyCMvL/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-1sWKvJ/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

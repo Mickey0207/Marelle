@@ -12,6 +12,8 @@ const NavActions = ({
   const location = useLocation();
   // 從後端 /frontend/auth/me 取得真實登入狀態（Cookie 驗證）
   const [currentUser, setCurrentUser] = useState(null);
+  // 是否已綁定 LINE（null 代表尚未載入）
+  const [isLineBound, setIsLineBound] = useState(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const accountMenuRef = useRef(null);
   const [accountHover, setAccountHover] = useState(false);
@@ -35,6 +37,24 @@ const NavActions = ({
   // 初始與路由 path 變更時檢查登入狀態（避免對 query/hash 變更過度敏感）
   useEffect(() => { fetchMe(); }, [fetchMe, location.pathname]);
 
+  // 取得 LINE 綁定狀態：已登入時才查詢
+  useEffect(() => {
+    let cancelled = false;
+    async function loadLineStatus() {
+      if (!currentUser) { setIsLineBound(null); return; }
+      try {
+        const res = await fetch('/frontend/account/line/status', { credentials: 'include' });
+        if (!res.ok) { if (!cancelled) setIsLineBound(null); return; }
+        const data = await res.json();
+        if (!cancelled) setIsLineBound(!!data.is_bound);
+      } catch {
+        if (!cancelled) setIsLineBound(null);
+      }
+    }
+    loadLineStatus();
+    return () => { cancelled = true; };
+  }, [currentUser, location.pathname, location.search]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (showAccountMenu && accountMenuRef.current && !accountMenuRef.current.contains(e.target)) {
@@ -57,6 +77,19 @@ const NavActions = ({
 
   return (
     <div className="flex items-center space-x-3 xs:space-x-4 ml-auto">
+      {/* 未綁定 LINE 的使用者：在搜尋 icon 左側顯示綁定按鈕（桌面端） */}
+      {currentUser && isLineBound === false && (
+        <a
+          href="/frontend/account/line/start"
+          className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold shadow-md transition-all"
+          style={{ background: '#06C755', color: '#FFFFFF' }}
+          title="綁定 LINE"
+          onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(0.95)')}
+          onMouseLeave={(e) => (e.currentTarget.style.filter = 'none')}
+        >
+          綁定 LINE
+        </a>
+      )}
       <button
         className="hidden lg:block p-1.5 xs:p-2 transition-colors duration-200"
         style={{color: '#666666'}}

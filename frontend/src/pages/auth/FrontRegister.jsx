@@ -91,7 +91,12 @@ const FrontRegister = () => {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: form.password })
+        body: JSON.stringify({ 
+          email, 
+          password: form.password,
+          newsletter: !!form.agree1,
+          privacy_policy: !!form.agree2
+        })
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)

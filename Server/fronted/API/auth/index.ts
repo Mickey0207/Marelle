@@ -126,11 +126,11 @@ function getFrontendRedirectLogin(c: any) {
   }
 }
 
-// POST /frontend/auth/register { email, password, display_name? }
+// POST /frontend/auth/register { email, password, display_name?, newsletter?: boolean, privacy_policy?: boolean, gender?: '男'|'女'|'不願透漏'|null }
 app.post('/frontend/auth/register', async (c) => {
   try {
-    const body = await c.req.json<{ email: string; password: string; display_name?: string }>()
-    const { email, password, display_name } = body || ({} as any)
+    const body = await c.req.json<{ email: string; password: string; display_name?: string; newsletter?: boolean; privacy_policy?: boolean; gender?: string | null }>()
+    const { email, password, display_name, newsletter, privacy_policy, gender } = body || ({} as any)
     if (!email || !password) return c.json({ error: 'Missing email or password' }, 400)
 
     const supabase = makeSupabase(c)
@@ -141,35 +141,28 @@ app.post('/frontend/auth/register', async (c) => {
       options: { emailRedirectTo }
     })
     if (error) {
-      // 若 email 已存在於 Supabase Auth，直接建立/同步 fronted_users 並回 200
-      const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY
-      if (!serviceKey) return c.json({ error: 'Server misconfigured' }, 500)
-      try {
-        const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } })
-        // supabase-js v2 admin API
-        // @ts-ignore
-        const { data: userByEmail } = await (svc as any).auth.admin.getUserByEmail(email)
-        const uid = userByEmail?.user?.id
-        if (uid) {
-          const payload: any = { id: uid, email }
-          if (display_name) payload.display_name = display_name
-          await svc.from('fronted_users').upsert(payload, { onConflict: 'id' })
-          return c.json({ ok: true, exists: true, confirmation_sent: false })
-        }
-      } catch (_) {
-        // fallthrough to error return
+      // 常見：User already registered or email taken → 回 200 提示前端即可
+      const msg = (error.message || '').toLowerCase()
+      if (msg.includes('registered') || msg.includes('exists') || msg.includes('already')) {
+        return c.json({ ok: true, exists: true, confirmation_sent: false })
       }
       return c.json({ error: error.message || 'Register failed' }, 400)
     }
 
     const userId = data?.user?.id
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceKey) return c.json({ error: 'Server misconfigured' }, 500)
-    if (userId) {
-      const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } })
-      const payload: any = { id: userId, email }
-      if (display_name) payload.display_name = display_name
-      await svc.from('fronted_users').upsert(payload, { onConflict: 'id' })
+    if (userId && serviceKey) {
+      try {
+        const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } })
+        const payload: any = { id: userId, email }
+        if (display_name) payload.display_name = display_name
+        if (newsletter !== undefined) payload.newsletter = !!newsletter
+        if (privacy_policy !== undefined) payload.privacy_policy = !!privacy_policy
+        if (gender !== undefined && gender !== '') payload.gender = gender
+        await svc.from('fronted_users').upsert(payload, { onConflict: 'id' })
+      } catch (_) {
+        // 不阻斷註冊流程
+      }
     }
     return c.json({ ok: true, confirmation_sent: true })
   } catch (e: any) {
@@ -262,6 +255,188 @@ app.post('/frontend/auth/logout', async (c) => {
 })
 
 // ---------- LINE Bind ----------
+// GET /frontend/account/profile
+app.get('/frontend/account/profile', async (c) => {
+  try {
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) return c.json({ error: 'Server misconfigured' }, 500)
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } })
+
+    // resolve uid via access or front-session
+    let uid: string | null = null
+    let email: string | null = null
+    const access = getCookie(c, ACCESS_COOKIE)
+    if (access) {
+      const supabase = makeSupabase(c)
+      const { data } = await supabase.auth.getUser(access)
+      if (data?.user?.id) { uid = data.user.id; email = data.user.email ?? null }
+    }
+    if (!uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET
+      const token = getCookie(c, FRONT_SESSION_COOKIE)
+      if (secret && token) {
+        const parsed = await verifyFrontSessionToken(secret, token)
+        if (parsed?.uid) uid = parsed.uid
+      }
+    }
+    if (!uid) return c.json({ error: 'Unauthorized' }, 401)
+
+    // auth user details
+    // @ts-ignore
+    const { data: gotUser } = await (svc as any).auth.admin.getUserById(uid)
+    const created_at = gotUser?.user?.created_at ?? null
+    const last_sign_in_at = gotUser?.user?.last_sign_in_at ?? null
+    const authEmail = gotUser?.user?.email ?? email
+
+    // fronted_users info
+    let display_name: string | null = null
+    let phone: string | null = null
+    let gender: string | null = null
+    let newsletter: boolean = false
+    let privacy_policy: boolean = false
+    try {
+      const { data: row } = await svc.from('fronted_users').select('display_name,email,phone,gender,newsletter,privacy_policy').eq('id', uid).single()
+      if (row) {
+        display_name = (row as any).display_name ?? null
+        if (!authEmail) email = (row as any).email ?? null
+        phone = (row as any).phone ?? null
+        gender = (row as any).gender ?? null
+        newsletter = !!(row as any).newsletter
+        privacy_policy = !!(row as any).privacy_policy
+      }
+    } catch {}
+
+    return c.json({ id: uid, email: authEmail ?? email, display_name, phone, gender, newsletter, privacy_policy, created_at, last_sign_in_at })
+  } catch (e: any) {
+    return c.json({ error: e?.message || 'Internal error' }, 500)
+  }
+})
+
+// POST /frontend/auth/password/reset
+app.post('/frontend/auth/password/reset', async (c) => {
+  try {
+    // Only allow for current user; resolve email
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) return c.json({ error: 'Server misconfigured' }, 500)
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } })
+
+    let uid: string | null = null
+    let email: string | null = null
+    const access = getCookie(c, ACCESS_COOKIE)
+    if (access) {
+      const supabase = makeSupabase(c)
+      const { data } = await supabase.auth.getUser(access)
+      if (data?.user?.id) { uid = data.user.id; email = data.user.email ?? null }
+    }
+    if (!uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET
+      const token = getCookie(c, FRONT_SESSION_COOKIE)
+      if (secret && token) {
+        const parsed = await verifyFrontSessionToken(secret, token)
+        if (parsed?.uid) uid = parsed.uid
+      }
+    }
+    if (!uid) return c.json({ error: 'Unauthorized' }, 401)
+
+    // get email via admin if missing
+    if (!email) {
+      // @ts-ignore
+      const { data: gotUser } = await (svc as any).auth.admin.getUserById(uid)
+      email = gotUser?.user?.email ?? null
+    }
+    if (!email) return c.json({ error: 'No email' }, 400)
+
+    // Send reset password email
+    const anon = c.env.SUPABASE_ANON_KEY
+    const url = c.env.SUPABASE_URL
+    if (!anon || !url) return c.json({ error: 'Server misconfigured' }, 500)
+    const client = createClient(url, anon, { auth: { persistSession: false } })
+
+    // Build redirect target
+    const site = c.env.FRONTEND_SITE_URL
+    let redirectTo = site ? `${String(site).replace(/\/$/, '')}/login` : undefined
+    if (!redirectTo) {
+      try { const u = new URL(c.req.url); redirectTo = `${u.origin}/login` } catch {}
+    }
+
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo
+    })
+    if (error) return c.json({ error: error.message || 'Send failed' }, 400)
+    return c.json({ ok: true })
+  } catch (e: any) {
+    return c.json({ error: e?.message || 'Internal error' }, 500)
+  }
+})
+
+// PATCH /frontend/account/profile  { display_name?: string|null, phone?: string|null, gender?: string|null, newsletter?: boolean, privacy_policy?: boolean }
+app.patch('/frontend/account/profile', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({})) as { display_name?: string | null; phone?: string | null; gender?: string | null; newsletter?: boolean; privacy_policy?: boolean }
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) return c.json({ error: 'Server misconfigured' }, 500)
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } })
+
+    // resolve uid
+    let uid: string | null = null
+    const access = getCookie(c, ACCESS_COOKIE)
+    if (access) {
+      const supabase = makeSupabase(c)
+      const { data } = await supabase.auth.getUser(access)
+      if (data?.user?.id) uid = data.user.id
+    }
+    if (!uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET
+      const token = getCookie(c, FRONT_SESSION_COOKIE)
+      if (secret && token) {
+        const parsed = await verifyFrontSessionToken(secret, token)
+        if (parsed?.uid) uid = parsed.uid
+      }
+    }
+    if (!uid) return c.json({ error: 'Unauthorized' }, 401)
+
+    // validate
+    let next: any = {}
+    if (body.display_name !== undefined) {
+      const name = body.display_name === null ? null : String(body.display_name).trim()
+      if (name === null || name.length <= 50) {
+        next.display_name = name
+      } else {
+        return c.json({ error: 'Invalid display_name' }, 400)
+      }
+    }
+    if (body.phone !== undefined) {
+      if (body.phone === null || body.phone === '') {
+        next.phone = null
+      } else if (/^09\d{8}$/.test(String(body.phone))) {
+        next.phone = String(body.phone)
+      } else {
+        return c.json({ error: 'Invalid phone' }, 400)
+      }
+    }
+    if (body.gender !== undefined) {
+      const g = body.gender === null ? null : String(body.gender)
+      const allowed = ['男', '女', '不願透漏']
+      if (g === null || allowed.includes(g)) next.gender = g
+      else return c.json({ error: 'Invalid gender' }, 400)
+    }
+
+    if (body.newsletter !== undefined) {
+      next.newsletter = !!body.newsletter
+    }
+    if (body.privacy_policy !== undefined) {
+      next.privacy_policy = !!body.privacy_policy
+    }
+
+    if (Object.keys(next).length === 0) return c.json({ ok: true })
+
+    const { error } = await svc.from('fronted_users').update(next).eq('id', uid)
+    if (error) return c.json({ error: 'Update failed' }, 500)
+    return c.json({ ok: true })
+  } catch (e: any) {
+    return c.json({ error: e?.message || 'Internal error' }, 500)
+  }
+})
 // GET /frontend/account/line/status
 app.get('/frontend/account/line/status', async (c) => {
   try {
@@ -300,6 +475,42 @@ app.get('/frontend/account/line/status', async (c) => {
   }
 })
 
+// POST /frontend/account/line/unbind
+app.post('/frontend/account/line/unbind', async (c) => {
+  try {
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) return c.json({ error: 'Server misconfigured' }, 500)
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } })
+
+    // Resolve user id via access cookie or front-session
+    let uid: string | null = null
+    const access = getCookie(c, ACCESS_COOKIE)
+    if (access) {
+      const supabase = makeSupabase(c)
+      const { data, error } = await supabase.auth.getUser(access)
+      if (!error && data?.user?.id) uid = data.user.id
+    }
+    if (!uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET
+      const token = getCookie(c, FRONT_SESSION_COOKIE)
+      if (secret && token) {
+        const parsed = await verifyFrontSessionToken(secret, token)
+        if (parsed?.uid) uid = parsed.uid
+      }
+    }
+    if (!uid) return c.json({ error: 'Unauthorized' }, 401)
+
+    const { error } = await svc
+      .from('fronted_users')
+      .update({ line_user_id: null, line_display_name: null, line_picture_url: null })
+      .eq('id', uid)
+    if (error) return c.json({ error: 'Unbind failed' }, 500)
+    return c.json({ ok: true })
+  } catch (e: any) {
+    return c.json({ error: e?.message || 'Internal error' }, 500)
+  }
+})
+
 function getRedirectBase(c: any) {
   // Use configured FRONTEND_LINE_REDIRECT_BASE, fallback to request origin
   const base = c.env.FRONTEND_LINE_REDIRECT_BASE
@@ -319,6 +530,36 @@ function getFrontendSiteBase(c: any) {
   const base = getRedirectBase(c)
   return base
 }
+
+// Fallback: if a browser opens /login on the Worker (e.g., from Supabase emails pointing to 127.0.0.1:8787),
+// redirect to the real frontend site /login so SPA can handle the hash tokens.
+app.get('/login', (c) => {
+  const base = getFrontendSiteBase(c)
+  const html = `<!DOCTYPE html>
+  <html lang="zh-Hant">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Redirecting…</title>
+      <meta http-equiv="refresh" content="0;url=${base}/login" />
+      <script>
+        (function(){
+          try {
+            var h = window.location.hash || '';
+            var t = '${base}/login' + h;
+            window.location.replace(t);
+          } catch (_) {
+            window.location.href = '${base}/login';
+          }
+        })();
+      </script>
+    </head>
+    <body>
+      Redirecting to ${base}/login …
+    </body>
+  </html>`
+  return c.html(html)
+})
 
 // GET /frontend/account/line/start -> redirect to LINE authorize (bind flow)
 app.get('/frontend/account/line/start', async (c) => {
@@ -400,11 +641,21 @@ app.get('/frontend/line/callback', async (c) => {
 
     if (flow === 'bind') {
       // Ensure user session
+      let userId: string | null = null
       const access = getCookie(c, ACCESS_COOKIE)
-      if (!access) return c.text('Unauthorized', 401)
-      const supabase = makeSupabase(c)
-      const { data: userRes } = await supabase.auth.getUser(access)
-      const userId = userRes?.user?.id
+      if (access) {
+        const supabase = makeSupabase(c)
+        const { data: userRes } = await supabase.auth.getUser(access)
+        userId = userRes?.user?.id ?? null
+      }
+      if (!userId) {
+        const secret = c.env.ADMIN_SESSION_SECRET
+        const token = getCookie(c, FRONT_SESSION_COOKIE)
+        if (secret && token) {
+          const parsed = await verifyFrontSessionToken(secret, token)
+          if (parsed?.uid) userId = parsed.uid
+        }
+      }
       if (!userId) return c.text('Unauthorized', 401)
 
       await svc
@@ -416,7 +667,7 @@ app.get('/frontend/line/callback', async (c) => {
         })
         .eq('id', userId)
 
-      return c.redirect(`${frontendBase}/account?line_bound=1`, 302)
+  return c.redirect(`${frontendBase}/account?line_bound=1`, 302)
     } else if (flow === 'login') {
       // Login flow: reconcile user and set front-session cookie
       // find existing fronted_users by line_user_id
