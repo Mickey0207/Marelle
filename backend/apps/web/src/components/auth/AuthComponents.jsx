@@ -13,9 +13,10 @@ export const AuthProvider = ({ children }) => {
   const [countdown, setCountdown] = useState(0);
 
   // 映射登入錯誤訊息（友善中文）
-  const mapLoginErrorMessage = (msg) => {
+  const mapLoginErrorMessage = (msg, status) => {
     const s = (msg || '').toLowerCase()
-    if (s.includes('invalid login credentials') || s.includes('invalid credentials')) return '信箱或密碼錯誤'
+    if (status === 403 || s.includes('not a backend admin')) return '您沒有後台權限'
+    if (status === 401 || s.includes('invalid login credentials') || s.includes('invalid credentials')) return '信箱或密碼錯誤'
     if (s.includes('email not confirmed') || s.includes('not confirmed')) return 'E-mail 尚未驗證，請先至信箱完成驗證'
     if (s.includes('invalid email')) return '信箱格式不正確'
     if (s.includes('user not found')) return '找不到該帳號'
@@ -134,7 +135,7 @@ export const AuthProvider = ({ children }) => {
       setupPeriodicRefresh()
       return { success: true }
     } catch (e) {
-      return { success: false, message: mapLoginErrorMessage(e?.message) }
+      return { success: false, message: mapLoginErrorMessage(e?.message, e?.status) }
     }
   };
 
