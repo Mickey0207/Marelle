@@ -8,6 +8,15 @@ export default function ProfileInfo({ user }) {
   const [showUnbind, setShowUnbind] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: '', phone: '', gender: '', newsletter: false });
+  // 本地暫存多組地址（僅 UI，尚未串 API）
+  const [homeAddresses, setHomeAddresses] = useState([]);
+  const [storeAddresses, setStoreAddresses] = useState([]);
+  const [addingHome, setAddingHome] = useState(false);
+  const [addingStore, setAddingStore] = useState(false);
+  const [homeDraft, setHomeDraft] = useState({ alias: '', recipient: '', phone: '', zip: '', city: '', district: '', address: '' });
+  const [storeDraft, setStoreDraft] = useState({ alias: '', vendor: '', store_name: '', store_id: '', store_address: '' });
+  const [editingHomeId, setEditingHomeId] = useState(null);
+  const [editingStoreId, setEditingStoreId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -250,11 +259,166 @@ export default function ProfileInfo({ user }) {
       )}
 
       {activeTab === 'address' && (
-        <div className="space-y-4 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="font-medium" style={{color:'#333333'}}>送貨地址</span>
+        <div className="text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* 左：宅配地址（可多筆） */}
+            <section className="border rounded-lg p-5 bg-white" style={{ borderColor: '#E5E7EB' }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium" style={{ color: '#333333' }}>宅配地址</h3>
+                {!addingHome && editingHomeId === null && (
+                  <button
+                    onClick={() => { setAddingHome(true); setHomeDraft({ alias: '', recipient: '', phone: '', zip: '', city: '', district: '', address: '' }); }}
+                    className="px-3 py-1.5 rounded-md text-xs border"
+                    style={{ color:'#666666', borderColor:'#E5E7EB' }}
+                  >新增</button>
+                )}
+              </div>
+
+              {/* 新增宅配表單 */}
+              {addingHome && (
+                <div className="mb-4 border rounded-md p-4" style={{ borderColor: '#E5E7EB' }}>
+                  <Row label={<span className="whitespace-nowrap">別稱</span>}>
+                    <input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.alias} onChange={(e)=>setHomeDraft(s=>({ ...s, alias:e.target.value }))} />
+                  </Row>
+                  <Row label="收件人">
+                    <input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.recipient} onChange={(e)=>setHomeDraft(s=>({ ...s, recipient:e.target.value }))} />
+                  </Row>
+                  <Row label="電話">
+                    <input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.phone} onChange={(e)=>setHomeDraft(s=>({ ...s, phone:e.target.value }))} />
+                  </Row>
+                  <Row label="郵遞區號">
+                    <input className="w-32 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.zip} onChange={(e)=>setHomeDraft(s=>({ ...s, zip:e.target.value }))} />
+                  </Row>
+                  <Row label="縣市">
+                    <input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.city} onChange={(e)=>setHomeDraft(s=>({ ...s, city:e.target.value }))} />
+                  </Row>
+                  <Row label="行政區">
+                    <input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.district} onChange={(e)=>setHomeDraft(s=>({ ...s, district:e.target.value }))} />
+                  </Row>
+                  <Row label={<span className="whitespace-nowrap">詳細地址</span>}>
+                    <input className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.address} onChange={(e)=>setHomeDraft(s=>({ ...s, address:e.target.value }))} />
+                  </Row>
+                  <div className="flex items-center justify-end gap-2 mt-3">
+                    <button onClick={()=>{ setAddingHome(false); }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
+                    <button onClick={()=>{
+                      const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+                      setHomeAddresses(a=>[...a,{ id, ...homeDraft }]);
+                      setAddingHome(false);
+                    }} className="px-3 py-1.5 rounded-md text-xs font-bold text-white" style={{ background:'#cc824d' }}>儲存</button>
+                  </div>
+                </div>
+              )}
+
+              {/* 清單 */}
+              {homeAddresses.length === 0 && !addingHome && (
+                <div className="text-gray-500">目前尚未新增宅配地址。</div>
+              )}
+              <ul className="space-y-3">
+                {homeAddresses.map(item => (
+                  <li key={item.id} className="border rounded-md" style={{ borderColor:'#E5E7EB' }}>
+                    {editingHomeId === item.id ? (
+                      <div className="p-4">
+                        <Row label="別稱"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.alias} onChange={(e)=>item.alias=e.target.value} /></Row>
+                        <Row label="收件人"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.recipient} onChange={(e)=>item.recipient=e.target.value} /></Row>
+                        <Row label="電話"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.phone} onChange={(e)=>item.phone=e.target.value} /></Row>
+                        <Row label="郵遞區號"><input className="w-32 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.zip} onChange={(e)=>item.zip=e.target.value} /></Row>
+                        <Row label="縣市"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.city} onChange={(e)=>item.city=e.target.value} /></Row>
+                        <Row label="行政區"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.district} onChange={(e)=>item.district=e.target.value} /></Row>
+                        <Row label={<span className="whitespace-nowrap">詳細地址</span>}><input className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.address} onChange={(e)=>item.address=e.target.value} /></Row>
+                        <div className="flex items-center justify-end gap-2 mt-3">
+                          <button onClick={()=>setEditingHomeId(null)} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
+                          <button onClick={()=>{
+                            setHomeAddresses(arr=>arr.map(x=>x.id===item.id?{...item}:x));
+                            setEditingHomeId(null);
+                          }} className="px-3 py-1.5 rounded-md text-xs font-bold text-white" style={{ background:'#cc824d' }}>儲存</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4">
+                        <div className="text-gray-700 truncate whitespace-nowrap">
+                          {item.alias ? `${item.alias} ｜ ` : ''}收件人：{item.recipient || '—'} ｜ 電話：{item.phone || '—'} ｜ 地址：({item.zip || '—'}) {item.city || ''}{item.district || ''}{item.address || ''}
+                        </div>
+                        <div className="flex items-center justify-end gap-2 mt-3">
+                          <button onClick={()=>setEditingHomeId(item.id)} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>編輯</button>
+                          <button onClick={()=>setHomeAddresses(arr=>arr.filter(x=>x.id!==item.id))} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>刪除</button>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* 右：超商地址（可多筆） */}
+            <section className="border rounded-lg p-5 bg-white" style={{ borderColor: '#E5E7EB' }}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium" style={{ color: '#333333' }}>超商地址</h3>
+                {!addingStore && editingStoreId === null && (
+                  <button
+                    onClick={() => { setAddingStore(true); setStoreDraft({ alias: '', vendor: '', store_name: '', store_id: '', store_address: '' }); }}
+                    className="px-3 py-1.5 rounded-md text-xs border"
+                    style={{ color:'#666666', borderColor:'#E5E7EB' }}
+                  >新增</button>
+                )}
+              </div>
+
+              {/* 新增超商表單 */}
+              {addingStore && (
+                <div className="mb-4 border rounded-md p-4" style={{ borderColor: '#E5E7EB' }}>
+                  <Row label={<span className="whitespace-nowrap">別稱</span>}><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.alias} onChange={(e)=>setStoreDraft(s=>({ ...s, alias:e.target.value }))} /></Row>
+                  <Row label="物流廠商"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.vendor} onChange={(e)=>setStoreDraft(s=>({ ...s, vendor:e.target.value }))} /></Row>
+                  <Row label="門市名稱"><input className="w-64 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.store_name} onChange={(e)=>setStoreDraft(s=>({ ...s, store_name:e.target.value }))} /></Row>
+                  <Row label="門市代號"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.store_id} onChange={(e)=>setStoreDraft(s=>({ ...s, store_id:e.target.value }))} /></Row>
+                  <Row label={<span className="whitespace-nowrap">門市地址</span>}><input className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.store_address} onChange={(e)=>setStoreDraft(s=>({ ...s, store_address:e.target.value }))} /></Row>
+                  <div className="flex items-center justify-end gap-2 mt-3">
+                    <button onClick={()=>{ setAddingStore(false); }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
+                    <button onClick={()=>{
+                      const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+                      setStoreAddresses(a=>[...a,{ id, ...storeDraft }]);
+                      setAddingStore(false);
+                    }} className="px-3 py-1.5 rounded-md text-xs font-bold text-white" style={{ background:'#cc824d' }}>儲存</button>
+                  </div>
+                </div>
+              )}
+
+              {/* 清單 */}
+              {storeAddresses.length === 0 && !addingStore && (
+                <div className="text-gray-500">目前尚未新增超商地址。</div>
+              )}
+              <ul className="space-y-3">
+                {storeAddresses.map(item => (
+                  <li key={item.id} className="border rounded-md" style={{ borderColor:'#E5E7EB' }}>
+                    {editingStoreId === item.id ? (
+                      <div className="p-4">
+                        <Row label="別稱"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.alias} onChange={(e)=>item.alias=e.target.value} /></Row>
+                        <Row label="物流廠商"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.vendor} onChange={(e)=>item.vendor=e.target.value} /></Row>
+                        <Row label="門市名稱"><input className="w-64 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.store_name} onChange={(e)=>item.store_name=e.target.value} /></Row>
+                        <Row label="門市代號"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.store_id} onChange={(e)=>item.store_id=e.target.value} /></Row>
+                        <Row label={<span className="whitespace-nowrap">門市地址</span>}><input className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.store_address} onChange={(e)=>item.store_address=e.target.value} /></Row>
+                        <div className="flex items-center justify-end gap-2 mt-3">
+                          <button onClick={()=>setEditingStoreId(null)} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
+                          <button onClick={()=>{
+                            setStoreAddresses(arr=>arr.map(x=>x.id===item.id?{...item}:x));
+                            setEditingStoreId(null);
+                          }} className="px-3 py-1.5 rounded-md text-xs font-bold text-white" style={{ background:'#cc824d' }}>儲存</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4">
+                        <div className="text-gray-700 truncate whitespace-nowrap">
+                          {item.alias ? `${item.alias} ｜ ` : ''}物流：{item.vendor || '—'} ｜ 門市：{item.store_name || '—'}（{item.store_id || '—'}） ｜ 地址：{item.store_address || '—'}
+                        </div>
+                        <div className="flex items-center justify-end gap-2 mt-3">
+                          <button onClick={()=>setEditingStoreId(item.id)} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>編輯</button>
+                          <button onClick={()=>setStoreAddresses(arr=>arr.filter(x=>x.id!==item.id))} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>刪除</button>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
           </div>
-          <div style={{color:'#666666'}}>目前尚未設定送貨地址。</div>
         </div>
       )}
 

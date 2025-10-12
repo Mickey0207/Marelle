@@ -43,7 +43,7 @@ const Profile = () => {
     >
       <LineBindPrompt />
       <div className="mb-10">
-        <h1 className="text-2xl sm:text-3xl font-light tracking-wide" style={{color:'#333333'}}>個人資料</h1>
+        <h1 className="text-2xl sm:text-3xl font-light tracking-wide" style={{ color: '#CC824D' }}>個人資料</h1>
         <p className="mt-2 text-sm" style={{color:'#666666'}}>此頁面為前端模擬，資料僅存在瀏覽器 localStorage。</p>
       </div>
 
@@ -55,7 +55,6 @@ const Profile = () => {
         {/* 右側：通知（1/4 寬） */}
         <aside className="md:col-span-1 space-y-6">
           <ProfileNotice />
-          <div className="text-xs" style={{color:'#999999'}}>所有資料皆儲存在瀏覽器，不會上傳伺服器。</div>
         </aside>
       </div>
     </div>
