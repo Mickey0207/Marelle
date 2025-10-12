@@ -1,8 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBagIcon, MagnifyingGlassIcon, UserIcon, HeartIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useCart } from '../../../../external_mock/state/cart.jsx';
-import { getCurrentUser, logout } from '../../../../external_mock/state/users.js';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const NavActions = ({
   isMenuOpen,
@@ -11,23 +10,30 @@ const NavActions = ({
   const { cartItemsCount } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
+  // 從後端 /frontend/auth/me 取得真實登入狀態（Cookie 驗證）
+  const [currentUser, setCurrentUser] = useState(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const accountMenuRef = useRef(null);
   const [accountHover, setAccountHover] = useState(false);
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === 'marelle_session_user') setCurrentUser(getCurrentUser());
-    };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
+  const fetchMe = useCallback(async () => {
+    try {
+      const res = await fetch('/frontend/auth/me', { credentials: 'include' });
+      if (!res.ok) {
+        setCurrentUser(null);
+        return;
+      }
+      const data = await res.json();
+      setCurrentUser({ id: data.id, email: data.email, display_name: data.display_name || null });
+      // 可在此處理首次登入後的提示（例如透過事件通知頁面彈出 LineBindPrompt）
+      // 目前先維持由個人資料頁掛載提示，避免全站重複彈窗。
+    } catch {
+      setCurrentUser(null);
+    }
   }, []);
 
-  // 同頁籤內導頁時，同步檢查目前登入狀態（storage 事件不會在同頁觸發）
-  useEffect(() => {
-    setCurrentUser(getCurrentUser());
-  }, [location.pathname]);
+  // 初始與路由 path 變更時檢查登入狀態（避免對 query/hash 變更過度敏感）
+  useEffect(() => { fetchMe(); }, [fetchMe, location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -39,10 +45,14 @@ const NavActions = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showAccountMenu]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      await fetch('/frontend/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch {}
     setCurrentUser(null);
     setShowAccountMenu(false);
+    // 登出後導回首頁
+    navigate('/');
   };
 
   return (
@@ -89,14 +99,22 @@ const NavActions = ({
             style={{color: (accountHover || showAccountMenu) ? '#CC824D' : '#666666'}}
           >
             <UserIcon className="w-5 h-5" style={{strokeWidth: 1.5}} />
-            <span className="hidden xl:inline text-xs font-chinese tracking-wide" style={{letterSpacing:'0.05em'}}>{currentUser.username}</span>
+            {currentUser.display_name ? (
+              <span className="hidden xl:inline text-xs font-chinese tracking-wide" style={{letterSpacing:'0.05em'}}>
+                {currentUser.display_name}
+              </span>
+            ) : null}
           </button>
           {showAccountMenu && (
             <div className="absolute right-0 mt-2 w-40 rounded-lg shadow-lg ring-1 ring-black/5 z-50" style={{background:'#FFFFFF', border:'1px solid #E5E7EB'}}>
               <div className="px-3 py-2 border-b" style={{borderColor:'#E5E7EB'}}>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-chinese" style={{color:'#666666'}}>已登入</span>
-                  <span className="text-xs font-chinese font-medium" style={{color:'#CC824D'}}>{currentUser.username}</span>
+                  {currentUser.display_name ? (
+                    <span className="text-xs font-chinese font-medium" style={{color:'#CC824D'}}>
+                      {currentUser.display_name}
+                    </span>
+                  ) : null}
                 </div>
               </div>
               <div className="py-1">

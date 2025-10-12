@@ -1,33 +1,45 @@
 import { useEffect, useState } from 'react';
-import { getCurrentUser } from '../../../../external_mock/state/users.js';
 import { useNavigate } from 'react-router-dom';
 import ProfileInfo from '../../../components/member/account/ProfileInfo.jsx';
 import ProfileNotice from '../../../components/member/account/ProfileNotice.jsx';
 import ProfileQuickLinks from '../../../components/member/account/ProfileQuickLinks.jsx';
+import LineBindPrompt from '../../../components/member/account/LineBindPrompt.jsx';
 
 // 個人資料頁（前端模擬）
 // 規則：僅使用現有 UI 風格，不創新按鈕樣式。
 
 const Profile = () => {
-  const [user, setUser] = useState(() => getCurrentUser());
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const u = getCurrentUser();
-    if (!u) {
-      // 未登入導向登入頁，記錄來源路徑
-      navigate('/login', { state: { from: '/account' } });
-    } else {
-      setUser(u);
-    }
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch('/frontend/auth/me', { credentials: 'include' });
+        if (!mounted) return;
+        if (res.ok) {
+          const data = await res.json();
+          setUser({ id: data.id, email: data.email, display_name: data.display_name || null });
+        } else {
+          navigate('/login', { state: { from: '/account' } });
+        }
+      } catch {
+        navigate('/login', { state: { from: '/account' } });
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false };
   }, [navigate]);
 
-  if (!user) {
-    return null; // 短暫空白, 導頁中
-  }
+  if (loading) return null;
+  if (!user) return null;
 
   return (
     <div className="pt-24 pb-20 px-4 sm:px-8 max-w-5xl mx-auto font-chinese">
+      <LineBindPrompt />
       <div className="mb-10">
         <h1 className="text-2xl sm:text-3xl font-light tracking-wide" style={{color:'#333333'}}>個人資料</h1>
         <p className="mt-2 text-sm" style={{color:'#666666'}}>此頁面為前端模擬，資料僅存在瀏覽器 localStorage。</p>

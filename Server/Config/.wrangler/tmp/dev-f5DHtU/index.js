@@ -1307,10 +1307,10 @@ var require_cjs = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-w9UJsO/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-eyCMvL/middleware-loader.entry.ts
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-w9UJsO/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-eyCMvL/middleware-insertion-facade.js
 init_modules_watch_stub();
 
 // ../backend/API/index.ts
@@ -2090,14 +2090,14 @@ var Hono = class {
   }
   #notFoundHandler = notFoundHandler;
   errorHandler = errorHandler;
-  route(path, app4) {
+  route(path, app5) {
     const subApp = this.basePath(path);
-    app4.routes.map((r) => {
+    app5.routes.map((r) => {
       let handler;
-      if (app4.errorHandler === errorHandler) {
+      if (app5.errorHandler === errorHandler) {
         handler = r.handler;
       } else {
-        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app4.errorHandler)(c, () => r.handler(c, next))).res, "handler");
+        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app5.errorHandler)(c, () => r.handler(c, next))).res, "handler");
         handler[COMPOSED_HANDLER] = r.handler;
       }
       subApp.#addRoute(r.method, r.path, handler);
@@ -11362,8 +11362,8 @@ function base64UrlEncode(str) {
   return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 __name(base64UrlEncode, "base64UrlEncode");
-function base64UrlDecodeToString(b64url) {
-  const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+function base64UrlDecodeToString(b64url2) {
+  const b64 = b64url2.replace(/-/g, "+").replace(/_/g, "/");
   const pad = b64.length % 4 === 2 ? "==" : b64.length % 4 === 3 ? "=" : "";
   const s = atob(b64 + pad);
   const bytes = new Uint8Array([...s].map((ch) => ch.charCodeAt(0)));
@@ -11415,7 +11415,7 @@ function requiredEnv(c, key) {
 }
 __name(requiredEnv, "requiredEnv");
 function getRedirectUri(c) {
-  const configured = c.env.LINE_REDIRECT_URI;
+  const configured = c.env.BACKEND_LINE_REDIRECT_URI || c.env.LINE_REDIRECT_URI;
   if (configured) return configured;
   try {
     const u = new URL(c.req.url);
@@ -11448,9 +11448,16 @@ function getStateCookie(c) {
   return getCookie(c, LINE_STATE_COOKIE);
 }
 __name(getStateCookie, "getStateCookie");
+function getBackendLineCreds(c) {
+  const clientId = c.env.BACKEND_LINE_CHANNEL_ID || c.env.LINE_CHANNEL_ID;
+  const clientSecret = c.env.BACKEND_LINE_CHANNEL_SECRET || c.env.LINE_CHANNEL_SECRET;
+  if (!clientId) throw new Error("Missing env: BACKEND_LINE_CHANNEL_ID or LINE_CHANNEL_ID");
+  if (!clientSecret) throw new Error("Missing env: BACKEND_LINE_CHANNEL_SECRET or LINE_CHANNEL_SECRET");
+  return { clientId, clientSecret };
+}
+__name(getBackendLineCreds, "getBackendLineCreds");
 async function exchangeLineToken(c, code) {
-  const clientId = requiredEnv(c, "LINE_CHANNEL_ID");
-  const clientSecret = requiredEnv(c, "LINE_CHANNEL_SECRET");
+  const { clientId, clientSecret } = getBackendLineCreds(c);
   const redirectUri = getRedirectUri(c);
   const body = new URLSearchParams();
   body.set("grant_type", "authorization_code");
@@ -11612,7 +11619,7 @@ app.get("/backend/_diag/env", (c) => {
 var auth_default = app;
 app.get("/backend/auth/line/start", async (c) => {
   try {
-    const clientId = requiredEnv(c, "LINE_CHANNEL_ID");
+    const { clientId } = getBackendLineCreds(c);
     const redirectUri = getRedirectUri(c);
     const state = randomString(32);
     const nonce = randomString(16);
@@ -11992,11 +11999,400 @@ app2.post("/backend/admins/:id/send-reset-email", async (c) => {
 });
 var admin_default = app2;
 
+// ../fronted/API/auth/index.ts
+init_modules_watch_stub();
+var app3 = new Hono2({ strict: false });
+app3.use("*", cors({
+  origin: /* @__PURE__ */ __name((origin) => origin || "*", "origin"),
+  allowHeaders: ["Content-Type", "Authorization"],
+  allowMethods: ["GET", "POST", "OPTIONS"],
+  credentials: true,
+  maxAge: 86400
+}));
+var ACCESS_COOKIE3 = "sb-access-token";
+var REFRESH_COOKIE2 = "sb-refresh-token";
+var FRONT_SESSION_COOKIE = "front-session";
+function isLocalRequest2(c) {
+  try {
+    const u = new URL(c.req.url);
+    return u.hostname === "127.0.0.1" || u.hostname === "localhost";
+  } catch {
+    return false;
+  }
+}
+__name(isLocalRequest2, "isLocalRequest");
+function setAuthCookies2(c, accessToken, expiresInSec, refreshToken) {
+  const isLocal = isLocalRequest2(c);
+  setCookie(c, ACCESS_COOKIE3, accessToken, {
+    httpOnly: true,
+    secure: !isLocal,
+    sameSite: "Lax",
+    path: "/",
+    maxAge: Math.max(60, Math.min(expiresInSec, 60 * 60 * 24))
+  });
+  setCookie(c, REFRESH_COOKIE2, refreshToken, {
+    httpOnly: true,
+    secure: !isLocal,
+    sameSite: "Lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30
+  });
+}
+__name(setAuthCookies2, "setAuthCookies");
+function makeSupabase2(c, accessToken) {
+  const url = c.env.SUPABASE_URL;
+  const anon = c.env.SUPABASE_ANON_KEY;
+  if (!url || !anon) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");
+  }
+  const headers = {};
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  return createClient(url, anon, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers }
+  });
+}
+__name(makeSupabase2, "makeSupabase");
+async function hmacSign2(secret, data) {
+  const enc = new TextEncoder();
+  const keyBytes = enc.encode(secret);
+  const key = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
+  const bytes = new Uint8Array(sig);
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+__name(hmacSign2, "hmacSign");
+function b64url(str) {
+  const b64 = btoa(unescape(encodeURIComponent(str)));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+__name(b64url, "b64url");
+function b64urlToStr(b64url2) {
+  const b64 = b64url2.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = b64.length % 4 === 2 ? "==" : b64.length % 4 === 3 ? "=" : "";
+  const s = atob(b64 + pad);
+  const bytes = new Uint8Array([...s].map((ch) => ch.charCodeAt(0)));
+  const dec = new TextDecoder();
+  return dec.decode(bytes);
+}
+__name(b64urlToStr, "b64urlToStr");
+async function createFrontSessionToken(secret, uid, ttlSec = 60 * 60 * 24 * 7) {
+  const payload = { uid, exp: Math.floor(Date.now() / 1e3) + ttlSec };
+  const p = b64url(JSON.stringify(payload));
+  const sig = await hmacSign2(secret, p);
+  return `${p}.${sig}`;
+}
+__name(createFrontSessionToken, "createFrontSessionToken");
+async function verifyFrontSessionToken(secret, token) {
+  const [p, sig] = token.split(".");
+  if (!p || !sig) return null;
+  const expSig = await hmacSign2(secret, p);
+  if (expSig !== sig) return null;
+  try {
+    const payload = JSON.parse(b64urlToStr(p));
+    if (!payload?.uid || !payload?.exp) return null;
+    if (payload.exp < Math.floor(Date.now() / 1e3)) return null;
+    return { uid: String(payload.uid) };
+  } catch {
+    return null;
+  }
+}
+__name(verifyFrontSessionToken, "verifyFrontSessionToken");
+function getFrontendRedirectLogin(c) {
+  const url = c.env.FRONTEND_SITE_URL;
+  if (url) return `${url.replace(/\/$/, "")}/login`;
+  try {
+    const u = new URL(c.req.url);
+    return `${u.origin}/login`;
+  } catch {
+    return "/login";
+  }
+}
+__name(getFrontendRedirectLogin, "getFrontendRedirectLogin");
+app3.post("/frontend/auth/register", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email, password, display_name } = body || {};
+    if (!email || !password) return c.json({ error: "Missing email or password" }, 400);
+    const supabase = makeSupabase2(c);
+    const emailRedirectTo = getFrontendRedirectLogin(c);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo }
+    });
+    if (error) {
+      const serviceKey2 = c.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!serviceKey2) return c.json({ error: "Server misconfigured" }, 500);
+      try {
+        const svc = createClient(c.env.SUPABASE_URL, serviceKey2, { auth: { persistSession: false } });
+        const { data: userByEmail } = await svc.auth.admin.getUserByEmail(email);
+        const uid = userByEmail?.user?.id;
+        if (uid) {
+          const payload = { id: uid, email };
+          if (display_name) payload.display_name = display_name;
+          await svc.from("fronted_users").upsert(payload, { onConflict: "id" });
+          return c.json({ ok: true, exists: true, confirmation_sent: false });
+        }
+      } catch (_) {
+      }
+      return c.json({ error: error.message || "Register failed" }, 400);
+    }
+    const userId = data?.user?.id;
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    if (userId) {
+      const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+      const payload = { id: userId, email };
+      if (display_name) payload.display_name = display_name;
+      await svc.from("fronted_users").upsert(payload, { onConflict: "id" });
+    }
+    return c.json({ ok: true, confirmation_sent: true });
+  } catch (e) {
+    return c.json({ error: e?.message || "Register failed" }, 500);
+  }
+});
+app3.post("/frontend/auth/login", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email, password } = body || {};
+    if (!email || !password) return c.json({ error: "Missing email or password" }, 400);
+    const supabase = makeSupabase2(c);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data?.session?.access_token) {
+      const msg = isLocalRequest2(c) ? error?.message || "Invalid credentials" : "Invalid credentials";
+      if (error) console.warn("frontend login failed:", error);
+      return c.json({ error: msg }, 401);
+    }
+    const session = data.session;
+    const user = data.user;
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const { data: frow, error: ferr } = await svc.from("fronted_users").select("id,is_active,display_name").eq("id", user.id).single();
+    if (ferr || !frow || frow.is_active === false) {
+      return c.json({ error: "Not a frontend user" }, 403);
+    }
+    setAuthCookies2(c, session.access_token, session.expires_in ?? 900, session.refresh_token);
+    return c.json({ user: { id: user.id, email: user.email, display_name: frow.display_name ?? null } });
+  } catch (e) {
+    return c.json({ error: e?.message || "Login failed" }, 500);
+  }
+});
+app3.get("/frontend/auth/me", async (c) => {
+  try {
+    const access = getCookie(c, ACCESS_COOKIE3);
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    if (access) {
+      const supabase = makeSupabase2(c);
+      const { data, error } = await supabase.auth.getUser(access);
+      if (!error && data?.user) {
+        const user = data.user;
+        const { data: row } = await svc.from("fronted_users").select("id,is_active,display_name,email").eq("id", user.id).single();
+        if (row && row.is_active !== false) return c.json({ id: user.id, email: user.email, display_name: row.display_name ?? null });
+      }
+    }
+    const secret = c.env.ADMIN_SESSION_SECRET;
+    const token = getCookie(c, FRONT_SESSION_COOKIE);
+    if (secret && token) {
+      const parsed = await verifyFrontSessionToken(secret, token);
+      if (parsed?.uid) {
+        const { data: row } = await svc.from("fronted_users").select("id,is_active,display_name,email").eq("id", parsed.uid).single();
+        if (row && row.is_active !== false) {
+          return c.json({ id: row.id, email: row.email ?? null, display_name: row.display_name ?? null });
+        }
+      }
+    }
+    return c.json({ error: "Unauthorized" }, 401);
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal server error" }, 500);
+  }
+});
+app3.post("/frontend/auth/logout", async (c) => {
+  try {
+    deleteCookie(c, ACCESS_COOKIE3, { path: "/" });
+    deleteCookie(c, REFRESH_COOKIE2, { path: "/" });
+    deleteCookie(c, FRONT_SESSION_COOKIE, { path: "/" });
+    return c.json({ ok: true });
+  } catch (e) {
+    return c.json({ error: e?.message || "Logout failed" }, 500);
+  }
+});
+app3.get("/frontend/account/line/status", async (c) => {
+  try {
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    let uid = null;
+    const access = getCookie(c, ACCESS_COOKIE3);
+    if (access) {
+      const supabase = makeSupabase2(c);
+      const { data, error } = await supabase.auth.getUser(access);
+      if (!error && data?.user?.id) uid = data.user.id;
+    }
+    if (!uid) {
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      const token = getCookie(c, FRONT_SESSION_COOKIE);
+      if (secret && token) {
+        const parsed = await verifyFrontSessionToken(secret, token);
+        if (parsed?.uid) uid = parsed.uid;
+      }
+    }
+    if (!uid) return c.json({ is_bound: false }, 200);
+    const { data: row } = await svc.from("fronted_users").select("line_user_id, line_display_name, line_picture_url").eq("id", uid).single();
+    const isBound = !!row?.line_user_id;
+    return c.json({ is_bound: isBound, line_display_name: row?.line_display_name ?? null, line_picture_url: row?.line_picture_url ?? null });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+function getRedirectBase(c) {
+  const base = c.env.FRONTEND_LINE_REDIRECT_BASE;
+  if (base) return String(base).replace(/\/$/, "");
+  try {
+    return new URL(c.req.url).origin;
+  } catch {
+    return "";
+  }
+}
+__name(getRedirectBase, "getRedirectBase");
+function getFrontendLineCreds(c) {
+  const clientId = c.env.FRONTEND_LINE_CHANNEL_ID;
+  const clientSecret = c.env.FRONTEND_LINE_CHANNEL_SECRET;
+  return { clientId, clientSecret };
+}
+__name(getFrontendLineCreds, "getFrontendLineCreds");
+function getFrontendSiteBase(c) {
+  const site = c.env.FRONTEND_SITE_URL;
+  if (site) return String(site).replace(/\/$/, "");
+  const base = getRedirectBase(c);
+  return base;
+}
+__name(getFrontendSiteBase, "getFrontendSiteBase");
+app3.get("/frontend/account/line/start", async (c) => {
+  const { clientId, clientSecret } = getFrontendLineCreds(c);
+  if (!clientId || !clientSecret) return c.json({ error: "LINE not configured" }, 500);
+  const base = getRedirectBase(c);
+  const redirectUri = `${base}/frontend/line/callback`;
+  const nonce = Math.random().toString(36).slice(2);
+  const state = `bind:${nonce}`;
+  setCookie(c, "line-oauth-state", state, { httpOnly: true, sameSite: "Lax", path: "/", maxAge: 600 });
+  const scope = encodeURIComponent("profile openid");
+  const authorizeUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}&scope=${scope}`;
+  try {
+    const u = new URL(c.req.url);
+    if (u.searchParams.get("dryrun") === "1") {
+      return c.json({ authorizeUrl, redirect_uri: redirectUri, client_id: clientId, base, flow: "bind" });
+    }
+  } catch {
+  }
+  return c.redirect(authorizeUrl, 302);
+});
+app3.get("/frontend/auth/line/start", async (c) => {
+  const { clientId, clientSecret } = getFrontendLineCreds(c);
+  if (!clientId || !clientSecret) return c.json({ error: "LINE not configured" }, 500);
+  const base = getRedirectBase(c);
+  const redirectUri = `${base}/frontend/line/callback`;
+  const nonce = Math.random().toString(36).slice(2);
+  const state = `login:${nonce}`;
+  setCookie(c, "line-oauth-state", state, { httpOnly: true, sameSite: "Lax", path: "/", maxAge: 600 });
+  const scope = encodeURIComponent("profile openid");
+  const authorizeUrl = `https://access.line.me/oauth2/v2.1/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}&scope=${scope}`;
+  try {
+    const u = new URL(c.req.url);
+    if (u.searchParams.get("dryrun") === "1") {
+      return c.json({ authorizeUrl, redirect_uri: redirectUri, client_id: clientId, base, flow: "login" });
+    }
+  } catch {
+  }
+  return c.redirect(authorizeUrl, 302);
+});
+app3.get("/frontend/line/callback", async (c) => {
+  try {
+    const { clientId, clientSecret } = getFrontendLineCreds(c);
+    if (!clientId || !clientSecret) return c.text("LINE not configured", 500);
+    const url = new URL(c.req.url);
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
+    const stored = getCookie(c, "line-oauth-state");
+    if (!code || !state || !stored || state !== stored) return c.text("Invalid state", 400);
+    deleteCookie(c, "line-oauth-state", { path: "/" });
+    const flow = state.split(":", 1)[0];
+    const base = getRedirectBase(c);
+    const redirectUri = `${base}/frontend/line/callback`;
+    const tokenResp = await fetch("https://api.line.me/oauth2/v2.1/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: redirectUri, client_id: clientId, client_secret: clientSecret }).toString()
+    });
+    if (!tokenResp.ok) return c.text("LINE token error", 400);
+    const tokenJson = await tokenResp.json();
+    const lineAccess = tokenJson.access_token;
+    const profResp = await fetch("https://api.line.me/v2/profile", { headers: { Authorization: `Bearer ${lineAccess}` } });
+    if (!profResp.ok) return c.text("LINE profile error", 400);
+    const prof = await profResp.json();
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.text("Server misconfigured", 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const frontendBase = getFrontendSiteBase(c);
+    if (flow === "bind") {
+      const access = getCookie(c, ACCESS_COOKIE3);
+      if (!access) return c.text("Unauthorized", 401);
+      const supabase = makeSupabase2(c);
+      const { data: userRes } = await supabase.auth.getUser(access);
+      const userId = userRes?.user?.id;
+      if (!userId) return c.text("Unauthorized", 401);
+      await svc.from("fronted_users").update({
+        line_user_id: prof.userId,
+        line_display_name: prof.displayName ?? null,
+        line_picture_url: prof.pictureUrl ?? null
+      }).eq("id", userId);
+      return c.redirect(`${frontendBase}/account?line_bound=1`, 302);
+    } else if (flow === "login") {
+      let uid = null;
+      const { data: existing } = await svc.from("fronted_users").select("id,is_active").eq("line_user_id", prof.userId).maybeSingle();
+      if (existing && existing.is_active !== false) {
+        uid = existing.id;
+        const { data: gotUser } = await svc.auth.admin.getUserById(uid);
+        if (!gotUser?.user) {
+          const { data: created } = await svc.auth.admin.createUser({ email: `${prof.userId}@line.local`, email_confirm: true });
+          if (created?.user?.id) uid = created.user.id;
+        }
+      } else {
+        const { data: created } = await svc.auth.admin.createUser({ email: `${prof.userId}@line.local`, email_confirm: true });
+        uid = created?.user?.id ?? null;
+        if (uid) {
+          await svc.from("fronted_users").upsert({ id: uid, email: `${prof.userId}@line.local`, line_user_id: prof.userId, line_display_name: prof.displayName ?? null, line_picture_url: prof.pictureUrl ?? null }, { onConflict: "id" });
+        } else {
+          return c.text("Unable to create user", 500);
+        }
+      }
+      if (!uid) return c.text("Unauthorized", 401);
+      const secret = c.env.ADMIN_SESSION_SECRET;
+      if (!secret) return c.text("Server misconfigured", 500);
+      const token = await createFrontSessionToken(secret, uid);
+      setCookie(c, FRONT_SESSION_COOKIE, token, { httpOnly: true, sameSite: "Lax", path: "/", maxAge: 60 * 60 * 24 * 7 });
+      return c.redirect(`${frontendBase}/account?line_login=1`, 302);
+    } else {
+      return c.text("Invalid flow", 400);
+    }
+  } catch (e) {
+    console.error("LINE login callback error", e);
+    return c.text("Internal error", 500);
+  }
+});
+var auth_default2 = app3;
+
 // ../backend/API/index.ts
-var app3 = new Hono2();
-app3.route("/", auth_default);
-app3.route("/", admin_default);
-var API_default = app3;
+var app4 = new Hono2();
+app4.route("/", auth_default);
+app4.route("/", admin_default);
+app4.route("/", auth_default2);
+var API_default = app4;
 
 // ../node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
 init_modules_watch_stub();
@@ -12041,7 +12437,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-w9UJsO/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-eyCMvL/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -12074,7 +12470,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-w9UJsO/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-eyCMvL/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

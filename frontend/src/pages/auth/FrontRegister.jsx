@@ -1,12 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { addUser, getCurrentUser, verifyCredentials } from '../../../external_mock/state/users.js';
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import { getCurrentUser } from '../../../external_mock/state/users.js';
 
 const FrontRegister = () => {
   const [form, setForm] = useState({
-    country: 'TW',
-    phone: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -15,12 +12,7 @@ const FrontRegister = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  
-  const countries = [
-    { code: 'TW', label: 'TW+886'},
-  ];
+  const [passwordStrength, setPasswordStrength] = useState({ percent: 0, label: '' });
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,22 +26,25 @@ const FrontRegister = () => {
     }
   }, [navigate, location]);
 
-  // 點擊外部關閉下拉選單
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  // 計算密碼強度：8-12 碼，且需同時包含英文與數字
+  const evaluateStrength = (pwd) => {
+    const lenOK = pwd.length >= 8 && pwd.length <= 12
+    const hasEnglish = /[A-Za-z]/.test(pwd)
+    const hasDigit = /\d/.test(pwd)
+    const checks = [lenOK, hasEnglish, hasDigit]
+    const met = checks.filter(Boolean).length
+    const percent = Math.round((met / 3) * 100)
+    let label = '弱'
+    if (met === 2) label = '中等'
+    if (met === 3) label = '強'
+    return { percent, label, lenOK, hasEnglish, hasDigit }
+  }
 
   const handleChange = (field, value) => {
     setForm(f => ({ ...f, [field]: value }));
+    if (field === 'password') {
+      setPasswordStrength(evaluateStrength(value))
+    }
   };
 
   const handleCheckbox = (field) => {
@@ -62,8 +57,8 @@ const FrontRegister = () => {
     setError('');
 
     // 驗證欄位
-    if (!form.phone && !form.email) {
-      setError('請輸入手機或 Email');
+    if (!form.email) {
+      setError('請輸入 Email');
       return;
     }
     if (!form.password || !form.confirmPassword) {
@@ -74,27 +69,43 @@ const FrontRegister = () => {
       setError('兩次密碼不一致');
       return;
     }
+    // 規則：8-12 碼，需包含英文與數字
+    const { lenOK, hasEnglish, hasDigit } = evaluateStrength(form.password)
+    if (!lenOK) {
+      setError('密碼長度需為 8 至 12 碼');
+      return;
+    }
+    if (!hasEnglish || !hasDigit) {
+      setError('密碼需同時包含英文與數字');
+      return;
+    }
     if (!form.agree2) {
       setError('請同意服務條款及隱私權');
       return;
     }
 
-    // 選擇使用哪個當作 username (這裡預設 email 優先，沒有就用 phone)
-    const username = (form.email || form.phone).trim();
+    const email = form.email.trim();
     try {
       setSubmitting(true);
-      addUser(username, form.password, { phone: form.phone, email: form.email });
-      await verifyCredentials(username, form.password); // 自動登入建立 session
-      navigate('/');
+  const res = await fetch('/frontend/auth/register', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: form.password })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`)
+      // 顯示提示並導向登入頁
+      navigate('/login', { replace: true, state: { registered: true } })
     } catch (err) {
-      setError(err.message || '註冊失敗');
+      setError(err.message || '註冊失敗')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fdf8f2]">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-cream-50" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%)'}}>
       <main className="flex-1 flex flex-col items-center justify-center py-6 xs:py-8 sm:py-10 md:py-12 pt-16 xs:pt-18 sm:pt-20 md:pt-20 px-4 xs:px-6 sm:px-8">
         {/* LOGO 區域 */}
         <div className="w-full max-w-md mx-auto mb-6 xs:mb-7 sm:mb-8 md:mb-8 lg:mb-10 text-center">
@@ -106,47 +117,6 @@ const FrontRegister = () => {
         
         <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto flex flex-col items-center">
           <div className="w-full flex flex-col gap-5 xs:gap-5 sm:gap-6 md:gap-6 lg:gap-7">
-            <div className="flex gap-1.5 xs:gap-2 sm:gap-2 md:gap-2 items-center">
-              {/* 自定義國家代碼選擇器 */}
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-1.5 xs:gap-2 sm:gap-2 md:gap-2 px-2 xs:px-2 sm:px-3 md:px-3 py-2.5 xs:py-2.5 sm:py-3 md:py-3 border-0 border-b border-[#e5ded6] bg-transparent text-sm xs:text-sm sm:text-base md:text-base focus:outline-none focus:border-[#bfae9b] font-serif min-w-[100px] xs:min-w-[100px] sm:min-w-[120px] md:min-w-[120px] transition-colors duration-200"
-                >
-                  <span className="text-base xs:text-base sm:text-lg md:text-lg">{countries.find(c => c.code === form.country)?.flag}</span>
-                  <span className="text-[#2d1e0f]">{countries.find(c => c.code === form.country)?.label}</span>
-                  <ChevronDownIcon className={`w-3.5 h-3.5 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 md:w-4 md:h-4 text-[#bfae9b] transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {/* 下拉選單 */}
-                {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#e5ded6] rounded-lg shadow-lg z-10 overflow-hidden">
-                    {countries.map((country) => (
-                      <button
-                        key={country.code}
-                        type="button"
-                        onClick={() => {
-                          handleChange('country', country.code);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2 xs:gap-2 sm:gap-3 md:gap-3 px-2 xs:px-2 sm:px-3 md:px-3 py-2.5 xs:py-2.5 sm:py-3 md:py-3 text-left hover:bg-[#f7f2e8] transition-colors duration-200 font-serif"
-                      >
-                        <span className="text-base xs:text-base sm:text-lg md:text-lg">{country.flag}</span>
-                        <span className="text-sm xs:text-sm sm:text-base md:text-base text-[#2d1e0f]">{country.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={e => handleChange('phone', e.target.value)}
-                className="flex-1 border-0 border-b border-[#e5ded6] bg-transparent text-sm xs:text-sm sm:text-base md:text-base lg:text-lg py-2.5 xs:py-2.5 sm:py-3 md:py-3 px-0 focus:ring-0 focus:border-[#bfae9b] placeholder-[#bfae9b] font-serif"
-                placeholder="912 345 678"
-              />
-            </div>
             <div>
               <input
                 type="email"
@@ -162,10 +132,28 @@ const FrontRegister = () => {
                 value={form.password}
                 onChange={e => handleChange('password', e.target.value)}
                 className="block w-full border-0 border-b border-[#e5ded6] bg-transparent text-sm xs:text-sm sm:text-base md:text-base lg:text-lg py-2.5 xs:py-2.5 sm:py-3 md:py-3 px-0 focus:ring-0 focus:border-[#bfae9b] placeholder-[#bfae9b] font-serif"
-                placeholder="設定密碼"
+                placeholder="設定密碼（8-12 碼，需含英文與數字）"
                 required
-                minLength={4}
+                minLength={8}
+                maxLength={12}
               />
+              {form.password && (
+                <div className="mt-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600 font-serif">密碼強度</span>
+                    <span className="text-xs font-medium font-serif">{passwordStrength.label}</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all duration-300 ${passwordStrength.percent < 40 ? 'bg-red-500' : (passwordStrength.percent < 80 ? 'bg-yellow-500' : 'bg-green-500')}`}
+                      style={{ width: `${passwordStrength.percent}%` }}
+                    />
+                  </div>
+                  <div className="text-[11px] text-gray-500 mt-2 font-serif">
+                    需 8-12 碼，且同時包含英文與數字
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <input
@@ -175,7 +163,8 @@ const FrontRegister = () => {
                 className="block w-full border-0 border-b border-[#e5ded6] bg-transparent text-sm xs:text-sm sm:text-base md:text-base lg:text-lg py-2.5 xs:py-2.5 sm:py-3 md:py-3 px-0 focus:ring-0 focus:border-[#bfae9b] placeholder-[#bfae9b] font-serif"
                 placeholder="確認密碼"
                 required
-                minLength={4}
+                minLength={8}
+                maxLength={12}
               />
             </div>
             <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2 md:gap-2 text-[10px] xs:text-xs sm:text-xs md:text-xs text-[#bfae9b]">
@@ -203,12 +192,7 @@ const FrontRegister = () => {
             <div className="flex-1 h-px bg-[#e5ded6]" />
           </div>
         </form>
-        <div className="w-full max-w-md mx-auto mb-6 xs:mb-7 sm:mb-8 md:mb-8">
-          <button type="button" className="w-full bg-[#00c300] hover:bg-[#00b300] text-white text-sm xs:text-sm sm:text-base md:text-base lg:text-lg font-bold py-2.5 xs:py-2.5 sm:py-3 md:py-3 lg:py-3.5 rounded transition-colors font-serif tracking-wider flex items-center justify-center gap-2 xs:gap-2 sm:gap-3 md:gap-3">
-            <i className="fa-brands fa-line text-lg xs:text-lg sm:text-xl md:text-xl" />
-            <span>LINE 註冊</span>
-          </button>
-        </div>
+        {/* 暫不提供 LINE 註冊；登入後再行綁定 */}
         <div className="w-full max-w-md mx-auto flex flex-col items-center mt-6 xs:mt-7 sm:mt-8 md:mt-8">
           <h3 className="text-lg xs:text-lg sm:text-xl md:text-xl lg:text-2xl font-serif font-bold text-[#2d1e0f] mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 tracking-wider">已經有帳號？</h3>
           <div className="text-[#bfae9b] text-xs xs:text-xs sm:text-sm md:text-sm mb-3 xs:mb-3 sm:mb-4 md:mb-4">立即登入享有更多優惠！</div>

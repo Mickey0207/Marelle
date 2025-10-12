@@ -8,10 +8,16 @@ type Bindings = {
   SUPABASE_ANON_KEY: string
   ALLOWED_ORIGIN?: string
   SUPABASE_SERVICE_ROLE_KEY?: string
+  // Preferred backend-specific LINE envs
+  BACKEND_LINE_CHANNEL_ID?: string
+  BACKEND_LINE_CHANNEL_SECRET?: string
+  BACKEND_LINE_REDIRECT_URI?: string
+  // Legacy fallback
   LINE_CHANNEL_ID?: string
   LINE_CHANNEL_SECRET?: string
   LINE_REDIRECT_URI?: string
   ADMIN_SESSION_SECRET?: string
+  FRONTEND_SITE_URL?: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>({ strict: false })
@@ -172,8 +178,8 @@ function requiredEnv(c: any, key: keyof Bindings) {
 }
 
 function getRedirectUri(c: any) {
-  // prefer explicit env, else infer from request origin
-  const configured = c.env.LINE_REDIRECT_URI
+  // prefer backend-specific env, then legacy, else infer from request origin
+  const configured = c.env.BACKEND_LINE_REDIRECT_URI || c.env.LINE_REDIRECT_URI
   if (configured) return configured
   try {
     const u = new URL(c.req.url)
@@ -205,9 +211,16 @@ function getStateCookie(c: any) {
   return getCookie(c, LINE_STATE_COOKIE)
 }
 
+function getBackendLineCreds(c: any) {
+  const clientId = (c.env.BACKEND_LINE_CHANNEL_ID || c.env.LINE_CHANNEL_ID) as string | undefined
+  const clientSecret = (c.env.BACKEND_LINE_CHANNEL_SECRET || c.env.LINE_CHANNEL_SECRET) as string | undefined
+  if (!clientId) throw new Error('Missing env: BACKEND_LINE_CHANNEL_ID or LINE_CHANNEL_ID')
+  if (!clientSecret) throw new Error('Missing env: BACKEND_LINE_CHANNEL_SECRET or LINE_CHANNEL_SECRET')
+  return { clientId, clientSecret }
+}
+
 async function exchangeLineToken(c: any, code: string) {
-  const clientId = requiredEnv(c, 'LINE_CHANNEL_ID')
-  const clientSecret = requiredEnv(c, 'LINE_CHANNEL_SECRET')
+  const { clientId, clientSecret } = getBackendLineCreds(c)
   const redirectUri = getRedirectUri(c)
   const body = new URLSearchParams()
   body.set('grant_type', 'authorization_code')
@@ -231,6 +244,7 @@ async function fetchLineProfile(accessToken: string) {
   if (!resp.ok) throw new Error(`LINE profile failed: ${resp.status}`)
   return resp.json()
 }
+
 
 // POST /backend/auth/login { email, password }
 app.post('/backend/auth/login', async (c) => {
@@ -416,7 +430,7 @@ export default app
 // GET /backend/auth/line/start -> redirect to LINE authorize
 app.get('/backend/auth/line/start', async (c) => {
   try {
-    const clientId = requiredEnv(c, 'LINE_CHANNEL_ID')
+  const { clientId } = getBackendLineCreds(c)
     const redirectUri = getRedirectUri(c)
     const state = randomString(32)
     const nonce = randomString(16)

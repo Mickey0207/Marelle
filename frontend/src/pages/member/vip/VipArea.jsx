@@ -1,19 +1,35 @@
-import { useEffect } from 'react';
-import { getCurrentUser } from '../../../../external_mock/state/users.js';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VipCoupons from '../../../components/member/vip/VipCoupons.jsx';
 import VipActivities from '../../../components/member/vip/VipActivities.jsx';
 
 export default function VipArea() {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login', { state: { from: '/vip' } });
-    }
-  }, [user, navigate]);
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch('/frontend/auth/me', { credentials: 'include' });
+        if (!mounted) return;
+        if (res.ok) {
+          const data = await res.json();
+          setUser({ id: data.id, email: data.email, display_name: data.display_name || null });
+        } else {
+          navigate('/login', { state: { from: '/vip' } });
+        }
+      } catch {
+        navigate('/login', { state: { from: '/vip' } });
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false };
+  }, [navigate]);
 
+  if (loading) return null;
   if (!user) return null;
 
   return (
