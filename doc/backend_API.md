@@ -13,17 +13,24 @@
 - 錯誤格式：`{ error: string }`
 
 用途：優先以 `sb-access-token` 取得使用者；若不存在，且存在 `admin-session`，則以該 session 識別 admin 並回傳資料庫中的 email（需 `SUPABASE_SERVICE_ROLE_KEY`）
+ 
+1) POST /backend/auth/login
 
 - 用途：Email/Password 登入並在回應中設定 Cookie
+- 請求：`{ email: string, password: string }`
 - 成功：`200 { user: { id: string, email: string } }`
-- 失敗：`401 { error: 'Invalid credentials' }` 或 `400 { error: 'Missing email or password' }`
+- 失敗：
+  - `400 { error: 'Missing email or password' }`
+  - `401 { error: 'Invalid credentials' }`
+  - `403 { error: 'Not a backend admin' }`（帳號雖存在於 Supabase Auth，但未在 `backend_admins` 建立或 `is_active=false`）
+
 -- GET /backend/auth/line/callback
   
-  - 用途：LINE 回呼端點，驗證 state，交換 access_token，抓取 profile
-  - 成功（已綁定）：若該 `line_user_id` 已綁定 `backend_admins`，且設定 `ADMIN_SESSION_SECRET`，伺服端簽發 `admin-session` Cookie（有效期預設 12 小時），並 302 轉址至 `/`
-  - 成功（未綁定）：302 轉址至 `/login?line_status=success&bound=0&name=...`
-  - 失敗：302 轉址至 `/login?line_status=error&reason=...`
-  - 環境變數：`LINE_CHANNEL_ID`, `LINE_CHANNEL_SECRET`, `LINE_REDIRECT_URI`，以及（選用）`SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_SESSION_SECRET`
+- 用途：LINE 回呼端點，驗證 state，交換 access_token，抓取 profile
+- 成功（已綁定）：若該 `line_user_id` 已綁定 `backend_admins`，且設定 `ADMIN_SESSION_SECRET`，伺服端簽發 `admin-session` Cookie（有效期預設 12 小時），並 302 轉址至 `/`
+- 成功（未綁定）：302 轉址至 `/login?line_status=success&bound=0&name=...`
+- 失敗：302 轉址至 `/login?line_status=error&reason=...`
+- 環境變數：`LINE_CHANNEL_ID`, `LINE_CHANNEL_SECRET`, `LINE_REDIRECT_URI`，以及（選用）`SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_SESSION_SECRET`
 
 1) GET /backend/auth/me
 
@@ -34,6 +41,9 @@
 - 用途：以 access token 驗證後，回傳使用者資訊
 - 成功：`200 { id: string, email: string }`
 - 未授權：`401 { error: 'Unauthorized' }`
+- 禁止存取：`403 { error: 'Not a backend admin' }`（已驗證，但未在 `backend_admins` 建立或 `is_active=false`）
+
+註：不論是以 `sb-access-token` 或 `admin-session` 身分識別，伺服端在回傳資料前都會確認該使用者存在於 `backend_admins` 且為啟用狀態。
 
 1) POST /backend/auth/refresh
 
@@ -46,6 +56,7 @@
 - 用途：取得目前登入使用者可用的後台模組清單。伺服端會以目前管理員的 `backend_admins.role`，查詢 `backend_role_modules` 的布林矩陣，並與啟用中的 `backend_modules` 交集後回傳。
 - 成功：`200 [ 'dashboard', 'products', ... ]`
 - 未授權：`401 { error: 'Unauthorized' }`
+- 禁止存取：`403 { error: 'Not a backend admin' }`
 
 注意事項
 
@@ -79,7 +90,10 @@
 
 ## 管理員與角色 API（backend_admin）
 
-所有端點皆需攜帶 Cookie（`credentials: 'include'`）。未授權回應：`401 { error: 'Unauthorized' }`。
+所有端點皆需攜帶 Cookie（`credentials: 'include'`），且呼叫者必須為「存在於 `backend_admins` 並且 `is_active=true` 的後台管理員」。
+
+- 未登入/逾期：`401 { error: 'Unauthorized' }`
+- 非後台管理員或已停用：`403 { error: 'Not a backend admin' }`
 
 1) GET /backend/admins
 
@@ -92,6 +106,8 @@
 - 用途：建立新的管理員帳號（會同時建立 Supabase Auth 使用者以及 backend_admins 資料列）
 - 請求：`{ email: string, password: string, display_name?: string, role?: string, department?: string }`
 - 回傳：`200 { id: string, email: string, display_name: string | null, role: string, department?: string }`
+
+注意：此操作僅限具備相應管理權限之後台管理員執行（例如管理員管理模組）。前台使用者無法呼叫此 API。
 
 1) POST /backend/admins/:id/send-reset-email
 

@@ -11488,13 +11488,13 @@ app.post("/backend/auth/login", async (c) => {
       return c.json({ error: msg }, 401);
     }
     const session = data.session;
-    setAuthCookies(c, session.access_token, session.expires_in ?? 900, session.refresh_token);
     const user = data.user;
-    const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Admin";
-    const { error: upsertErr } = await makeSupabase(c, session.access_token).from("backend_admins").upsert({ id: user.id, email: user.email, display_name: displayName, is_active: true });
-    if (upsertErr) {
-      console.warn("backend_admins upsert failed", upsertErr);
+    const svc = makeSupabase(c, session.access_token);
+    const { data: row, error: selErr } = await svc.from("backend_admins").select("id,is_active").eq("id", user.id).single();
+    if (selErr || !row || row.is_active === false) {
+      return c.json({ error: "Not a backend admin" }, 403);
     }
+    setAuthCookies(c, session.access_token, session.expires_in ?? 900, session.refresh_token);
     return c.json({ user: { id: user.id, email: user.email } });
   } catch (e) {
     return c.json({ error: e?.message || "Login failed" }, 500);
@@ -11525,6 +11525,9 @@ app.get("/backend/auth/me", async (c) => {
       const { data, error } = await supabase.auth.getUser(access);
       if (error || !data?.user) return c.json({ error: "Unauthorized" }, 401);
       const user = data.user;
+      const svc = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_ANON_KEY, { auth: { persistSession: false }, global: { headers: { Authorization: `Bearer ${access}` } } });
+      const { data: row } = await svc.from("backend_admins").select("id,is_active").eq("id", user.id).single();
+      if (!row || row.is_active === false) return c.json({ error: "Unauthorized" }, 401);
       return c.json({ id: user.id, email: user.email });
     }
     const adminToken = getCookie(c, ADMIN_SESSION_COOKIE);
@@ -11533,10 +11536,12 @@ app.get("/backend/auth/me", async (c) => {
     const parsed = await verifyAdminSessionToken(secret, adminToken);
     if (!parsed) return c.json({ error: "Unauthorized" }, 401);
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceKey) return c.json({ id: parsed.uid });
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
     const admin = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
-    const { data: rows } = await admin.from("backend_admins").select("email").eq("id", parsed.uid).limit(1);
-    const email = Array.isArray(rows) && rows[0]?.email ? rows[0].email : void 0;
+    const { data: rows } = await admin.from("backend_admins").select("email,is_active").eq("id", parsed.uid).limit(1);
+    const r = Array.isArray(rows) ? rows[0] : null;
+    if (!r || r.is_active === false) return c.json({ error: "Unauthorized" }, 401);
+    const email = r?.email;
     return c.json({ id: parsed.uid, email });
   } catch (e) {
     return c.json({ error: e?.message || "Internal server error" }, 500);
@@ -11579,8 +11584,8 @@ app.get("/backend/auth/modules", async (c) => {
     }
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
     const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
-    const { data: adminRow, error: adminErr } = await svc.from("backend_admins").select("role").eq("id", adminId).single();
-    if (adminErr) return c.json({ error: "Failed to load admin role" }, 500);
+    const { data: adminRow, error: adminErr } = await svc.from("backend_admins").select("role,is_active").eq("id", adminId).single();
+    if (adminErr || !adminRow || adminRow.is_active === false) return c.json({ error: "Unauthorized" }, 401);
     role = adminRow?.role || "Staff";
     const { data: roleRow, error: roleErr } = await svc.from("backend_role_modules").select("*").eq("role", role).single();
     if (roleErr || !roleRow) return c.json([]);
