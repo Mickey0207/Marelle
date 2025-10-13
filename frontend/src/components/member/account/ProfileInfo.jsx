@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import GlassModal from '../../ui/GlassModal.jsx';
 import SearchableSelect from '../../ui/SearchableSelect.jsx';
 
@@ -8,15 +8,34 @@ export default function ProfileInfo({ user }) {
   const [showUnbind, setShowUnbind] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: '', phone: '', gender: '', newsletter: false });
-  // 本地暫存多組地址（僅 UI，尚未串 API）
+  // 地址簿（串後端 API）
   const [homeAddresses, setHomeAddresses] = useState([]);
   const [storeAddresses, setStoreAddresses] = useState([]);
   const [addingHome, setAddingHome] = useState(false);
   const [addingStore, setAddingStore] = useState(false);
   const [homeDraft, setHomeDraft] = useState({ alias: '', recipient: '', phone: '', zip: '', city: '', district: '', address: '' });
-  const [storeDraft, setStoreDraft] = useState({ alias: '', vendor: '', store_name: '', store_id: '', store_address: '' });
+  const [storeDraft, setStoreDraft] = useState({ alias: '', vendor: '', store_name: '', store_id: '', store_address: '', recipient: '', phone: '' });
   const [editingHomeId, setEditingHomeId] = useState(null);
   const [editingStoreId, setEditingStoreId] = useState(null);
+  const [homeEditForm, setHomeEditForm] = useState(null);
+  const [storeEditForm, setStoreEditForm] = useState(null);
+  const [addrLoading, setAddrLoading] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  const vendorOptions = useMemo(() => ([
+    { value: 'UNIMARTC2C', label: '7-ELEVEN (UNIMARTC2C)' },
+    { value: 'FAMIC2C', label: '全家 (FAMIC2C)' },
+    { value: 'HILIFEC2C', label: '萊爾富 (HILIFEC2C)' },
+    { value: 'OKMARTC2C', label: 'OK (OKMARTC2C)' }
+  ]), [])
+
+  function pushToast(type, message) {
+    const id = `${Date.now()}_${Math.random().toString(36).slice(2,6)}`
+    setToasts((arr) => [...arr, { id, type, message }])
+    setTimeout(() => {
+      setToasts((arr) => arr.filter(t => t.id !== id))
+    }, 2600)
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +55,66 @@ export default function ProfileInfo({ user }) {
     fetchLine();
     return () => { cancelled = true; };
   }, []);
+
+  // 讀取地址簿
+  const loadAddresses = async () => {
+    try {
+      setAddrLoading(true)
+      const [h, s] = await Promise.all([
+        fetch('/frontend/account/addresses?type=home', { credentials: 'include' }),
+        fetch('/frontend/account/addresses?type=cvs', { credentials: 'include' })
+      ])
+      if (h.ok) { const d = await h.json(); setHomeAddresses(Array.isArray(d)?d:[]) }
+      if (s.ok) { const d = await s.json(); setStoreAddresses(Array.isArray(d)?d:[]) }
+    } catch {}
+    finally { setAddrLoading(false) }
+  }
+
+  // 切換到地址分頁時載入
+  useEffect(() => { if (activeTab === 'address') loadAddresses() }, [activeTab])
+
+  // ZIP3 查詢
+  const fetchZip = async (zip3) => {
+    try {
+      if (!/^\d{3}$/.test(String(zip3||''))) return null
+      const res = await fetch(`/frontend/account/zip/${zip3}`, { credentials: 'include' })
+      if (!res.ok) return null
+      return await res.json()
+    } catch { return null }
+  }
+
+  // 綠界選店（新視窗）
+  function openCvsMap(subType = 'FAMIC2C') {
+    const w = window.open('', 'ecpay_map', 'width=1024,height=768')
+    if (w) w.location.href = `/frontend/account/ecpay/map/start?subType=${encodeURIComponent(subType)}`
+  }
+
+  // 接收選店回傳並填入新增草稿
+  useEffect(() => {
+    function onMsg(e) {
+      if (!e?.data || e.data.type !== 'ecpay:cvs:selected') return
+      try {
+        const s = e.data?.data || (function(){
+          const raw = localStorage.getItem('ecpay_map_store');
+          return raw ? JSON.parse(raw) : null;
+        })();
+        if (!s) return
+        setAddingStore(true)
+        setStoreDraft(d => ({
+          alias: d?.alias || s.store_name || '',
+          vendor: s.sub_type || d?.vendor || '',
+          store_id: s.store_id || '',
+          store_name: s.store_name || '',
+          store_address: s.store_address || '',
+          recipient: d?.recipient || '',
+          phone: d?.phone || ''
+        }))
+        pushToast('success', '已帶入選店結果，請確認後儲存')
+      } catch {}
+    }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+  }, [])
 
   const [meta, setMeta] = useState({ created_at: null, last_sign_in_at: null, email: user.email || null, display_name: user.display_name || null, phone: null, gender: null, newsletter: false, privacy_policy: false })
 
@@ -287,7 +366,19 @@ export default function ProfileInfo({ user }) {
                     <input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.phone} onChange={(e)=>setHomeDraft(s=>({ ...s, phone:e.target.value }))} />
                   </Row>
                   <Row label="郵遞區號">
-                    <input className="w-32 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.zip} onChange={(e)=>setHomeDraft(s=>({ ...s, zip:e.target.value }))} />
+                    <input
+                      className="w-32 border rounded-md px-3 py-2 text-sm"
+                      style={{ borderColor:'#E5E7EB' }}
+                      value={homeDraft.zip}
+                      onChange={async (e)=>{
+                        const v = e.target.value.replace(/[^0-9]/g,'').slice(0,3)
+                        setHomeDraft(s=>({ ...s, zip:v }))
+                        if (v.length===3) {
+                          const m = await fetchZip(v)
+                          if (m) setHomeDraft(s=>({ ...s, city:m.city||s.city, district:m.district||s.district }))
+                        }
+                      }}
+                    />
                   </Row>
                   <Row label="縣市">
                     <input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeDraft.city} onChange={(e)=>setHomeDraft(s=>({ ...s, city:e.target.value }))} />
@@ -300,10 +391,24 @@ export default function ProfileInfo({ user }) {
                   </Row>
                   <div className="flex items-center justify-end gap-2 mt-3">
                     <button onClick={()=>{ setAddingHome(false); }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
-                    <button onClick={()=>{
-                      const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-                      setHomeAddresses(a=>[...a,{ id, ...homeDraft }]);
-                      setAddingHome(false);
+                    <button onClick={async ()=>{
+                      if (!homeDraft.alias?.trim()) { pushToast('error', '請輸入別稱'); return }
+                      if (!homeDraft.recipient?.trim()) { pushToast('error', '請輸入收件人'); return }
+                      if (!/^09\d{8}$/.test(homeDraft.phone?.trim()||'')) { pushToast('error', '電話格式錯誤，需為 09 開頭 10 碼'); return }
+                      if (!/^\d{3}$/.test(homeDraft.zip?.trim()||'')) { pushToast('error', '請輸入 3 碼郵遞區號'); return }
+                      if (!homeDraft.city?.trim() || !homeDraft.district?.trim() || !homeDraft.address?.trim()) { pushToast('error', '請完整填寫地址'); return }
+                      const payload = {
+                        type: 'home',
+                        alias: homeDraft.alias || null,
+                        receiver_name: homeDraft.recipient?.trim(),
+                        receiver_phone: homeDraft.phone?.trim(),
+                        zip3: homeDraft.zip?.trim(),
+                        city: homeDraft.city?.trim(),
+                        district: homeDraft.district?.trim(),
+                        address_line: homeDraft.address?.trim()
+                      }
+                      const res = await fetch('/frontend/account/addresses', { method: 'POST', credentials: 'include', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
+                      if (res.ok) { const created = await res.json(); setHomeAddresses(a=>[created, ...a.filter(x=>x.id!==created.id)]); setAddingHome(false); setHomeDraft({ alias:'', recipient:'', phone:'', zip:'', city:'', district:'', address:'' }); pushToast('success', '宅配地址已新增') } else { pushToast('error', '新增失敗，請稍後再試') }
                     }} className="px-3 py-1.5 rounded-md text-xs font-bold text-white" style={{ background:'#cc824d' }}>儲存</button>
                   </div>
                 </div>
@@ -318,29 +423,41 @@ export default function ProfileInfo({ user }) {
                   <li key={item.id} className="border rounded-md" style={{ borderColor:'#E5E7EB' }}>
                     {editingHomeId === item.id ? (
                       <div className="p-4">
-                        <Row label="別稱"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.alias} onChange={(e)=>item.alias=e.target.value} /></Row>
-                        <Row label="收件人"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.recipient} onChange={(e)=>item.recipient=e.target.value} /></Row>
-                        <Row label="電話"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.phone} onChange={(e)=>item.phone=e.target.value} /></Row>
-                        <Row label="郵遞區號"><input className="w-32 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.zip} onChange={(e)=>item.zip=e.target.value} /></Row>
-                        <Row label="縣市"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.city} onChange={(e)=>item.city=e.target.value} /></Row>
-                        <Row label="行政區"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.district} onChange={(e)=>item.district=e.target.value} /></Row>
-                        <Row label={<span className="whitespace-nowrap">詳細地址</span>}><input className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.address} onChange={(e)=>item.address=e.target.value} /></Row>
+                        <Row label="別稱"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeEditForm?.alias||''} onChange={(e)=>setHomeEditForm(s=>({ ...s, alias:e.target.value }))} /></Row>
+                        <Row label="收件人"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeEditForm?.recipient||''} onChange={(e)=>setHomeEditForm(s=>({ ...s, recipient:e.target.value }))} /></Row>
+                        <Row label="電話"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeEditForm?.phone||''} onChange={(e)=>setHomeEditForm(s=>({ ...s, phone:e.target.value }))} /></Row>
+                        <Row label="郵遞區號"><input className="w-32 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeEditForm?.zip||''} onChange={async (e)=>{ const v=e.target.value.replace(/[^0-9]/g,'').slice(0,3); setHomeEditForm(s=>({ ...s, zip:v })); if (v.length===3){ const m=await fetchZip(v); if(m) setHomeEditForm(s=>({ ...s, city:m.city||s.city, district:m.district||s.district })) } }} /></Row>
+                        <Row label="縣市"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeEditForm?.city||''} onChange={(e)=>setHomeEditForm(s=>({ ...s, city:e.target.value }))} /></Row>
+                        <Row label="行政區"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeEditForm?.district||''} onChange={(e)=>setHomeEditForm(s=>({ ...s, district:e.target.value }))} /></Row>
+                        <Row label={<span className="whitespace-nowrap">詳細地址</span>}><input className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={homeEditForm?.address||''} onChange={(e)=>setHomeEditForm(s=>({ ...s, address:e.target.value }))} /></Row>
                         <div className="flex items-center justify-end gap-2 mt-3">
-                          <button onClick={()=>setEditingHomeId(null)} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
-                          <button onClick={()=>{
-                            setHomeAddresses(arr=>arr.map(x=>x.id===item.id?{...item}:x));
-                            setEditingHomeId(null);
+                          <button onClick={()=>{ setEditingHomeId(null); setHomeEditForm(null) }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
+                          <button onClick={async ()=>{
+                            if (!homeEditForm?.alias?.trim()) { pushToast('error', '請輸入別稱'); return }
+                            if (!homeEditForm?.recipient?.trim()) { pushToast('error', '請輸入收件人'); return }
+                            if (!/^09\d{8}$/.test((homeEditForm?.phone||'').trim())) { pushToast('error', '電話格式錯誤，需為 09 開頭 10 碼'); return }
+                            if (!/^\d{3}$/.test((homeEditForm?.zip||'').trim())) { pushToast('error', '請輸入 3 碼郵遞區號'); return }
+                            if (!homeEditForm?.city?.trim() || !homeEditForm?.district?.trim() || !homeEditForm?.address?.trim()) { pushToast('error', '請完整填寫地址'); return }
+                            const payload = { type:'home', alias: homeEditForm?.alias||null, receiver_name: homeEditForm?.recipient?.trim(), receiver_phone: homeEditForm?.phone?.trim(), zip3: homeEditForm?.zip?.trim(), city: homeEditForm?.city?.trim(), district: homeEditForm?.district?.trim(), address_line: homeEditForm?.address?.trim() }
+                            const res = await fetch(`/frontend/account/addresses/${item.id}`, { method:'PATCH', credentials:'include', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
+                            if (res.ok) { const updated = await res.json(); setHomeAddresses(arr=>arr.map(x=>x.id===item.id?updated:x)); setEditingHomeId(null); setHomeEditForm(null); pushToast('success', '已更新') } else { pushToast('error', '更新失敗') }
                           }} className="px-3 py-1.5 rounded-md text-xs font-bold text-white" style={{ background:'#cc824d' }}>儲存</button>
                         </div>
                       </div>
                     ) : (
                       <div className="p-4">
-                        <div className="text-gray-700 truncate whitespace-nowrap">
-                          {item.alias ? `${item.alias} ｜ ` : ''}收件人：{item.recipient || '—'} ｜ 電話：{item.phone || '—'} ｜ 地址：({item.zip || '—'}) {item.city || ''}{item.district || ''}{item.address || ''}
+                        <div className="flex items-center gap-2 text-gray-700 truncate whitespace-nowrap">
+                          {item.is_default ? (<span className="inline-block px-2 py-0.5 rounded-full text-[10px]" style={{ background:'#F3F4F6', color:'#CC824D', border:'1px solid #E5E7EB' }}>預設</span>) : null}
+                          <span>
+                            {item.alias ? `${item.alias} ｜ ` : ''}收件人：{item.receiver_name || item.recipient || '—'} ｜ 電話：{item.receiver_phone || item.phone || '—'} ｜ 地址：({item.zip3 || item.zip || '—'}) {item.city || ''}{item.district || ''}{item.address_line || item.address || ''}
+                          </span>
                         </div>
                         <div className="flex items-center justify-end gap-2 mt-3">
-                          <button onClick={()=>setEditingHomeId(item.id)} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>編輯</button>
-                          <button onClick={()=>setHomeAddresses(arr=>arr.filter(x=>x.id!==item.id))} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>刪除</button>
+                          {!item.is_default && (
+                            <button onClick={async ()=>{ const res = await fetch(`/frontend/account/addresses/${item.id}`, { method:'PATCH', credentials:'include', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ type:'home', is_default: true }) }); if (res.ok) { setHomeAddresses(arr=>arr.map(x=>({ ...x, is_default: x.id===item.id }))); pushToast('success', '已設定為預設地址') } else { pushToast('error', '設定失敗') } }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>設為預設</button>
+                          )}
+                          <button onClick={()=>{ setEditingHomeId(item.id); setHomeEditForm({ alias:item.alias||'', recipient:item.receiver_name||item.recipient||'', phone:item.receiver_phone||item.phone||'', zip:item.zip3||item.zip||'', city:item.city||'', district:item.district||'', address:item.address_line||item.address||'' }) }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>編輯</button>
+                          <button onClick={async ()=>{ const r = await fetch(`/frontend/account/addresses/${item.id}`, { method:'DELETE', credentials:'include' }); if (r.ok) { loadAddresses(); pushToast('success', '已刪除') } else { pushToast('error', '刪除失敗') } }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>刪除</button>
                         </div>
                       </div>
                     )}
@@ -355,7 +472,7 @@ export default function ProfileInfo({ user }) {
                 <h3 className="text-sm font-medium" style={{ color: '#333333' }}>超商地址</h3>
                 {!addingStore && editingStoreId === null && (
                   <button
-                    onClick={() => { setAddingStore(true); setStoreDraft({ alias: '', vendor: '', store_name: '', store_id: '', store_address: '' }); }}
+                    onClick={() => { setAddingStore(true); setStoreDraft({ alias: '', recipient:'', phone:'', vendor: '', store_name: '', store_id: '', store_address: '' }); }}
                     className="px-3 py-1.5 rounded-md text-xs border"
                     style={{ color:'#666666', borderColor:'#E5E7EB' }}
                   >新增</button>
@@ -366,16 +483,39 @@ export default function ProfileInfo({ user }) {
               {addingStore && (
                 <div className="mb-4 border rounded-md p-4" style={{ borderColor: '#E5E7EB' }}>
                   <Row label={<span className="whitespace-nowrap">別稱</span>}><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.alias} onChange={(e)=>setStoreDraft(s=>({ ...s, alias:e.target.value }))} /></Row>
-                  <Row label="物流廠商"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.vendor} onChange={(e)=>setStoreDraft(s=>({ ...s, vendor:e.target.value }))} /></Row>
+                  <Row label={<span className="whitespace-nowrap">收件人</span>}><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.recipient} onChange={(e)=>setStoreDraft(s=>({ ...s, recipient:e.target.value }))} /></Row>
+                  <Row label={<span className="whitespace-nowrap">收件電話</span>}><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.phone} onChange={(e)=>setStoreDraft(s=>({ ...s, phone:e.target.value }))} placeholder="09xxxxxxxx" /></Row>
+                  <Row label="物流廠商">
+                    <div className="w-64">
+                      <SearchableSelect
+                        options={vendorOptions}
+                        value={storeDraft.vendor || ''}
+                        onChange={(val)=>setStoreDraft(s=>({ ...s, vendor: val }))}
+                        placeholder="選擇物流廠商"
+                      />
+                    </div>
+                  </Row>
                   <Row label="門市名稱"><input className="w-64 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.store_name} onChange={(e)=>setStoreDraft(s=>({ ...s, store_name:e.target.value }))} /></Row>
                   <Row label="門市代號"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.store_id} onChange={(e)=>setStoreDraft(s=>({ ...s, store_id:e.target.value }))} /></Row>
                   <Row label={<span className="whitespace-nowrap">門市地址</span>}><input className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeDraft.store_address} onChange={(e)=>setStoreDraft(s=>({ ...s, store_address:e.target.value }))} /></Row>
+                  <div className="flex items-center justify-end gap-2 mt-1">
+                    <button
+                      onClick={()=>{ if (!storeDraft.vendor) { pushToast('error', '請先選擇物流廠商'); return } openCvsMap(storeDraft.vendor) }}
+                      className="px-3 py-1.5 rounded-md text-xs border"
+                      style={{ color:'#666666', borderColor:'#E5E7EB' }}
+                    >選擇店鋪</button>
+                  </div>
                   <div className="flex items-center justify-end gap-2 mt-3">
                     <button onClick={()=>{ setAddingStore(false); }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
-                    <button onClick={()=>{
-                      const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-                      setStoreAddresses(a=>[...a,{ id, ...storeDraft }]);
-                      setAddingStore(false);
+                    <button onClick={async ()=>{
+                      if (!storeDraft.alias?.trim()) { pushToast('error', '請輸入別稱'); return }
+                      if (!storeDraft.recipient?.trim()) { pushToast('error', '請輸入收件人'); return }
+                      if (!/^09\d{8}$/.test((storeDraft.phone||'').trim())) { pushToast('error', '收件電話格式不正確'); return }
+                      if (!storeDraft.vendor) { pushToast('error', '請先選擇物流廠商'); return }
+                      if (!storeDraft.store_id || !storeDraft.store_name || !storeDraft.store_address) { pushToast('error', '請先完成「選擇店鋪」'); return }
+                      const payload = { type:'cvs', alias: storeDraft.alias?.trim()||null, vendor: storeDraft.vendor?.trim(), store_id: storeDraft.store_id?.trim(), store_name: storeDraft.store_name?.trim(), store_address: storeDraft.store_address?.trim(), receiver_name: (storeDraft.recipient||'').trim(), receiver_phone: (storeDraft.phone||'').trim() }
+                      const res = await fetch('/frontend/account/addresses', { method:'POST', credentials:'include', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
+                      if (res.ok) { const created = await res.json(); setStoreAddresses(a=>[created, ...a.filter(x=>x.id!==created.id)]); setAddingStore(false); setStoreDraft({ alias:'', recipient:'', phone:'', vendor:'', store_name:'', store_id:'', store_address:'' }); pushToast('success', '超商地址已新增') } else { pushToast('error', '新增失敗，請稍後再試') }
                     }} className="px-3 py-1.5 rounded-md text-xs font-bold text-white" style={{ background:'#cc824d' }}>儲存</button>
                   </div>
                 </div>
@@ -390,27 +530,40 @@ export default function ProfileInfo({ user }) {
                   <li key={item.id} className="border rounded-md" style={{ borderColor:'#E5E7EB' }}>
                     {editingStoreId === item.id ? (
                       <div className="p-4">
-                        <Row label="別稱"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.alias} onChange={(e)=>item.alias=e.target.value} /></Row>
-                        <Row label="物流廠商"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.vendor} onChange={(e)=>item.vendor=e.target.value} /></Row>
-                        <Row label="門市名稱"><input className="w-64 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.store_name} onChange={(e)=>item.store_name=e.target.value} /></Row>
-                        <Row label="門市代號"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.store_id} onChange={(e)=>item.store_id=e.target.value} /></Row>
-                        <Row label={<span className="whitespace-nowrap">門市地址</span>}><input className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} defaultValue={item.store_address} onChange={(e)=>item.store_address=e.target.value} /></Row>
+                        <Row label="別稱"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeEditForm?.alias||''} onChange={(e)=>setStoreEditForm(s=>({ ...s, alias:e.target.value }))} /></Row>
+                        <Row label={<span className="whitespace-nowrap">收件人</span>}><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeEditForm?.recipient||''} onChange={(e)=>setStoreEditForm(s=>({ ...s, recipient:e.target.value }))} /></Row>
+                        <Row label={<span className="whitespace-nowrap">收件電話</span>}><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeEditForm?.phone||''} onChange={(e)=>setStoreEditForm(s=>({ ...s, phone:e.target.value }))} placeholder="09xxxxxxxx" /></Row>
+                        <Row label="物流廠商"><input className="w-56 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeEditForm?.vendor||''} onChange={(e)=>setStoreEditForm(s=>({ ...s, vendor:e.target.value }))} /></Row>
+                        <Row label="門市名稱"><input className="w-64 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeEditForm?.store_name||''} onChange={(e)=>setStoreEditForm(s=>({ ...s, store_name:e.target.value }))} /></Row>
+                        <Row label="門市代號"><input className="w-40 border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeEditForm?.store_id||''} onChange={(e)=>setStoreEditForm(s=>({ ...s, store_id:e.target.value }))} /></Row>
+                        <Row label={<span className="whitespace-nowrap">門市地址</span>}><input className="w-full border rounded-md px-3 py-2 text-sm" style={{ borderColor:'#E5E7EB' }} value={storeEditForm?.store_address||''} onChange={(e)=>setStoreEditForm(s=>({ ...s, store_address:e.target.value }))} /></Row>
                         <div className="flex items-center justify-end gap-2 mt-3">
-                          <button onClick={()=>setEditingStoreId(null)} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
-                          <button onClick={()=>{
-                            setStoreAddresses(arr=>arr.map(x=>x.id===item.id?{...item}:x));
-                            setEditingStoreId(null);
+                          <button onClick={()=>{ setEditingStoreId(null); setStoreEditForm(null) }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>取消</button>
+                          <button onClick={async ()=>{
+                            if (!storeEditForm?.alias?.trim()) { pushToast('error', '請輸入別稱'); return }
+                            if (!storeEditForm?.recipient?.trim()) { pushToast('error', '請輸入收件人'); return }
+                            if (!/^09\d{8}$/.test((storeEditForm?.phone||'').trim())) { pushToast('error', '收件電話格式不正確'); return }
+                            if (!storeEditForm?.vendor?.trim() || !storeEditForm?.store_id?.trim() || !storeEditForm?.store_name?.trim() || !storeEditForm?.store_address?.trim()) { pushToast('error', '請完整填寫門市資訊'); return }
+                            const payload = { type:'cvs', alias: storeEditForm?.alias||null, vendor: storeEditForm?.vendor?.trim(), store_id: storeEditForm?.store_id?.trim(), store_name: storeEditForm?.store_name?.trim(), store_address: storeEditForm?.store_address?.trim(), receiver_name: (storeEditForm?.recipient||'').trim(), receiver_phone: (storeEditForm?.phone||'').trim() }
+                            const res = await fetch(`/frontend/account/addresses/${item.id}`, { method:'PATCH', credentials:'include', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
+                            if (res.ok) { const updated = await res.json(); setStoreAddresses(arr=>arr.map(x=>x.id===item.id?updated:x)); setEditingStoreId(null); setStoreEditForm(null) }
                           }} className="px-3 py-1.5 rounded-md text-xs font-bold text-white" style={{ background:'#cc824d' }}>儲存</button>
                         </div>
                       </div>
                     ) : (
                       <div className="p-4">
-                        <div className="text-gray-700 truncate whitespace-nowrap">
-                          {item.alias ? `${item.alias} ｜ ` : ''}物流：{item.vendor || '—'} ｜ 門市：{item.store_name || '—'}（{item.store_id || '—'}） ｜ 地址：{item.store_address || '—'}
+                        <div className="flex items-center gap-2 text-gray-700 truncate whitespace-nowrap">
+                          {item.is_default ? (<span className="inline-block px-2 py-0.5 rounded-full text-[10px]" style={{ background:'#F3F4F6', color:'#CC824D', border:'1px solid #E5E7EB' }}>預設</span>) : null}
+                          <span>
+                            {item.alias ? `${item.alias} ｜ ` : ''}收件人：{item.receiver_name || item.recipient || '—'} ｜ 電話：{item.receiver_phone || item.phone || '—'} ｜ 物流：{item.vendor || '—'} ｜ 門市：{item.store_name || '—'}（{item.store_id || '—'}） ｜ 地址：{item.store_address || '—'}
+                          </span>
                         </div>
                         <div className="flex items-center justify-end gap-2 mt-3">
-                          <button onClick={()=>setEditingStoreId(item.id)} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>編輯</button>
-                          <button onClick={()=>setStoreAddresses(arr=>arr.filter(x=>x.id!==item.id))} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>刪除</button>
+                          {!item.is_default && (
+                            <button onClick={async ()=>{ const res = await fetch(`/frontend/account/addresses/${item.id}`, { method:'PATCH', credentials:'include', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ type:'cvs', is_default: true }) }); if (res.ok) { setStoreAddresses(arr=>arr.map(x=>({ ...x, is_default: x.id===item.id }))); pushToast('success', '已設定為預設地址') } else { pushToast('error', '設定失敗') } }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>設為預設</button>
+                          )}
+                          <button onClick={()=>{ setEditingStoreId(item.id); setStoreEditForm({ alias:item.alias||'', vendor:item.vendor||'', store_name:item.store_name||'', store_id:item.store_id||'', store_address:item.store_address||'', recipient:item.receiver_name||item.recipient||'', phone:item.receiver_phone||item.phone||'' }) }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>編輯</button>
+                          <button onClick={async ()=>{ const r = await fetch(`/frontend/account/addresses/${item.id}`, { method:'DELETE', credentials:'include' }); if (r.ok) { loadAddresses(); pushToast('success', '已刪除') } else { pushToast('error', '刪除失敗') } }} className="px-3 py-1.5 rounded-md text-xs border" style={{ color:'#666666', borderColor:'#E5E7EB' }}>刪除</button>
                         </div>
                       </div>
                     )}
@@ -511,6 +664,14 @@ export default function ProfileInfo({ user }) {
           </GlassModal>
         </div>
       )}
+      {/* Toasts */}
+      <div className="fixed bottom-4 right-4 space-y-2 z-50">
+        {toasts.map(t => (
+          <div key={t.id} className="px-3 py-2 rounded-md shadow text-xs" style={{ background: t.type==='error' ? '#fee2e2' : '#ecfeff', color: t.type==='error' ? '#b91c1c' : '#0369a1', border: `1px solid ${t.type==='error' ? '#fecaca' : '#a5f3fc'}` }}>
+            {t.message}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

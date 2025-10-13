@@ -1307,10 +1307,10 @@ var require_cjs = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-1sWKvJ/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-r8bwSO/middleware-loader.entry.ts
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-1sWKvJ/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-r8bwSO/middleware-insertion-facade.js
 init_modules_watch_stub();
 
 // ../backend/API/index.ts
@@ -1507,11 +1507,11 @@ var getPattern = /* @__PURE__ */ __name((label, next) => {
   }
   return null;
 }, "getPattern");
-var tryDecode = /* @__PURE__ */ __name((str, decoder) => {
+var tryDecode = /* @__PURE__ */ __name((str2, decoder) => {
   try {
-    return decoder(str);
+    return decoder(str2);
   } catch {
-    return str.replace(/(?:%[0-9A-Fa-f]{2})+/g, (match) => {
+    return str2.replace(/(?:%[0-9A-Fa-f]{2})+/g, (match) => {
       try {
         return decoder(match);
       } catch {
@@ -1520,7 +1520,7 @@ var tryDecode = /* @__PURE__ */ __name((str, decoder) => {
     });
   }
 }, "tryDecode");
-var tryDecodeURI = /* @__PURE__ */ __name((str) => tryDecode(str, decodeURI), "tryDecodeURI");
+var tryDecodeURI = /* @__PURE__ */ __name((str2) => tryDecode(str2, decodeURI), "tryDecodeURI");
 var getPath = /* @__PURE__ */ __name((request) => {
   const url = request.url;
   const start = url.indexOf("/", url.indexOf(":") + 4);
@@ -1654,7 +1654,7 @@ var getQueryParams = /* @__PURE__ */ __name((url, key) => {
 var decodeURIComponent_ = decodeURIComponent;
 
 // ../node_modules/hono/dist/request.js
-var tryDecodeURIComponent = /* @__PURE__ */ __name((str) => tryDecode(str, decodeURIComponent_), "tryDecodeURIComponent");
+var tryDecodeURIComponent = /* @__PURE__ */ __name((str2) => tryDecode(str2, decodeURIComponent_), "tryDecodeURIComponent");
 var HonoRequest = class {
   static {
     __name(this, "HonoRequest");
@@ -1780,27 +1780,27 @@ var raw = /* @__PURE__ */ __name((value, callbacks) => {
   escapedString.callbacks = callbacks;
   return escapedString;
 }, "raw");
-var resolveCallback = /* @__PURE__ */ __name(async (str, phase, preserveCallbacks, context, buffer) => {
-  if (typeof str === "object" && !(str instanceof String)) {
-    if (!(str instanceof Promise)) {
-      str = str.toString();
+var resolveCallback = /* @__PURE__ */ __name(async (str2, phase, preserveCallbacks, context, buffer) => {
+  if (typeof str2 === "object" && !(str2 instanceof String)) {
+    if (!(str2 instanceof Promise)) {
+      str2 = str2.toString();
     }
-    if (str instanceof Promise) {
-      str = await str;
+    if (str2 instanceof Promise) {
+      str2 = await str2;
     }
   }
-  const callbacks = str.callbacks;
+  const callbacks = str2.callbacks;
   if (!callbacks?.length) {
-    return Promise.resolve(str);
+    return Promise.resolve(str2);
   }
   if (buffer) {
-    buffer[0] += str;
+    buffer[0] += str2;
   } else {
-    buffer = [str];
+    buffer = [str2];
   }
   const resStr = Promise.all(callbacks.map((c) => c({ phase, buffer, context }))).then(
     (res) => Promise.all(
-      res.filter(Boolean).map((str2) => resolveCallback(str2, phase, false, context, buffer))
+      res.filter(Boolean).map((str22) => resolveCallback(str22, phase, false, context, buffer))
     ).then(() => buffer[0])
   );
   if (preserveCallbacks) {
@@ -2090,14 +2090,14 @@ var Hono = class {
   }
   #notFoundHandler = notFoundHandler;
   errorHandler = errorHandler;
-  route(path, app5) {
+  route(path, app7) {
     const subApp = this.basePath(path);
-    app5.routes.map((r) => {
+    app7.routes.map((r) => {
       let handler;
-      if (app5.errorHandler === errorHandler) {
+      if (app7.errorHandler === errorHandler) {
         handler = r.handler;
       } else {
-        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app5.errorHandler)(c, () => r.handler(c, next))).res, "handler");
+        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app7.errorHandler)(c, () => r.handler(c, next))).res, "handler");
         handler[COMPOSED_HANDLER] = r.handler;
       }
       subApp.#addRoute(r.method, r.path, handler);
@@ -6840,7 +6840,7 @@ function byteFromBase64URL(charCode, state, emit) {
   }
 }
 __name(byteFromBase64URL, "byteFromBase64URL");
-function stringFromBase64URL(str) {
+function stringFromBase64URL(str2) {
   const conv = [];
   const utf8Emit = /* @__PURE__ */ __name((codepoint) => {
     conv.push(String.fromCodePoint(codepoint));
@@ -6853,8 +6853,8 @@ function stringFromBase64URL(str) {
   const byteEmit = /* @__PURE__ */ __name((byte) => {
     stringFromUTF8(byte, utf8State, utf8Emit);
   }, "byteEmit");
-  for (let i = 0; i < str.length; i += 1) {
-    byteFromBase64URL(str.charCodeAt(i), b64State, byteEmit);
+  for (let i = 0; i < str2.length; i += 1) {
+    byteFromBase64URL(str2.charCodeAt(i), b64State, byteEmit);
   }
   return conv.join("");
 }
@@ -6882,12 +6882,12 @@ function codepointToUTF8(codepoint, emit) {
   throw new Error(`Unrecognized Unicode codepoint: ${codepoint.toString(16)}`);
 }
 __name(codepointToUTF8, "codepointToUTF8");
-function stringToUTF8(str, emit) {
-  for (let i = 0; i < str.length; i += 1) {
-    let codepoint = str.charCodeAt(i);
+function stringToUTF8(str2, emit) {
+  for (let i = 0; i < str2.length; i += 1) {
+    let codepoint = str2.charCodeAt(i);
     if (codepoint > 55295 && codepoint <= 56319) {
       const highSurrogate = (codepoint - 55296) * 1024 & 65535;
-      const lowSurrogate = str.charCodeAt(i + 1) - 56320 & 65535;
+      const lowSurrogate = str2.charCodeAt(i + 1) - 56320 & 65535;
       codepoint = (lowSurrogate | highSurrogate) + 65536;
       i += 1;
     }
@@ -6929,21 +6929,21 @@ function stringFromUTF8(byte, state, emit) {
   }
 }
 __name(stringFromUTF8, "stringFromUTF8");
-function base64UrlToUint8Array(str) {
+function base64UrlToUint8Array(str2) {
   const result = [];
   const state = { queue: 0, queuedBits: 0 };
   const onByte = /* @__PURE__ */ __name((byte) => {
     result.push(byte);
   }, "onByte");
-  for (let i = 0; i < str.length; i += 1) {
-    byteFromBase64URL(str.charCodeAt(i), state, onByte);
+  for (let i = 0; i < str2.length; i += 1) {
+    byteFromBase64URL(str2.charCodeAt(i), state, onByte);
   }
   return new Uint8Array(result);
 }
 __name(base64UrlToUint8Array, "base64UrlToUint8Array");
-function stringToUint8Array(str) {
+function stringToUint8Array(str2) {
   const result = [];
-  stringToUTF8(str, (byte) => result.push(byte));
+  stringToUTF8(str2, (byte) => result.push(byte));
   return new Uint8Array(result);
 }
 __name(stringToUint8Array, "stringToUint8Array");
@@ -7214,8 +7214,8 @@ function getAlgorithm(alg) {
 }
 __name(getAlgorithm, "getAlgorithm");
 var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-function validateUUID(str) {
-  if (!UUID_REGEX.test(str)) {
+function validateUUID(str2) {
+  if (!UUID_REGEX.test(str2)) {
     throw new Error("@supabase/auth-js: Expected parameter to be UUID but is not");
   }
 }
@@ -9572,10 +9572,10 @@ var GoTrueClient = class _GoTrueClient {
    */
   async resend(credentials) {
     try {
-      const endpoint = `${this.url}/resend`;
+      const endpoint2 = `${this.url}/resend`;
       if ("email" in credentials) {
         const { email, type, options } = credentials;
-        const { error } = await _request(this.fetch, "POST", endpoint, {
+        const { error } = await _request(this.fetch, "POST", endpoint2, {
           headers: this.headers,
           body: {
             email,
@@ -9587,7 +9587,7 @@ var GoTrueClient = class _GoTrueClient {
         return { data: { user: null, session: null }, error };
       } else if ("phone" in credentials) {
         const { phone, type, options } = credentials;
-        const { data, error } = await _request(this.fetch, "POST", endpoint, {
+        const { data, error } = await _request(this.fetch, "POST", endpoint2, {
           headers: this.headers,
           body: {
             phone,
@@ -11351,14 +11351,14 @@ async function hmacSign(secret, data) {
 __name(hmacSign, "hmacSign");
 function bufferToBase64Url(buf) {
   const bytes = new Uint8Array(buf);
-  let str = "";
-  for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
-  const b64 = btoa(str);
+  let str2 = "";
+  for (let i = 0; i < bytes.length; i++) str2 += String.fromCharCode(bytes[i]);
+  const b64 = btoa(str2);
   return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 __name(bufferToBase64Url, "bufferToBase64Url");
-function base64UrlEncode(str) {
-  const b64 = btoa(unescape(encodeURIComponent(str)));
+function base64UrlEncode(str2) {
+  const b64 = btoa(unescape(encodeURIComponent(str2)));
   return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 __name(base64UrlEncode, "base64UrlEncode");
@@ -12064,8 +12064,8 @@ async function hmacSign2(secret, data) {
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 __name(hmacSign2, "hmacSign");
-function b64url(str) {
-  const b64 = btoa(unescape(encodeURIComponent(str)));
+function b64url(str2) {
+  const b64 = btoa(unescape(encodeURIComponent(str2)));
   return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 __name(b64url, "b64url");
@@ -12610,12 +12610,388 @@ app3.get("/frontend/line/callback", async (c) => {
 });
 var auth_default2 = app3;
 
+// ../fronted/API/addresses/index.ts
+init_modules_watch_stub();
+var app4 = new Hono2({ strict: false });
+app4.use("*", cors({ origin: /* @__PURE__ */ __name((o) => o || "*", "origin"), allowHeaders: ["Content-Type"], allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"], credentials: true }));
+var ACCESS_COOKIE4 = "sb-access-token";
+var FRONT_SESSION_COOKIE2 = "front-session";
+function makeSupabase3(c, accessToken) {
+  const url = c.env.SUPABASE_URL;
+  const anon = c.env.SUPABASE_ANON_KEY;
+  if (!url || !anon) throw new Error("Missing SUPABASE env");
+  const headers = {};
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  return createClient(url, anon, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers } });
+}
+__name(makeSupabase3, "makeSupabase");
+async function verifyFrontSession(secret, token) {
+  if (!secret || !token) return null;
+  try {
+    const [p, sig] = String(token).split(".");
+    if (!p || !sig) return null;
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const got = await crypto.subtle.sign("HMAC", key, enc.encode(p));
+    const b = String.fromCharCode(...new Uint8Array(got));
+    const expect = btoa(b).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    if (expect !== sig) return null;
+    const b64 = p.replace(/-/g, "+").replace(/_/g, "/");
+    const pad = b64.length % 4 === 2 ? "==" : b64.length % 4 === 3 ? "=" : "";
+    const json = atob(b64 + pad);
+    const payload = JSON.parse(new TextDecoder().decode(new Uint8Array([...json].map((ch) => ch.charCodeAt(0)))));
+    if (!payload?.uid || !payload?.exp) return null;
+    if (payload.exp < Math.floor(Date.now() / 1e3)) return null;
+    return String(payload.uid);
+  } catch {
+    return null;
+  }
+}
+__name(verifyFrontSession, "verifyFrontSession");
+async function resolveUid(c) {
+  const access = getCookie(c, ACCESS_COOKIE4);
+  if (access) {
+    try {
+      const supa = makeSupabase3(c);
+      const { data } = await supa.auth.getUser(access);
+      if (data?.user?.id) return String(data.user.id);
+    } catch {
+    }
+  }
+  const uid = await verifyFrontSession(c.env.ADMIN_SESSION_SECRET, getCookie(c, FRONT_SESSION_COOKIE2));
+  return uid;
+}
+__name(resolveUid, "resolveUid");
+function str(v) {
+  return typeof v === "string" ? v.trim() : v === null || v === void 0 ? void 0 : String(v).trim();
+}
+__name(str, "str");
+function has(obj, k) {
+  return Object.prototype.hasOwnProperty.call(obj, k);
+}
+__name(has, "has");
+function pickHomeCreate(body) {
+  return {
+    alias: str(body.alias) ?? void 0,
+    receiver_name: str(body.receiver_name),
+    receiver_phone: str(body.receiver_phone),
+    zip3: str(body.zip3),
+    city: str(body.city),
+    district: str(body.district),
+    address_line: str(body.address_line)
+  };
+}
+__name(pickHomeCreate, "pickHomeCreate");
+function pickCvsCreate(body) {
+  return {
+    alias: str(body.alias) ?? void 0,
+    vendor: str(body.vendor),
+    store_id: str(body.store_id),
+    store_name: str(body.store_name),
+    store_address: str(body.store_address),
+    receiver_name: str(body.receiver_name) ?? void 0,
+    receiver_phone: str(body.receiver_phone) ?? void 0
+  };
+}
+__name(pickCvsCreate, "pickCvsCreate");
+function pickHomeUpdate(body) {
+  const next = {};
+  if (has(body, "alias")) next.alias = str(body.alias) ?? null;
+  if (has(body, "receiver_name")) next.receiver_name = str(body.receiver_name);
+  if (has(body, "receiver_phone")) next.receiver_phone = str(body.receiver_phone);
+  if (has(body, "zip3")) next.zip3 = str(body.zip3);
+  if (has(body, "city")) next.city = str(body.city);
+  if (has(body, "district")) next.district = str(body.district);
+  if (has(body, "address_line")) next.address_line = str(body.address_line);
+  return next;
+}
+__name(pickHomeUpdate, "pickHomeUpdate");
+function pickCvsUpdate(body) {
+  const next = {};
+  if (has(body, "alias")) next.alias = str(body.alias) ?? null;
+  if (has(body, "vendor")) next.vendor = str(body.vendor);
+  if (has(body, "store_id")) next.store_id = str(body.store_id);
+  if (has(body, "store_name")) next.store_name = str(body.store_name);
+  if (has(body, "store_address")) next.store_address = str(body.store_address);
+  if (has(body, "receiver_name")) next.receiver_name = str(body.receiver_name) ?? null;
+  if (has(body, "receiver_phone")) next.receiver_phone = str(body.receiver_phone) ?? null;
+  return next;
+}
+__name(pickCvsUpdate, "pickCvsUpdate");
+app4.get("/frontend/account/addresses", async (c) => {
+  try {
+    const uid = await resolveUid(c);
+    if (!uid) return c.json({ error: "Unauthorized" }, 401);
+    const type = String(c.req.query("type") || "").toLowerCase();
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    if (type === "home") {
+      const { data } = await svc.from("fronted_users_home_addresses").select("*").eq("user_id", uid).eq("is_archived", false).order("is_default", { ascending: false }).order("updated_at", { ascending: false });
+      return c.json(data || []);
+    } else if (type === "cvs") {
+      const { data } = await svc.from("fronted_users_cvs_addresses").select("*").eq("user_id", uid).eq("is_archived", false).order("is_default", { ascending: false }).order("updated_at", { ascending: false });
+      return c.json(data || []);
+    }
+    return c.json({ error: "Invalid type" }, 400);
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app4.post("/frontend/account/addresses", async (c) => {
+  try {
+    const uid = await resolveUid(c);
+    if (!uid) return c.json({ error: "Unauthorized" }, 401);
+    const body = await c.req.json().catch(() => ({}));
+    const type = String(body.type || "").toLowerCase();
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    if (type === "home") {
+      const v = pickHomeCreate(body);
+      if (!v.alias || !v.receiver_name || !v.receiver_phone || !/^09\d{8}$/.test(v.receiver_phone) || !v.zip3 || !v.city || !v.district || !v.address_line) {
+        return c.json({ error: "Invalid payload" }, 400);
+      }
+      const { count } = await svc.from("fronted_users_home_addresses").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("is_archived", false);
+      const is_default = !count || count === 0 || !!body.is_default;
+      if (is_default) {
+        await svc.from("fronted_users_home_addresses").update({ is_default: false }).eq("user_id", uid);
+      }
+      const { data, error } = await svc.from("fronted_users_home_addresses").insert([{ user_id: uid, ...v, is_default }]).select("*").single();
+      if (error) return c.json({ error: "Insert failed" }, 400);
+      return c.json(data);
+    } else if (type === "cvs") {
+      const v = pickCvsCreate(body);
+      if (!v.alias || !v.receiver_name || !v.receiver_phone || !/^09\d{8}$/.test(v.receiver_phone || "") || !v.vendor || !v.store_id || !v.store_name || !v.store_address) {
+        return c.json({ error: "Invalid payload" }, 400);
+      }
+      const { count } = await svc.from("fronted_users_cvs_addresses").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("is_archived", false);
+      const is_default = !count || count === 0 || !!body.is_default;
+      if (is_default) {
+        await svc.from("fronted_users_cvs_addresses").update({ is_default: false }).eq("user_id", uid);
+      }
+      const { data, error } = await svc.from("fronted_users_cvs_addresses").insert([{ user_id: uid, ...v, is_default }]).select("*").single();
+      if (error) return c.json({ error: "Insert failed" }, 400);
+      return c.json(data);
+    }
+    return c.json({ error: "Invalid type" }, 400);
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app4.patch("/frontend/account/addresses/:id", async (c) => {
+  try {
+    const uid = await resolveUid(c);
+    if (!uid) return c.json({ error: "Unauthorized" }, 401);
+    const id = c.req.param("id");
+    const body = await c.req.json().catch(() => ({}));
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const type = String(body.type || "").toLowerCase();
+    if (type === "home") {
+      const next = pickHomeUpdate(body);
+      if (body.is_default === true) {
+        await svc.from("fronted_users_home_addresses").update({ is_default: false }).eq("user_id", uid);
+        next.is_default = true;
+      }
+      if (has(next, "receiver_phone") && next.receiver_phone && !/^09\d{8}$/.test(next.receiver_phone)) {
+        return c.json({ error: "Invalid phone" }, 400);
+      }
+      const { data, error } = await svc.from("fronted_users_home_addresses").update(next).eq("id", id).eq("user_id", uid).select("*").single();
+      if (error) return c.json({ error: "Update failed" }, 400);
+      return c.json(data);
+    } else if (type === "cvs") {
+      const next = pickCvsUpdate(body);
+      if (body.is_default === true) {
+        await svc.from("fronted_users_cvs_addresses").update({ is_default: false }).eq("user_id", uid);
+        next.is_default = true;
+      }
+      if (has(next, "receiver_phone") && next.receiver_phone && !/^09\d{8}$/.test(next.receiver_phone)) {
+        return c.json({ error: "Invalid phone" }, 400);
+      }
+      const { data, error } = await svc.from("fronted_users_cvs_addresses").update(next).eq("id", id).eq("user_id", uid).select("*").single();
+      if (error) return c.json({ error: "Update failed" }, 400);
+      return c.json(data);
+    }
+    return c.json({ error: "Invalid type" }, 400);
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app4.delete("/frontend/account/addresses/:id", async (c) => {
+  try {
+    const uid = await resolveUid(c);
+    if (!uid) return c.json({ error: "Unauthorized" }, 401);
+    const id = c.req.param("id");
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const h = await svc.from("fronted_users_home_addresses").select("id,is_default").eq("id", id).eq("user_id", uid).maybeSingle();
+    if (!h.error && h.data) {
+      const wasDefault = !!h.data.is_default;
+      await svc.from("fronted_users_home_addresses").update({ is_archived: true, is_default: false }).eq("id", id).eq("user_id", uid);
+      if (wasDefault) {
+        const pick = await svc.from("fronted_users_home_addresses").select("id").eq("user_id", uid).eq("is_archived", false).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        if (!pick.error && pick.data) {
+          await svc.from("fronted_users_home_addresses").update({ is_default: true }).eq("id", pick.data.id);
+        }
+      }
+      return c.json({ ok: true });
+    }
+    const s = await svc.from("fronted_users_cvs_addresses").select("id,is_default").eq("id", id).eq("user_id", uid).maybeSingle();
+    if (!s.error && s.data) {
+      const wasDefault = !!s.data.is_default;
+      await svc.from("fronted_users_cvs_addresses").update({ is_archived: true, is_default: false }).eq("id", id).eq("user_id", uid);
+      if (wasDefault) {
+        const pick = await svc.from("fronted_users_cvs_addresses").select("id").eq("user_id", uid).eq("is_archived", false).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        if (!pick.error && pick.data) {
+          await svc.from("fronted_users_cvs_addresses").update({ is_default: true }).eq("id", pick.data.id);
+        }
+      }
+      return c.json({ ok: true });
+    }
+    return c.json({ error: "Not found" }, 404);
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app4.get("/frontend/account/zip/:zip3", async (c) => {
+  try {
+    const zip3 = (c.req.param("zip3") || "").toString().trim();
+    if (!/^\d{3}$/.test(zip3)) return c.json({ error: "Invalid zip3" }, 400);
+    const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
+    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const { data } = await svc.from("fronted_address_zip_map").select("zip3,city,district").eq("zip3", zip3).maybeSingle();
+    if (!data) return c.json({ error: "Not found" }, 404);
+    return c.json(data);
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+var addresses_default = app4;
+
+// ../fronted/API/ecpay/index.ts
+init_modules_watch_stub();
+var app5 = new Hono2({ strict: false });
+app5.use("*", cors({ origin: /* @__PURE__ */ __name((o) => o || "*", "origin"), allowHeaders: ["Content-Type"], allowMethods: ["GET", "POST", "OPTIONS"], credentials: true }));
+function endpoint(env) {
+  return env === "prod" ? "https://logistics.ecpay.com.tw/Express/map" : "https://logistics-stage.ecpay.com.tw/Express/map";
+}
+__name(endpoint, "endpoint");
+async function sha256HexUpper(s) {
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(s));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+__name(sha256HexUpper, "sha256HexUpper");
+function normalizeUrlEncoded(str2) {
+  return encodeURIComponent(str2).toLowerCase().replace(/%2d/g, "-").replace(/%5f/g, "_").replace(/%2e/g, ".").replace(/%21/g, "!").replace(/%2a/g, "*").replace(/%28/g, "(").replace(/%29/g, ")");
+}
+__name(normalizeUrlEncoded, "normalizeUrlEncoded");
+function buildCMV(params, key, iv) {
+  const sorted = Object.keys(params).filter((k) => params[k] !== void 0 && params[k] !== "").sort((a, b) => a.localeCompare(b, "en")).map((k) => `${k}=${params[k]}`).join("&");
+  const raw2 = `HashKey=${key}&${sorted}&HashIV=${iv}`;
+  return sha256HexUpper(normalizeUrlEncoded(raw2));
+}
+__name(buildCMV, "buildCMV");
+async function buildStartHtml(c) {
+  const env = c.env.ECPAY_ENV || "stage";
+  const action = endpoint(env);
+  const merchantId = c.env.ECPAY_LOGISTICS_MERCHANT_ID;
+  const key = c.env.ECPAY_HASH_KEY;
+  const iv = c.env.ECPAY_HASH_IV;
+  if (!merchantId || !key || !iv) return c.text("ECPay not configured", 500);
+  let base = "";
+  try {
+    const u = new URL(c.req.url);
+    base = u.origin;
+  } catch {
+  }
+  const debug = (c.req.query("debug") || "") === "1";
+  const returnURL = `${base}/frontend/account/ecpay/map/return${debug ? "?debug=1" : ""}`;
+  const subType = (c.req.query("subType") || "FAMIC2C").toString();
+  const payload = {
+    MerchantID: merchantId,
+    LogisticsType: "CVS",
+    LogisticsSubType: subType,
+    IsCollection: "N",
+    ServerReplyURL: returnURL,
+    ReturnURL: returnURL
+  };
+  const cmv = await buildCMV(payload, key, iv);
+  const html = `<!doctype html><html><body>
+    <form id="f" method="POST" action="${action}">
+      ${Object.entries(payload).map(([k, v]) => `<input type="hidden" name="${k}" value="${v}"/>`).join("")}
+      <input type="hidden" name="CheckMacValue" value="${cmv}" />
+    </form>
+    <script>document.getElementById('f').submit();<\/script>
+  </body></html>`;
+  return c.html(html);
+}
+__name(buildStartHtml, "buildStartHtml");
+app5.post("/frontend/account/ecpay/map/start", buildStartHtml);
+app5.get("/frontend/account/ecpay/map/start", buildStartHtml);
+app5.post("/frontend/account/ecpay/map/return", async (c) => {
+  const body = await c.req.parseBody();
+  const data = {
+    store_id: String(body["CVSStoreID"] || ""),
+    store_name: String(body["CVSStoreName"] || ""),
+    store_address: String(body["CVSAddress"] || ""),
+    sub_type: String(body["LogisticsSubType"] || "")
+  };
+  const payload = JSON.stringify(data).replace(/</g, "\\u003c");
+  const targetOrigin = c.env.FRONTEND_SITE_URL || "*";
+  const debug = (c.req.query("debug") || "") === "1";
+  if (debug) {
+    const html = `<!doctype html><html><head><meta charset="utf-8"/><title>ECPay Map Debug</title></head><body style="font-family: ui-sans-serif, system-ui; padding:16px;">
+      <h3>\u6536\u5230\u7DA0\u754C\u56DE\u50B3\u8CC7\u6599 (Debug)</h3>
+      <pre id="p" style="background:#f6f8fa;padding:12px;border-radius:6px;">${payload}</pre>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button id="send" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;">\u56DE\u50B3\u81F3 opener \u4E26\u95DC\u9589</button>
+      </div>
+      <script>
+        const payload = ${payload};
+        document.getElementById('send').onclick = () => {
+          try {
+              // \u4FDD\u7559\u672C\u8996\u7A97\u6240\u5728\u4F86\u6E90\u7684 localStorage\uFF08\u9664\u932F/\u5F8C\u63F4\uFF09
+              localStorage.setItem('ecpay_map_store', JSON.stringify(payload));
+              // \u76F4\u63A5\u5C07\u8CC7\u6599\u593E\u5E36\u56DE opener\uFF0C\u907F\u514D\u8DE8\u7DB2\u57DF localStorage \u7121\u6CD5\u5171\u4EAB
+              var __data = payload;
+              if (window.opener) { window.opener.postMessage({ type: 'ecpay:cvs:selected', data: __data }, '${targetOrigin}'); }
+          } catch (e) {}
+          window.close();
+        };
+      <\/script>
+    </body></html>`;
+    return c.html(html);
+  } else {
+    const html = `<!doctype html><html><body>
+      <script>
+        try {
+            // \u4FDD\u7559\u672C\u8996\u7A97\u6240\u5728\u4F86\u6E90\u7684 localStorage\uFF08\u9664\u932F/\u5F8C\u63F4\uFF09
+            localStorage.setItem('ecpay_map_store', '${payload}');
+            // \u76F4\u63A5\u5C07\u8CC7\u6599\u593E\u5E36\u56DE opener\uFF0C\u907F\u514D\u8DE8\u7DB2\u57DF localStorage \u7121\u6CD5\u5171\u4EAB
+            var __data = JSON.parse('${payload}');
+            if (window.opener) { window.opener.postMessage({ type: 'ecpay:cvs:selected', data: __data }, '${targetOrigin}'); }
+        } catch (e) {}
+        window.close();
+      <\/script>
+    </body></html>`;
+    return c.html(html);
+  }
+});
+var ecpay_default = app5;
+
 // ../backend/API/index.ts
-var app4 = new Hono2();
-app4.route("/", auth_default);
-app4.route("/", admin_default);
-app4.route("/", auth_default2);
-var API_default = app4;
+var app6 = new Hono2();
+app6.route("/", auth_default);
+app6.route("/", admin_default);
+app6.route("/", auth_default2);
+app6.route("/", addresses_default);
+app6.route("/", ecpay_default);
+var API_default = app6;
 
 // ../node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
 init_modules_watch_stub();
@@ -12660,7 +13036,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-1sWKvJ/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-r8bwSO/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -12693,7 +13069,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-1sWKvJ/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-r8bwSO/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

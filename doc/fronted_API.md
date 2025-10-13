@@ -1,4 +1,31 @@
-# 前台登入與註冊 API（frontend_auth）
+# 前台 API 文件補充：地址簿
+
+## 地址簿 API（前台）
+
+- GET /frontend/account/addresses?type=home|cvs
+  - 說明：取得使用者的宅配或超商地址清單（未封存），預設在前、更新時間新者在前。
+  - 回傳：陣列（地址物件）
+
+- POST /frontend/account/addresses
+  - 說明：新增一筆地址。首筆同類型自動為預設；若傳 is_default=true，伺服器會自動取消同類型其他預設。
+  - 請求（home）：{ type:'home', alias?, receiver_name, receiver_phone, zip3, city, district, address_line, is_default? }
+  - 請求（cvs）：{ type:'cvs', alias?, vendor(UNIMARTC2C|FAMIC2C|HILIFEC2C|OKMARTC2C), store_id, store_name, store_address, is_default? }
+
+- PATCH /frontend/account/addresses/:id
+  - 說明：更新一筆地址；可設定 is_default。
+  - 請求欄位同 POST，各欄位可選。
+
+- DELETE /frontend/account/addresses/:id
+  - 說明：封存（軟刪除）地址。若刪除的是預設，伺服器會自動將同類型中「最近更新」的一筆設為新預設（若存在）。
+
+- GET /frontend/account/zip/:zip3
+  - 說明：以 3 碼郵遞區號查城市與行政區對照。
+  - 回傳：{ zip3, city, district } 或 404。
+
+- POST /frontend/account/ecpay/map/start?subType=FAMIC2C|UNIMARTC2C|HILIFEC2C|OKMARTC2C
+  - 說明：回傳自動送出的表單 HTML，開啟綠界電子地圖。選取完成後會由 /frontend/account/ecpay/map/return 儲存至 localStorage 並 window.postMessage 通知 opener。
+
+## 前台登入與註冊 API（frontend_auth）
 
 本節描述前台使用者的認證 API，均以 Cookie 驗證（HttpOnly, SameSite=Lax），前端請求需帶 credentials: 'include'。
 

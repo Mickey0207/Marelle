@@ -1,4 +1,46 @@
-# 前台資料庫結構（frontend）
+# 前台資料庫文件補充
+
+## 資料表：public.fronted_address_zip_map
+
+- 欄位：
+  - zip3 (text, PK)：三碼郵遞區號
+  - city (text)：縣市名
+  - district (text)：行政區名
+
+- 用途：提供郵遞區號對應城市/行政區之查找。
+
+## 資料表：public.fronted_users_home_addresses
+
+- 欄位（重點）：
+  - id (uuid, PK)
+  - user_id (uuid, FK -> auth.users)
+  - alias (text, nullable)：使用者自訂別稱；同用戶同表唯一
+  - is_default (boolean)：同用戶同表僅能存在一筆 true（透過部分唯一索引）
+  - receiver_name (text)、receiver_phone (text)
+  - zip3 (text, FK -> fronted_address_zip_map.zip3)、city、district、address_line (text)
+  - is_archived (boolean)：軟刪除
+  - created_at/updated_at：更新觸發器維護
+
+- 關聯：user_id -> auth.users；zip3 -> fronted_address_zip_map
+
+## 資料表：public.fronted_users_cvs_addresses
+
+- 欄位（重點）：
+  - id (uuid, PK)
+  - user_id (uuid, FK -> auth.users)
+  - alias (text, nullable)：使用者自訂別稱；同用戶同表唯一
+  - is_default (boolean)：同用戶同表僅能存在一筆 true
+  - vendor (text enum)：UNIMARTC2C|FAMIC2C|HILIFEC2C|OKMARTC2C
+  - store_id (text)、store_name (text)、store_address (text)
+  - receiver_name/receiver_phone (optional)
+  - is_archived (boolean)、created_at/updated_at
+
+- 關聯：user_id -> auth.users
+
+## 備註
+
+- RLS 已啟用，僅本人可存取與操作。
+- 刪除預設地址時，後端會自動選擇同類型中最近更新的一筆作為新預設（若存在）。
 
 ## 資料表：fronted_users
 
