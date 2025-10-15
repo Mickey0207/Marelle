@@ -137,8 +137,11 @@ const ProductDetail = () => {
               product={{
                 ...product,
                 price: variantState.leaf?.payload?.price ?? product.price,
+                // 修正：未完成變體選擇時，避免顯示缺貨，改為維持可購買狀態並提示需完成規格
                 inStock: (Array.isArray(product.variants) && product.variants.length > 0)
-                  ? (variantState.leaf?.payload?.stock > 0)
+                  ? (variantState.isComplete
+                      ? ((variantState.leaf?.payload?.stock ?? 0) > 0)
+                      : true)
                   : product.inStock,
               }}
               onAddToCart={handleAddToCart}

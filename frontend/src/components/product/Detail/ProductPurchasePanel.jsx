@@ -1,19 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { formatPrice } from '../../../../external_mock/data/format.js';
 import { getStockStatus } from '../../../../external_mock/data/stockStatus.js';
+import SuccessModal from '../../ui/SuccessModal.jsx';
 
 const ProductPurchasePanel = ({ product, onAddToCart, addToCartDisabled, variantSelector = null }) => {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const stock = getStockStatus(product.inStock);
+
+  // 顯示大型成功彈窗
+  const openSuccessModal = () => setShowSuccessModal(true);
 
   const handleAdd = () => {
     if (!product.inStock || addToCartDisabled) return;
     onAddToCart(quantity);
     gsap.fromTo('.add-to-cart-btn', { scale: 1 }, { scale: 1.05, duration: 0.1, yoyo: true, repeat: 1 });
+    openSuccessModal();
   };
+
+  // 成功彈窗自動關閉（3秒）
+  useEffect(() => {
+    if (!showSuccessModal) return;
+    const t = setTimeout(() => setShowSuccessModal(false), 3000);
+    return () => clearTimeout(t);
+  }, [showSuccessModal]);
 
   return (
     <div className="space-y-6">
@@ -97,6 +110,14 @@ const ProductPurchasePanel = ({ product, onAddToCart, addToCartDisabled, variant
           >{isFavorite ? '已加入收藏' : '加入收藏'}</button>
         </div>
       </div>
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="加入成功"
+        message="已將商品加入購物車。"
+        autoCloseMs={3000}
+        size="max-w-xl"
+      />
     </div>
   );
 };

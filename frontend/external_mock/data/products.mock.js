@@ -279,6 +279,12 @@ generatedProducts.forEach((p) => {
   }
 });
 
+// 確保 146notebook 不會被標成缺貨（測試多規格加入購物車用）
+const forceInStock = generatedProducts.find(p => p.urlKey === '146notebook');
+if (forceInStock) {
+  forceInStock.inStock = true;
+}
+
 export const mockProducts = generatedProducts;
 
 // 根據分類篩選產品

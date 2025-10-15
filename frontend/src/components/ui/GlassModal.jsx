@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
 /**
@@ -18,12 +19,13 @@ const GlassModal = ({
   children, 
   size = 'max-w-4xl',
   showCloseButton = true,
-  headerClass = 'bg-gradient-to-r from-[#cc824d]/80 to-[#b3723f]/80'
+  headerClass = 'bg-gradient-to-r from-[#cc824d]/80 to-[#b3723f]/80',
+  fullScreen = false,
 }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 glass-modal-root">
       {/* 玻璃態背景遮罩 */}
       <div 
         className="absolute inset-0 bg-white/20 backdrop-blur-md"
@@ -31,7 +33,7 @@ const GlassModal = ({
       ></div>
       
       {/* 玻璃態彈出視窗 */}
-      <div className={`relative ${size} w-full max-h-[90vh] overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl`}>
+      <div className={`relative ${fullScreen ? 'w-full h-full rounded-none' : `${size} w-full max-h-[90vh] rounded-3xl`} overflow-hidden bg-white/80 backdrop-blur-xl border border-white/30 shadow-2xl`}>
         {/* 標題列 */}
         {title && (
           <div className={`${headerClass} backdrop-blur-sm text-white px-6 py-4 border-b border-white/20`}>
@@ -50,12 +52,15 @@ const GlassModal = ({
         )}
         
         {/* 內容區域 */}
-        <div className="relative overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className={`relative overflow-y-auto ${fullScreen ? 'h-full' : 'max-h-[calc(90vh-80px)]'}`}>
           {children}
         </div>
       </div>
     </div>
   );
+
+  // 使用 Portal 掛載到 body，避免被父層 transform/overflow 影響
+  return createPortal(modalContent, document.body);
 };
 
 export default GlassModal;

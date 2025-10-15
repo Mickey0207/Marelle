@@ -27,10 +27,26 @@ function VariantTreeSelector({
 }) {
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // 扁平化首層：若第一層僅為單一群組包裹節點（無 payload、有 children），則直接下沉至其 children
+  const rootData = useMemo(() => {
+    let nodes = Array.isArray(data) ? data : [];
+    while (Array.isArray(nodes) && nodes.length === 1) {
+      const n = nodes[0];
+      const hasPayload = n && n.payload && Object.keys(n.payload).length > 0;
+      const hasChildren = n && Array.isArray(n.children) && n.children.length > 0;
+      if (!hasPayload && hasChildren) {
+        nodes = n.children;
+        continue;
+      }
+      break;
+    }
+    return nodes;
+  }, [data]);
+
   // 計算每一層可選項目
   const levels = useMemo(() => {
     const result = [];
-    let currentLevel = data;
+    let currentLevel = rootData;
     result.push(currentLevel);
     for (let lvl = 1; lvl < maxDepth; lvl++) {
       const prevSelected = currentLevel.find(n => n.id === selectedIds[lvl - 1]);
@@ -40,12 +56,12 @@ function VariantTreeSelector({
       currentLevel = children;
     }
     return result;
-  }, [data, selectedIds, maxDepth]);
+  }, [rootData, selectedIds, maxDepth]);
 
   // 計算當前 path 與是否完成
   const selectionPath = useMemo(() => {
     const path = [];
-    let currentLevel = data;
+    let currentLevel = rootData;
     for (let lvl = 0; lvl < selectedIds.length; lvl++) {
       const node = currentLevel.find(n => n.id === selectedIds[lvl]);
       if (!node) break;
@@ -54,7 +70,7 @@ function VariantTreeSelector({
       currentLevel = node.children;
     }
     return path;
-  }, [data, selectedIds]);
+  }, [rootData, selectedIds]);
 
   const leaf = selectionPath[selectionPath.length - 1];
   const isComplete = !!leaf && (!leaf.children || leaf.children.length === 0);
