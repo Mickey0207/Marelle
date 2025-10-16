@@ -8,6 +8,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { formatPrice } from "../../../external_mock/data/format.js";
 import { useCart } from "../../../external_mock/state/cart.jsx";
+import { CVS_BRANDS } from "../../../external_mock/data/addresses.js";
+import SearchableSelect from "../../components/ui/SearchableSelect.jsx";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -18,11 +20,11 @@ const Checkout = () => {
 
   const [shippingInfo, setShippingInfo] = useState({
     fullName: '',
-    email: '',
     phone: '',
-    address: '',
+    zip3: '',
     city: '',
-    zipCode: '',
+    district: '',
+    address: '',
     notes: ''
   });
 
@@ -34,11 +36,56 @@ const Checkout = () => {
     cardName: ''
   });
 
+  // 配送方式與地址簿/超商資訊
+  const [shippingMethod, setShippingMethod] = useState('home'); // 'home' | 'cvs'
+  const [homeAddresses, setHomeAddresses] = useState([]);
+  const [cvsAddresses, setCvsAddresses] = useState([]);
+  const [selectedHomeAddressId, setSelectedHomeAddressId] = useState('');
+  const [selectedCvsAddressId, setSelectedCvsAddressId] = useState('');
+  const [cvsInfo, setCvsInfo] = useState({ brand: '', storeName: '', storeId: '', storeAddress: '' });
+
   useEffect(() => {
     if (cartItems.length === 0 && !orderComplete) {
       navigate('/cart');
     }
   }, [cartItems, navigate, orderComplete]);
+
+  // 後端 API：載入地址簿（宅配 / 超商）
+  useEffect(() => {
+    let cancelled = false;
+    async function loadBooks() {
+      try {
+        const [h, s] = await Promise.all([
+          fetch('/frontend/account/addresses?type=home', { credentials: 'include' }),
+          fetch('/frontend/account/addresses?type=cvs', { credentials: 'include' })
+        ]);
+        if (!cancelled) {
+          if (h.ok) { const d = await h.json(); setHomeAddresses(Array.isArray(d) ? d : []); }
+          if (s.ok) { const d2 = await s.json(); setCvsAddresses(Array.isArray(d2) ? d2 : []); }
+        }
+      } catch {}
+    }
+    loadBooks();
+    return () => { cancelled = true; };
+  }, []);
+
+  // 郵遞區號 zip3 自動帶入 城市/地區
+  useEffect(() => {
+    const zip3 = String(shippingInfo.zip3 || '').trim();
+    let active = true;
+    async function fetchZip() {
+      try {
+        if (!/^\d{3}$/.test(zip3)) return;
+        const res = await fetch(`/frontend/account/zip/${zip3}`, { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active || !data) return;
+        setShippingInfo(prev => ({ ...prev, city: data.city || prev.city, district: data.district || prev.district }));
+      } catch {}
+    }
+    fetchZip();
+    return () => { active = false; };
+  }, [shippingInfo.zip3]);
 
   useEffect(() => {
     // Animate checkout steps
@@ -68,12 +115,16 @@ const Checkout = () => {
 
   const validateStep = (step) => {
     if (step === 1) {
-      return shippingInfo.fullName && 
-             shippingInfo.email && 
-             shippingInfo.phone && 
-             shippingInfo.address && 
-             shippingInfo.city && 
-             shippingInfo.zipCode;
+      if (shippingMethod === 'home') {
+        return shippingInfo.fullName && 
+               shippingInfo.phone && 
+               shippingInfo.zip3 && 
+               shippingInfo.city && 
+               shippingInfo.district &&
+               shippingInfo.address;
+      }
+      // 超商取貨：需姓名、電話、品牌與門市名稱
+      return shippingInfo.fullName && shippingInfo.phone && cvsInfo.brand && cvsInfo.storeName;
     } else if (step === 2) {
       if (paymentInfo.method === 'credit-card') {
         return paymentInfo.cardNumber && 
@@ -97,6 +148,36 @@ const Checkout = () => {
   const handleBack = () => {
     setCurrentStep(prev => prev - 1);
   };
+
+  // 綠界選店（新視窗）
+  function openCvsMap(subType = 'FAMIC2C') {
+    const w = window.open('', 'ecpay_map', 'width=1024,height=768');
+    if (w) w.location.href = `/frontend/account/ecpay/map/start?subType=${encodeURIComponent(subType)}`;
+  }
+
+  // 接收選店回傳並填入 cvsInfo
+  useEffect(() => {
+    function onMsg(e) {
+      if (!e?.data || e.data.type !== 'ecpay:cvs:selected') return;
+      try {
+        const s = e.data?.data || (function(){
+          const raw = localStorage.getItem('ecpay_map_store');
+          return raw ? JSON.parse(raw) : null;
+        })();
+        if (!s) return;
+        // 將 LogisticsSubType 作為品牌 value
+        setCvsInfo(prev => ({
+          ...prev,
+          brand: s.sub_type || prev.brand || '',
+          storeId: s.store_id || prev.storeId || '',
+          storeName: s.store_name || prev.storeName || '',
+          storeAddress: s.store_address || prev.storeAddress || '',
+        }));
+      } catch {}
+    }
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
 
   const handleSubmitOrder = async () => {
     setIsProcessing(true);
@@ -157,39 +238,42 @@ const Checkout = () => {
   return (
     <div className="min-h-screen pt-16 xs:pt-18 sm:pt-20 md:pt-20 lg:pt-20 pb-8 xs:pb-10 sm:pb-12 md:pb-12 lg:pb-14 xl:pb-16" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%)'}}>
   <div className="w-full px-4 xs:px-6 sm:px-8 md:px-10 lg:px-12 xl:px-16">
-        {/* Header */}
-        <div className="mb-6 xs:mb-7 sm:mb-8 md:mb-8 lg:mb-10">
-          <h1 className="text-2xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-bold text-primary-btn font-chinese">
-            結帳
-          </h1>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="mb-8 xs:mb-10 sm:mb-12 md:mb-12 lg:mb-14">
-          <div className="flex items-center justify-between">
-            {steps.map((step, index) => (
-              <div key={step.number} className="flex items-center flex-1">
-                <div className={`w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-10 md:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center text-xs xs:text-sm sm:text-base md:text-base font-semibold ${
-                  step.completed 
-                    ? 'bg-green-500 text-white' 
-                    : step.active 
-                    ? 'bg-primary-btn text-white' 
-                    : 'bg-gray-200 text-gray-600'
-                }`}>
-                  {step.completed ? '✓' : step.number}
-                </div>
-                <span className={`ml-1 xs:ml-2 sm:ml-2 md:ml-2 text-[10px] xs:text-xs sm:text-sm md:text-base font-medium font-chinese ${
-                  step.active ? 'text-primary-btn' : 'text-gray-600'
-                }`}>
-                  {step.title}
-                </span>
-                {index < steps.length - 1 && (
-                  <div className={`flex-1 h-0.5 xs:h-0.5 sm:h-1 md:h-1 mx-2 xs:mx-3 sm:mx-4 md:mx-4 ${
-                    step.completed ? 'bg-green-500' : 'bg-gray-200'
-                  }`}></div>
-                )}
+        {/* Header with Progress Steps */}
+        <div className="mt-6 xs:mt-7 sm:mt-8 md:mt-10 lg:mt-10 mb-6 xs:mb-7 sm:mb-8 md:mb-8 lg:mb-10">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+            {/* Title */}
+            <h1 className="text-2xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-3xl xl:text-4xl font-bold text-primary-btn font-chinese whitespace-nowrap flex-shrink-0">
+              結帳
+            </h1>
+            
+            {/* Progress Steps */}
+            <div className="flex-1 lg:min-w-[500px] xl:min-w-[600px]">
+              <div className="flex items-center justify-between">
+                {steps.map((step, index) => (
+                  <div key={step.number} className="flex items-center flex-1">
+                    <div className={`w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-10 md:h-10 lg:w-10 lg:h-10 rounded-full flex items-center justify-center text-xs xs:text-sm sm:text-base md:text-base font-semibold flex-shrink-0 ${
+                      step.completed 
+                        ? 'bg-green-500 text-white' 
+                        : step.active 
+                        ? 'bg-primary-btn text-white' 
+                        : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {step.completed ? '✓' : step.number}
+                    </div>
+                    <span className={`ml-1.5 xs:ml-2 sm:ml-2 md:ml-2 text-[11px] xs:text-xs sm:text-sm md:text-sm font-medium font-chinese whitespace-nowrap ${
+                      step.active ? 'text-primary-btn' : 'text-gray-600'
+                    }`}>
+                      {step.title}
+                    </span>
+                    {index < steps.length - 1 && (
+                      <div className={`flex-1 h-0.5 xs:h-0.5 sm:h-1 md:h-1 mx-2 xs:mx-2 sm:mx-3 md:mx-4 min-w-[20px] ${
+                        step.completed ? 'bg-green-500' : 'bg-gray-200'
+                      }`}></div>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
@@ -202,8 +286,100 @@ const Checkout = () => {
                 <h2 className="text-lg xs:text-lg sm:text-xl md:text-xl lg:text-2xl font-bold text-gray-900 mb-4 xs:mb-5 sm:mb-6 md:mb-6 font-chinese">
                   配送資訊
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 xs:gap-3 sm:gap-4 md:gap-4 lg:gap-5">
-                  <div className="md:col-span-2">
+                {/* 配送方式切換 */}
+                <div className="mb-4 xs:mb-5 sm:mb-6 md:mb-6">
+                  <div className="inline-flex rounded-lg overflow-hidden border">
+                    <button
+                      type="button"
+                      className={`px-4 py-2 text-sm font-chinese ${shippingMethod === 'home' ? 'bg-primary-btn text-white' : 'bg-white text-gray-700'}`}
+                      onClick={() => setShippingMethod('home')}
+                    >
+                      宅配到府
+                    </button>
+                    <button
+                      type="button"
+                      className={`px-4 py-2 text-sm font-chinese border-l ${shippingMethod === 'cvs' ? 'bg-primary-btn text-white' : 'bg-white text-gray-700'}`}
+                      onClick={() => setShippingMethod('cvs')}
+                    >
+                      超商取貨
+                    </button>
+                  </div>
+                </div>
+
+                {/* 地址簿下拉（宅配，保留欄位可覆寫） */}
+                {shippingMethod === 'home' && (
+                  <div className="mb-4">
+                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">從地址簿選擇</label>
+                    <SearchableSelect
+                      options={[
+                        { value: '', label: '不套用（手動填寫）' },
+                        ...homeAddresses.map(a => ({
+                          value: a.id,
+                          label: `${a.alias || a.receiver_name || ''}｜${a.city}${a.district}${a.address_line}`
+                        }))
+                      ]}
+                      value={selectedHomeAddressId}
+                      onChange={(id) => {
+                        setSelectedHomeAddressId(id);
+                        const a = homeAddresses.find(x => x.id === id);
+                        if (!a) return;
+                        setShippingInfo(prev => ({
+                          ...prev,
+                          fullName: a.receiver_name || prev.fullName,
+                          phone: a.receiver_phone || prev.phone,
+                          zip3: a.zip3 || prev.zip3,
+                          city: a.city || prev.city,
+                          district: a.district || prev.district,
+                          address: a.address_line || prev.address,
+                        }));
+                      }}
+                      placeholder="請選擇地址"
+                      searchPlaceholder="搜尋地址..."
+                      allowClear={true}
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {/* 超商地址簿（放在最前面） */}
+                  {shippingMethod === 'cvs' && (
+                    <div>
+                      <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">從地址簿選擇</label>
+                      <SearchableSelect
+                        options={[
+                          { value: '', label: '不套用（手動填寫）' },
+                          ...cvsAddresses.map(a => ({
+                            value: a.id,
+                            label: `${a.alias || a.store_name || ''}｜${a.vendor}`
+                          }))
+                        ]}
+                        value={selectedCvsAddressId}
+                        onChange={(id) => {
+                          setSelectedCvsAddressId(id);
+                          const a = cvsAddresses.find(x => x.id === id);
+                          if (!a) return;
+                          setShippingInfo(prev => ({
+                            ...prev,
+                            fullName: a.receiver_name || prev.fullName,
+                            phone: a.receiver_phone || prev.phone,
+                          }));
+                          setCvsInfo(prev => ({
+                            ...prev,
+                            brand: a.vendor || prev.brand,
+                            storeId: a.store_id || prev.storeId,
+                            storeName: a.store_name || prev.storeName,
+                            storeAddress: a.store_address || prev.storeAddress,
+                          }));
+                        }}
+                        placeholder="請選擇超商地址"
+                        searchPlaceholder="搜尋門市..."
+                        allowClear={true}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* 姓名欄位 */}
+                  <div>
                     <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       姓名 *
                     </label>
@@ -211,24 +387,12 @@ const Checkout = () => {
                       type="text"
                       value={shippingInfo.fullName}
                       onChange={(e) => handleInputChange('shipping', 'fullName', e.target.value)}
-                      className="input-glass font-chinese"
+                      className="input-glass font-chinese w-full"
                       placeholder="請輸入您的姓名"
                     />
                   </div>
                   
-                  <div>
-                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
-                      電子郵件 *
-                    </label>
-                    <input
-                      type="email"
-                      value={shippingInfo.email}
-                      onChange={(e) => handleInputChange('shipping', 'email', e.target.value)}
-                      className="input-glass"
-                      placeholder="example@email.com"
-                    />
-                  </div>
-                  
+                  {/* 電話欄位 */}
                   <div>
                     <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       電話 *
@@ -237,58 +401,132 @@ const Checkout = () => {
                       type="tel"
                       value={shippingInfo.phone}
                       onChange={(e) => handleInputChange('shipping', 'phone', e.target.value)}
-                      className="input-glass"
+                      className="input-glass w-full"
                       placeholder="09XX-XXX-XXX"
                     />
                   </div>
                   
-                  <div className="md:col-span-2">
-                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
-                      地址 *
-                    </label>
-                    <input
-                      type="text"
-                      value={shippingInfo.address}
-                      onChange={(e) => handleInputChange('shipping', 'address', e.target.value)}
-                      className="input-glass font-chinese"
-                      placeholder="請輸入詳細地址"
-                    />
-                  </div>
+                  {/* 宅配專屬欄位 */}
+                  {shippingMethod === 'home' && (
+                    <>
+                      {/* 郵遞區號、城市、地區（三欄並排） */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">郵遞區號 *</label>
+                          <input
+                            type="text"
+                            value={shippingInfo.zip3}
+                            onChange={(e) => handleInputChange('shipping', 'zip3', e.target.value)}
+                            className="input-glass w-full"
+                            placeholder="100"
+                            maxLength="3"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">城市 *</label>
+                          <input
+                            type="text"
+                            value={shippingInfo.city}
+                            onChange={(e) => handleInputChange('shipping', 'city', e.target.value)}
+                            className="input-glass font-chinese w-full"
+                            placeholder="台北市"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">地區 *</label>
+                          <input
+                            type="text"
+                            value={shippingInfo.district}
+                            onChange={(e) => handleInputChange('shipping', 'district', e.target.value)}
+                            className="input-glass font-chinese w-full"
+                            placeholder="中正區"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* 詳細地址 */}
+                      <div>
+                        <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
+                          詳細地址 *
+                        </label>
+                        <input
+                          type="text"
+                          value={shippingInfo.address}
+                          onChange={(e) => handleInputChange('shipping', 'address', e.target.value)}
+                          className="input-glass font-chinese w-full"
+                          placeholder="請輸入詳細地址"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* 超商取貨專屬欄位 */}
+                  {shippingMethod === 'cvs' && (
+                    <>
+                      {/* 超商品牌與門市選擇（兩欄並排） */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">超商品牌 *</label>
+                          <SearchableSelect
+                            options={[
+                              { value: '', label: '請選擇' },
+                              ...CVS_BRANDS.map(b => ({
+                                value: b.value,
+                                label: b.label
+                              }))
+                            ]}
+                            value={cvsInfo.brand}
+                            onChange={(brand) => setCvsInfo(prev => ({ ...prev, brand }))}
+                            placeholder="請選擇超商品牌"
+                            searchPlaceholder="搜尋超商..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">門市代碼</label>
+                          <input
+                            type="text"
+                            value={cvsInfo.storeId}
+                            onChange={(e) => setCvsInfo(prev => ({ ...prev, storeId: e.target.value }))}
+                            className="input-glass w-full"
+                            placeholder="例如：123456"
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* 門市名稱與選擇按鈕 */}
+                      <div>
+                        <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">門市名稱 *</label>
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            value={cvsInfo.storeName}
+                            onChange={(e) => setCvsInfo(prev => ({ ...prev, storeName: e.target.value }))}
+                            className="input-glass flex-1"
+                            placeholder="請輸入或選擇門市"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => openCvsMap(cvsInfo.brand || 'FAMIC2C')}
+                            className="px-4 py-2 rounded-md text-sm border font-chinese whitespace-nowrap"
+                            style={{ borderColor: '#E5E7EB', color: '#666666' }}
+                          >
+                            選擇門市
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                   
+                  {/* 備註欄位（兩種模式共用） */}
                   <div>
-                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
-                      城市 *
-                    </label>
-                    <input
-                      type="text"
-                      value={shippingInfo.city}
-                      onChange={(e) => handleInputChange('shipping', 'city', e.target.value)}
-                      className="input-glass font-chinese"
-                      placeholder="台北市"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
-                      郵遞區號 *
-                    </label>
-                    <input
-                      type="text"
-                      value={shippingInfo.zipCode}
-                      onChange={(e) => handleInputChange('shipping', 'zipCode', e.target.value)}
-                      className="input-glass"
-                      placeholder="100"
-                    />
-                  </div>
-                  
-                  <div className="md:col-span-2">
                     <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
                       備註
                     </label>
                     <textarea
                       value={shippingInfo.notes}
                       onChange={(e) => handleInputChange('shipping', 'notes', e.target.value)}
-                      className="input-glass font-chinese"
+                      className="input-glass font-chinese w-full"
                       rows="3"
                       placeholder="配送備註（選填）"
                     ></textarea>
@@ -421,13 +659,23 @@ const Checkout = () => {
                 {/* Shipping & Payment Summary */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xs:gap-5 sm:gap-6 md:gap-6 mb-6 xs:mb-7 sm:mb-8 md:mb-8">
                   <div className="p-3 xs:p-3 sm:p-4 md:p-4 bg-white/50 rounded-lg">
-                    <h3 className="text-sm xs:text-sm sm:text-base md:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">配送地址</h3>
-                    <p className="text-xs xs:text-xs sm:text-sm md:text-sm text-gray-600 font-chinese">
-                      {shippingInfo.fullName}<br />
-                      {shippingInfo.address}<br />
-                      {shippingInfo.city} {shippingInfo.zipCode}<br />
-                      {shippingInfo.phone}
-                    </p>
+                    <h3 className="text-sm xs:text-sm sm:text-base md:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">配送資訊</h3>
+                    {shippingMethod === 'home' ? (
+                      <p className="text-xs xs:text-xs sm:text-sm md:text-sm text-gray-600 font-chinese">
+                        {shippingInfo.fullName}<br />
+                        {shippingInfo.zip3} {shippingInfo.city} {shippingInfo.district}<br />
+                        {shippingInfo.address}<br />
+                        {shippingInfo.phone}
+                      </p>
+                    ) : (
+                      <p className="text-xs xs:text-xs sm:text-sm md:text-sm text-gray-600 font-chinese">
+                        {shippingInfo.fullName}（超商取貨）<br />
+                        {cvsInfo.brand && (<span>品牌：{CVS_BRANDS.find(b => b.value === cvsInfo.brand)?.label || cvsInfo.brand}<br /></span>)}
+                        門市：{cvsInfo.storeName}{cvsInfo.storeId ? `（${cvsInfo.storeId}）` : ''}<br />
+                        地址：{cvsInfo.storeAddress || '-'}<br />
+                        電話：{shippingInfo.phone}
+                      </p>
+                    )}
                   </div>
                   
                   <div className="p-3 xs:p-3 sm:p-4 md:p-4 bg-white/50 rounded-lg">

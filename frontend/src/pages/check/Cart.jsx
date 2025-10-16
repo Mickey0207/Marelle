@@ -39,6 +39,26 @@ const Cart = () => {
     );
   }, [cartItems]);
 
+  // 取得選擇的變體路徑（例如：黑 / A5 / 無格 / 軟皮 / 單本）
+  const getVariantPathLabels = (item) => {
+    if (!item || !item.variant || !Array.isArray(item.variants) || item.variants.length === 0) return null;
+    const targetId = item.variant.id;
+
+    const dfs = (nodes, path) => {
+      for (const node of nodes) {
+        const nextPath = [...path, node.label];
+        if (node.id === targetId) return nextPath;
+        if (Array.isArray(node.children) && node.children.length > 0) {
+          const found = dfs(node.children, nextPath);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    return dfs(item.variants, []) || null;
+  };
+
   const handleQuantityChange = (productId, newQuantity) => {
     if (newQuantity < 1) {
       removeFromCart(productId);
@@ -60,9 +80,12 @@ const Cart = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen pt-20 xs:pt-22 sm:pt-24 md:pt-24 flex items-center justify-center bg-lofi px-4">
+      <div
+        className="min-h-screen pt-20 xs:pt-22 sm:pt-24 md:pt-24 flex items-center justify-center px-4"
+        style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #FEFDFB 100%)' }}
+      >
         <div className="text-center max-w-xs xs:max-w-sm sm:max-w-md md:max-w-md mx-auto">
-          <div className="bg-white/80 border border-gray-200 p-8 xs:p-10 sm:p-12 md:p-12 rounded-xl xs:rounded-xl sm:rounded-2xl md:rounded-2xl">
+          <div className="glass p-8 xs:p-10 sm:p-12 md:p-12 rounded-xl xs:rounded-xl sm:rounded-2xl md:rounded-2xl">
             <ShoppingBagIcon className="w-12 xs:w-14 sm:w-16 md:w-16 h-12 xs:h-14 sm:h-16 md:h-16 text-gray-400 mx-auto mb-4 xs:mb-5 sm:mb-6 md:mb-6" />
             <h2 className="text-xl xs:text-2xl sm:text-2xl md:text-2xl font-bold text-lofi mb-3 xs:mb-4 sm:mb-4 md:mb-4 font-chinese">
               購物車是空的
@@ -134,6 +157,22 @@ const Cart = () => {
                         <p className="text-xs xs:text-xs sm:text-sm md:text-sm text-apricot-600 font-chinese mt-1">
                           {item.category}
                         </p>
+                        {/* 顯示使用者選擇的規格變體 */}
+                        {(() => {
+                          const path = getVariantPathLabels(item);
+                          const sku = item?.variant?.payload?.sku;
+                          if (!path && !sku) return null;
+                          return (
+                            <div className="mt-1 text-[11px] xs:text-xs sm:text-sm md:text-sm text-gray-600 font-chinese">
+                              {path && (
+                                <span className="inline-block">規格：{path.join(' / ')}</span>
+                              )}
+                              {sku && (
+                                <span className="inline-block ml-2 text-gray-400">SKU：{sku}</span>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <p className="text-base xs:text-base sm:text-lg md:text-lg font-bold text-gray-900 mt-1.5 xs:mt-2 sm:mt-2 md:mt-2">
                           {formatPrice(item.price)}
                         </p>

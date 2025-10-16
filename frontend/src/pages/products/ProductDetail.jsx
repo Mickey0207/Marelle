@@ -104,6 +104,30 @@ const ProductDetail = () => {
     addToCart(payloadProduct, qty);
   };
 
+  // 產生選項縮圖（資料 URI SVG），顏色層用對應色塊，其餘使用灰底縮圖
+  const getVariantThumb = (opt, levelLabel) => {
+    const encode = (s) => encodeURIComponent(String(s));
+    const makeSvg = (fill, text) => {
+      const svg = `<?xml version='1.0' encoding='UTF-8'?>\n<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'>\n  <rect x='0' y='0' width='20' height='20' rx='4' fill='${fill}'/>\n  ${text ? `<text x='10' y='13' text-anchor='middle' font-size='10' fill='%23FFFFFF' font-family='Arial, Helvetica, sans-serif'>${text}</text>` : ''}\n</svg>`;
+      return `data:image/svg+xml;utf8,${encode(svg)}`;
+    };
+    // 顏色層：依 label 給定常見色碼
+    const isColorLevel = levelLabel === '顏色' || /^color-/.test(opt?.id || '');
+    if (isColorLevel) {
+      const label = String(opt?.label || '').trim();
+      const colorMap = {
+        '黑': '#000000', '藍': '#1E40AF', '紅': '#B91C1C', '棕': '#92400E', '白': '#FFFFFF', '綠': '#065F46', '灰': '#6B7280'
+      };
+      const fill = colorMap[label] || '#6B7280';
+      // 白色需要邊框才看得見，這裡改用淡灰色
+      const safeFill = fill.toLowerCase() === '#ffffff' ? '#E5E7EB' : fill;
+      return makeSvg(safeFill);
+    }
+    // 其他層：灰底，首字母
+    const initial = String(opt?.label || '').trim().charAt(0) || '';
+    return makeSvg('#E5E7EB', initial);
+  };
+
   if (!product) {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center bg-lofi">
@@ -178,6 +202,13 @@ const ProductDetail = () => {
                                   onMouseEnter={(e) => { if (!selected && !isDisabled) { e.currentTarget.style.background = '#F0F2F5'; } }}
                                   onMouseLeave={(e) => { if (!selected && !isDisabled) { e.currentTarget.style.background = '#F7F8FA'; } }}
                                 >
+                                  <span className="inline-flex items-center justify-center w-5 h-5 mr-2 align-middle">
+                                    <img
+                                      alt={opt.label}
+                                      src={getVariantThumb(opt, label)}
+                                      className="w-5 h-5 rounded object-cover"
+                                    />
+                                  </span>
                                   {opt.label}
                                 </button>
                               );

@@ -7,7 +7,6 @@ const ProductQuickAddModal = ({ product, isOpen, onClose, onAddToCart }) => {
   const [quantity, setQuantity] = useState(1);
   // 五層規格選擇狀態
   const [variantState, setVariantState] = useState({ path: [], isComplete: false, leaf: undefined });
-  if (!isOpen || !product) return null;
 
   const handleAddToCart = () => {
     const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
@@ -26,6 +25,30 @@ const ProductQuickAddModal = ({ product, isOpen, onClose, onAddToCart }) => {
       setVariantState({ path: [], isComplete: false, leaf: undefined });
     }
   }, [isOpen]);
+
+  // 重要：所有 hooks 需在任何 early return 之前呼叫，避免「Rendered more hooks than during the previous render」
+  if (!isOpen || !product) return null;
+
+  // 產生選項縮圖（資料 URI SVG），顏色層用對應色塊，其餘使用灰底縮圖
+  const getVariantThumb = (opt, levelLabel) => {
+    const encode = (s) => encodeURIComponent(String(s));
+    const makeSvg = (fill, text) => {
+      const svg = `<?xml version='1.0' encoding='UTF-8'?>\n<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'>\n  <rect x='0' y='0' width='20' height='20' rx='4' fill='${fill}'/>\n  ${text ? `<text x='10' y='13' text-anchor='middle' font-size='10' fill='%23FFFFFF' font-family='Arial, Helvetica, sans-serif'>${text}</text>` : ''}\n</svg>`;
+      return `data:image/svg+xml;utf8,${encode(svg)}`;
+    };
+    const isColorLevel = levelLabel === '顏色' || /^color-/.test(opt?.id || '');
+    if (isColorLevel) {
+      const label = String(opt?.label || '').trim();
+      const colorMap = {
+        '黑': '#000000', '藍': '#1E40AF', '紅': '#B91C1C', '棕': '#92400E', '白': '#FFFFFF', '綠': '#065F46', '灰': '#6B7280'
+      };
+      const fill = colorMap[label] || '#6B7280';
+      const safeFill = fill.toLowerCase() === '#ffffff' ? '#E5E7EB' : fill;
+      return makeSvg(safeFill);
+    }
+    const initial = String(opt?.label || '').trim().charAt(0) || '';
+    return makeSvg('#E5E7EB', initial);
+  };
 
   const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
   const effectivePrice = hasVariants ? (variantState.leaf?.payload?.price ?? product.price) : product.price;
@@ -90,6 +113,13 @@ const ProductQuickAddModal = ({ product, isOpen, onClose, onAddToCart }) => {
                                   onMouseEnter={(e) => { if (!selected && !isDisabled) { e.currentTarget.style.background = '#F0F2F5'; } }}
                                   onMouseLeave={(e) => { if (!selected && !isDisabled) { e.currentTarget.style.background = '#F7F8FA'; } }}
                                 >
+                                  <span className="inline-flex items-center justify-center w-5 h-5 mr-2 align-middle">
+                                    <img
+                                      alt={opt.label}
+                                      src={getVariantThumb(opt, label)}
+                                      className="w-5 h-5 rounded object-cover"
+                                    />
+                                  </span>
                                   {opt.label}
                                 </button>
                               );
