@@ -80,7 +80,6 @@ const ProductQuickViewModal = ({ open, onClose, product }) => {
 
   const tabs = useMemo(() => ([
     { key: 'basic', label: '基本資訊' },
-    { key: 'pricing', label: '定價' },
     { key: 'variants', label: '變體' },
     { key: 'categories', label: '分類' },
     { key: 'media', label: '圖片' },
@@ -132,17 +131,7 @@ const ProductQuickViewModal = ({ open, onClose, product }) => {
           </div>
         )}
 
-        {activeKey === 'pricing' && (
-          <div>
-            <Section title="定價資訊">
-              <Field label="銷售價格">{product?.price ? `NT$${Number(product.price).toLocaleString()}` : '-'}</Field>
-              <Field label="比較價格">{product?.comparePrice ? `NT$${Number(product.comparePrice).toLocaleString()}` : '-'}</Field>
-              <Field label="成本價格">{product?.costPrice ? `NT$${Number(product.costPrice).toLocaleString()}` : '-'}</Field>
-              <Field label="利潤">{product?.profit ? `NT$${Number(product.profit).toLocaleString()}` : '-'}</Field>
-              <Field label="利潤率">{product?.profitMargin ? `${product.profitMargin}%` : '-'}</Field>
-            </Section>
-          </div>
-        )}
+        {/* 已移除定價分頁 */}
 
         {activeKey === 'variants' && (
           <div>
@@ -213,10 +202,10 @@ const ProductQuickViewModal = ({ open, onClose, product }) => {
         {activeKey === 'categories' && (
           <div>
             <Section title="分類">
-              <Field label="主分類">
-                {product?.categories?.length
-                  ? product.categories.map(c => c?.name || c).join('、')
-                  : (product?.category || '未分類')}
+              <Field label="分類">
+                {Array.isArray(product?.categories) && product.categories.length
+                  ? product.categories.join('、')
+                  : '未分類'}
               </Field>
             </Section>
           </div>

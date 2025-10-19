@@ -12,12 +12,11 @@ const SEOSettings = ({
   const [isUploadingOG, setIsUploadingOG] = useState(false);
   const [isUploadingSearch, setIsUploadingSearch] = useState(false);
 
-  // 生成預覽 URL
+  // 生成預覽 URL（分類陣列現為 ID，不再嘗試讀取 slug）
   useEffect(() => {
-    const categorySlug = categories.length > 0 ? categories[0].slug || 'category' : 'products';
     const productSlug = productData.slug || 'product-slug';
-    setPreviewUrl(`${window.location.origin}/${categorySlug}/${productSlug}`);
-  }, [productData.slug, categories]);
+    setPreviewUrl(`${window.location.origin}/products/${productSlug}`);
+  }, [productData.slug]);
 
   // 處理圖片上傳
   const handleImageUpload = async (file, field, setUploading) => {

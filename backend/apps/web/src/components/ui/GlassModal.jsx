@@ -73,10 +73,10 @@ const GlassModal = ({
                   type="button"
                   onClick={a.onClick}
                   disabled={a.disabled}
-                  className={`px-4 py-2 rounded-md transition text-white ${
+                  className={`px-4 py-2 rounded-md transition ${
                     a.variant === 'secondary' ? 'text-gray-700 bg-white/70 hover:bg-white border border-gray-300' :
-                    a.variant === 'danger' ? 'bg-red-600 hover:bg-red-700' :
-                    'bg-[#cc824d] hover:bg-[#b8734a]'
+                    a.variant === 'danger' ? 'text-white bg-red-600 hover:bg-red-700' :
+                    'text-white bg-[#cc824d] hover:bg-[#b8734a]'
                   } ${a.disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                   {a.label}

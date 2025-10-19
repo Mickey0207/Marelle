@@ -4,7 +4,6 @@ import {
   PhotoIcon,
   InformationCircleIcon,
   TagIcon,
-  CurrencyDollarIcon,
   CubeIcon,
   CheckCircleIcon,
   ChevronLeftIcon,
@@ -84,13 +83,6 @@ const AddProductAdvanced = () => {
       title: '基本資訊',
       description: '設定產品名稱、描述和基礎 SKU',
       icon: InformationCircleIcon,
-      isCompleted: false
-    },
-    {
-      id: 'pricing',
-      title: '定價設定',
-      description: '設定價格、成本和利潤（無變體商品）',
-      icon: CurrencyDollarIcon,
       isCompleted: false
     },
     {
@@ -229,14 +221,6 @@ const AddProductAdvanced = () => {
         if (productData.hasVariants) {
           if (productData.skuVariants.length === 0) {
             newErrors.skuVariants = '請設定至少一個 SKU 變體';
-          } else {
-            // 檢查變體是否有設定價格和庫存
-            const invalidVariants = productData.skuVariants.filter(v => 
-              v.isActive && (!v.price || (v.trackQuantity && !v.quantity))
-            );
-            if (invalidVariants.length > 0) {
-              newErrors.skuVariants = '請為所有啟用的變體設定價格和庫存';
-            }
           }
         }
         break;
@@ -341,17 +325,6 @@ const AddProductAdvanced = () => {
                 firstErrorStep = i;
                 firstErrorField = 'skuVariants';
               }
-            } else {
-              const invalidVariants = productData.skuVariants.filter(v => 
-                v.isActive && (!v.price || (v.trackQuantity && !v.quantity))
-              );
-              if (invalidVariants.length > 0) {
-                stepErrors.skuVariants = '請為所有啟用的變體設定價格和庫存';
-                if (firstErrorStep === -1) {
-                  firstErrorStep = i;
-                  firstErrorField = 'skuVariants';
-                }
-              }
             }
           }
           break;
@@ -399,66 +372,298 @@ const AddProductAdvanced = () => {
     }
 
     try {
-      // 準備提交的產品資料
-      const submitData = {
-        ...productData,
-        // 價格資訊 (僅用於無變體商品)
-        price: parseFloat(productData.price) || 0,
-        comparePrice: parseFloat(productData.comparePrice) || 0,
-        costPrice: parseFloat(productData.costPrice) || 0,
-        
-        // 基本資訊
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        productId: `${productData.baseSKU}-${Date.now()}`,
-        
-        // 圖片資訊
-        images: productData.images.map(img => ({
-          id: img.id,
-          url: img.url,
-          name: img.name,
-          size: img.size,
-          isMain: img === productData.images[0]
-        })),
-        
-        // SKU 變體資訊
-        skuVariants: productData.hasVariants ? productData.skuVariants.map(variant => ({
-          ...variant,
-          price: parseFloat(variant.price) || 0,
-          comparePrice: parseFloat(variant.comparePrice) || 0,
-          costPrice: parseFloat(variant.costPrice) || 0,
-          quantity: parseInt(variant.quantity) || 0,
-          lowStockThreshold: parseInt(variant.lowStockThreshold) || 0,
-          weight: parseFloat(variant.weight) || 0,
-          dimensions: {
-            length: parseFloat(variant.dimensions?.length) || 0,
-            width: parseFloat(variant.dimensions?.width) || 0,
-            height: parseFloat(variant.dimensions?.height) || 0
-          },
-          trackQuantity: Boolean(variant.trackQuantity),
-          allowBackorder: Boolean(variant.allowBackorder),
-          isActive: Boolean(variant.isActive)
-        })) : [],
-        
-        // 狀態資訊
-        hasVariants: Boolean(productData.hasVariants),
-        featured: Boolean(productData.featured)
-      };
+      setAlert({ show: false });
+      
+      // 1. 建立商品基本資訊
+      // 正規化分類 ID 為數字（後端為 bigint[]）。若沒有有效數字 ID，則不送此欄位。
+      const numericCategoryIds = (Array.isArray(productData.categories) ? productData.categories : [])
+        .filter((v) => v !== null && v !== undefined && v !== '')
+        .map((c) => (c !== null && typeof c === 'object' ? (c.id ?? c.value ?? c) : c))
+        .map((v) => (typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : v))
+        .filter((v) => typeof v === 'number' && Number.isFinite(v));
 
-      console.log('準備提交的產品資料:', submitData);
+      const productRes = await fetch('/backend/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: productData.name,
+          slug: productData.slug,
+          short_description: productData.shortDescription || null,
+          description: productData.description,
+          tags: productData.tags,
+          base_sku: productData.baseSKU,
+          has_variants: productData.hasVariants,
+          status: productData.status,
+          visibility: productData.visibility,
+          is_featured: productData.featured,
+          ...(numericCategoryIds.length > 0 ? { category_ids: numericCategoryIds } : {}),
+          meta_title: productData.metaTitle || null,
+          meta_description: productData.metaDescription || null,
+          og_title: productData.openGraphTitle || null,
+          og_description: productData.openGraphDescription || null,
+          og_image_url: productData.openGraphImage || null,
+          search_title: productData.searchTitle || null,
+          search_description: productData.searchDescription || null,
+          search_image_url: productData.searchImage || null,
+          sitemap_indexing: productData.sitemapIndexing,
+          custom_canonical_url: productData.customCanonicalUrl || null,
+          exclude_from_search: productData.excludeFromSearch,
+          use_meta_title_for_og: !!productData.useMetaTitleForOG,
+          use_meta_description_for_og: !!productData.useMetaDescriptionForOG,
+          use_meta_title_for_search: !!productData.useMetaTitleForSearch,
+          use_meta_description_for_search: !!productData.useMetaDescriptionForSearch,
+          use_og_image_for_search: !!productData.useOpenGraphImageForSearch
+        })
+      });
       
-      // 模擬 API 請求延遲
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!productRes.ok) {
+        throw new Error(`建立商品失敗: ${productRes.statusText}`);
+      }
       
-      // 顯示成功消息
+      const createdProduct = await productRes.json();
+      const productId = createdProduct.id;
+      
+      // 2. 上傳商品圖片 (批量上傳到固定10欄位結構)
+      if (productData.images && productData.images.length > 0) {
+        const filesToUpload = [];
+        const urlsToUpload = [];
+        
+        // 分離本地文件和已有URL
+        for (let i = 0; i < productData.images.length; i++) {
+          const img = productData.images[i];
+          if (img.file) {
+            filesToUpload.push(img.file);
+          } else if (img.url) {
+            urlsToUpload.push(img.url);
+          }
+        }
+        
+        // 合併所有圖片URL
+        const allImageUrls = [...urlsToUpload];
+        
+        // 上傳文件
+        if (filesToUpload.length > 0) {
+          for (const file of filesToUpload) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const uploadRes = await fetch(`/backend/products/${productId}/storage-upload`, {
+              method: 'POST',
+              credentials: 'include',
+              body: formData
+            });
+            
+            if (uploadRes.ok) {
+              const { url } = await uploadRes.json();
+              allImageUrls.push(url);
+            }
+          }
+        }
+        
+        // 批量更新所有10個圖片欄位
+        if (allImageUrls.length > 0) {
+          const photoUpdateData = {};
+          for (let i = 0; i < 10; i++) {
+            photoUpdateData[`photo_url_${i + 1}`] = allImageUrls[i] || null;
+          }
+          
+          const photoRes = await fetch(`/backend/products/${productId}/photos`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(photoUpdateData)
+          });
+          
+          if (!photoRes.ok) {
+            console.error(`更新商品圖片失敗: ${photoRes.statusText}`);
+          }
+        }
+      }
+      
+      // 3. 建立庫存與價格記錄
+      if (productData.hasVariants && productData.skuVariants.length > 0) {
+        // 為每個啟用的變體建立庫存和價格記錄
+        for (const variant of productData.skuVariants) {
+          if (!variant.isActive) continue; // 跳過未啟用的變體
+
+          try {
+            // 建立庫存記錄
+            const inventoryData = {
+              sku_key: variant.sku || null, // 使用完整 SKU 作為 sku_key
+              warehouse: '主倉',
+              current_stock_qty: variant.quantity ? parseInt(variant.quantity) : 0,
+              safety_stock_qty: variant.lowStockThreshold ? parseInt(variant.lowStockThreshold) : 10,
+              low_stock_threshold: variant.lowStockThreshold ? parseInt(variant.lowStockThreshold) : 5,
+              track_inventory: variant.trackQuantity !== false,
+              allow_backorder: variant.allowBackorder === true,
+              allow_preorder: false,
+              barcode: variant.config?.barcode || null,
+              hs_code: variant.config?.hsCode || null,
+              origin: variant.config?.origin || null,
+              notes: variant.config?.note || null,
+              weight: variant.config?.weight ? parseFloat(variant.config.weight) : null,
+              length_cm: variant.config?.dimensions?.length ? parseFloat(variant.config.dimensions.length) : null,
+              width_cm: variant.config?.dimensions?.width ? parseFloat(variant.config.dimensions.width) : null,
+              height_cm: variant.config?.dimensions?.height ? parseFloat(variant.config.dimensions.height) : null
+            };
+
+            // 提取5層級SKU資訊
+            if (variant.path && Array.isArray(variant.path)) {
+              for (let i = 0; i < 5; i++) {
+                const pathItem = variant.path[i];
+                if (pathItem) {
+                  inventoryData[`sku_level_${i + 1}`] = pathItem.option || null;
+                  inventoryData[`sku_level_${i + 1}_name`] = pathItem.option || null;
+                  inventoryData[`spec_level_${i + 1}_name`] = pathItem.level || null;
+                } else {
+                  inventoryData[`sku_level_${i + 1}`] = null;
+                  inventoryData[`sku_level_${i + 1}_name`] = null;
+                  inventoryData[`spec_level_${i + 1}_name`] = null;
+                }
+              }
+            } else {
+              // 如果沒有path資訊，初始化所有欄位為null
+              for (let i = 0; i < 5; i++) {
+                inventoryData[`sku_level_${i + 1}`] = null;
+                inventoryData[`sku_level_${i + 1}_name`] = null;
+                inventoryData[`spec_level_${i + 1}_name`] = null;
+              }
+            }
+
+            const inventoryRes = await fetch(`/backend/products/${productId}/inventory`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(inventoryData)
+            });
+
+            if (!inventoryRes.ok) {
+              console.error(`建立變體 ${variant.sku} 的庫存記錄失敗: ${inventoryRes.statusText}`);
+            }
+            let invRow = null;
+            try { if (inventoryRes.ok) invRow = await inventoryRes.json(); } catch {}
+
+            // 建立價格記錄 - 確保至少有一個價格欄位有值
+            const hasPrice = (variant.price && variant.price !== '') || 
+                            (variant.comparePrice && variant.comparePrice !== '') ||
+                            (variant.costPrice && variant.costPrice !== '');
+            
+            if (hasPrice) {
+              const priceData = {
+                sku_key: variant.sku || null,
+                sale_price: variant.price ? parseFloat(variant.price) : 0,
+                compare_at_price: variant.comparePrice ? parseFloat(variant.comparePrice) : null,
+                cost_price: variant.costPrice ? parseFloat(variant.costPrice) : null
+              };
+
+              const priceRes = await fetch(`/backend/products/${productId}/prices`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(priceData)
+              });
+
+              if (!priceRes.ok) {
+                console.error(`建立變體 ${variant.sku} 的價格記錄失敗: ${priceRes.statusText}`);
+              } else {
+                console.log(`成功建立變體 ${variant.sku} 的價格記錄`);
+              }
+            }
+
+            // 變體圖片：最多 3 張，上傳至 storage 並回填 variant photos
+            if (invRow && invRow.id) {
+              const vImgs = Array.isArray(variant.config?.variantImages) ? variant.config.variantImages : [];
+              if (vImgs.length > 0) {
+                const urls = [];
+                for (const img of vImgs.slice(0,3)) {
+                  if (img?.file) {
+                    const fd = new FormData();
+                    fd.append('file', img.file);
+                    const upRes = await fetch(`/backend/products/${productId}/variant-photos/${invRow.id}/upload`, { method:'POST', credentials:'include', body: fd });
+                    if (upRes.ok) { const { url } = await upRes.json(); urls.push(url); }
+                  } else if (img?.url) {
+                    urls.push(img.url);
+                  }
+                }
+                const patchBody = { variant_photo_url_1: urls[0] || null, variant_photo_url_2: urls[1] || null, variant_photo_url_3: urls[2] || null };
+                await fetch(`/backend/products/${productId}/variant-photos/${invRow.id}`, {
+                  method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(patchBody)
+                }).catch(e => console.warn('建立變體圖片失敗:', e));
+              }
+            }
+          } catch (error) {
+            console.error(`處理變體 ${variant.sku} 的庫存/價格記錄時出錯:`, error);
+            // 繼續處理其他變體，不中斷流程
+          }
+        }
+      } else if (!productData.hasVariants) {
+        // 單一SKU產品：建立基本庫存和價格記錄（sku_key 為 null）
+        try {
+          // 建立庫存記錄（sku_key 為 null 表示此產品無變體）
+          const inventoryData = {
+            sku_key: null,
+            warehouse: '主倉',
+            current_stock_qty: 0,
+            safety_stock_qty: 10,
+            low_stock_threshold: 5,
+            track_inventory: true,
+            allow_backorder: false,
+            allow_preorder: false
+          };
+
+          const inventoryRes = await fetch(`/backend/products/${productId}/inventory`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(inventoryData)
+          });
+
+          if (!inventoryRes.ok) {
+            console.error(`建立單一SKU產品的庫存記錄失敗: ${inventoryRes.statusText}`);
+          } else {
+            console.log('成功建立單一SKU產品的庫存記錄');
+          }
+
+          // 建立價格記錄 - 確保至少有一個價格欄位有值
+          const hasPrice = (productData.price && productData.price !== '') || 
+                          (productData.comparePrice && productData.comparePrice !== '') ||
+                          (productData.costPrice && productData.costPrice !== '');
+          
+          if (hasPrice) {
+            const priceData = {
+              sku_key: null,
+              sale_price: productData.price ? parseFloat(productData.price) : 0,
+              compare_at_price: productData.comparePrice ? parseFloat(productData.comparePrice) : null,
+              cost_price: productData.costPrice ? parseFloat(productData.costPrice) : null
+            };
+
+            const priceRes = await fetch(`/backend/products/${productId}/prices`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(priceData)
+            });
+
+            if (!priceRes.ok) {
+              console.error(`建立單一SKU產品的價格記錄失敗: ${priceRes.statusText}`);
+            } else {
+              console.log('成功建立單一SKU產品的價格記錄');
+            }
+          }
+        } catch (error) {
+          console.error('建立單一SKU產品的庫存/價格記錄時出錯:', error);
+        }
+      }
+      
+      // 成功
       setAlert({
         show: true,
         type: 'success',
         title: '產品創建成功',
-        message: `產品 "${productData.name}" 已成功創建！\n產品 ID: ${submitData.productId}`
+        message: `產品 "${productData.name}" 已成功創建！`
       });
       
-      // 延遲導航以顯示成功消息
       setTimeout(() => {
         navigate('/products');
       }, 2000);
@@ -469,7 +674,7 @@ const AddProductAdvanced = () => {
         show: true,
         type: 'error',
         title: '創建失敗',
-        message: '創建產品時發生錯誤，請稍後再試。'
+        message: error.message || '創建產品時發生錯誤，請稍後再試。'
       });
     }
   };
@@ -580,7 +785,7 @@ const AddProductAdvanced = () => {
                     </div>
                     {errors.slug && <p className="mt-1 text-sm text-red-600">{errors.slug}</p>}
                     <p className="mt-1 text-xs text-gray-500">
-                      產品網址將是: {window.location.origin}/{productData.categories.length > 0 ? productData.categories[0].slug || 'category' : 'products'}/{productData.slug || 'product-slug'}
+                      產品網址將是: {window.location.origin}/products/{productData.slug || 'product-slug'}
                     </p>
                   </div>
 
@@ -681,116 +886,6 @@ const AddProductAdvanced = () => {
 
             {currentStep === 1 && (
               <div className="space-y-6">
-                <h3 className={ADMIN_STYLES.sectionTitle}>定價設定</h3>
-                
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <p className="text-sm text-amber-800">
-                    💡 <strong>注意：</strong>如果您的商品有多個變體（如不同顏色、尺寸等），價格將在下一步的 SKU 變體管理中設定。
-                    此處的定價僅適用於無變體的單一商品。
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      銷售價格 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">NT$</span>
-                      <input
-                        type="number"
-                        name="price"
-                        id="price"
-                        value={productData.price}
-                        onChange={(e) => {
-                          handleInputChange('price', e.target.value);
-                          setTimeout(calculateProfit, 100);
-                        }}
-                        className={`${ADMIN_STYLES.input} pl-12 ${errors.price ? 'border-red-500' : ''}`}
-                        placeholder="0"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                    {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      比較價格（原價）
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">NT$</span>
-                      <input
-                        type="number"
-                        value={productData.comparePrice}
-                        onChange={(e) => handleInputChange('comparePrice', e.target.value)}
-                        className={`${ADMIN_STYLES.input} pl-12`}
-                        placeholder="0"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      成本價格
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">NT$</span>
-                      <input
-                        type="number"
-                        value={productData.costPrice}
-                        onChange={(e) => {
-                          handleInputChange('costPrice', e.target.value);
-                          setTimeout(calculateProfit, 100);
-                        }}
-                        className={`${ADMIN_STYLES.input} pl-12`}
-                        placeholder="0"
-                        min="0"
-                        step="0.01"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      利潤
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">NT$</span>
-                      <input
-                        type="text"
-                        value={productData.profit}
-                        readOnly
-                        className={`${ADMIN_STYLES.input} pl-12 bg-gray-50`}
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    利潤率
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={productData.profitMargin}
-                      readOnly
-                      className={`${ADMIN_STYLES.input} pr-8 bg-gray-50`}
-                      placeholder="0"
-                    />
-                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">%</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {currentStep === 2 && (
-              <div className="space-y-6">
                 <h3 className={ADMIN_STYLES.sectionTitle}>SKU 變體管理</h3>
                 
                 <div className="border-t border-gray-200 pt-6">
@@ -828,9 +923,6 @@ const AddProductAdvanced = () => {
                       baseSKU={productData.baseSKU}
                       skuVariants={productData.skuVariants}
                       onChange={(variants) => handleInputChange('skuVariants', variants)}
-                      basePrice={productData.price}
-                      baseComparePrice={productData.comparePrice}
-                      baseCostPrice={productData.costPrice}
                       productName={productData.name}
                       productCategories={productData.categories}
                     />
@@ -841,9 +933,9 @@ const AddProductAdvanced = () => {
               </div>
             )}
 
-            {currentStep === 3 && (
+            {currentStep === 2 && (
               <div className="space-y-6">
-                <h3 className={ADMIN_STYLES.sectionTitle}>商品分類設定</h3>
+                <h3 className={ADMIN_STYLES.sectionTitle}>商品分類</h3>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-4">
@@ -857,7 +949,7 @@ const AddProductAdvanced = () => {
               </div>
             )}
 
-            {currentStep === 4 && (
+            {currentStep === 3 && (
               <div className="space-y-6">
                 <h3 className={ADMIN_STYLES.sectionTitle}>圖片媒體</h3>
                 
@@ -874,7 +966,7 @@ const AddProductAdvanced = () => {
               </div>
               )}
 
-            {currentStep === 5 && (
+            {currentStep === 4 && (
               <div className="space-y-6">
                 <h3 className={ADMIN_STYLES.sectionTitle}>SEO 設定</h3>
                 

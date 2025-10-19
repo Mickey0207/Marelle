@@ -1,15 +1,36 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ADMIN_STYLES } from '../../Style/adminStyles';
 import StandardTable from '../../components/ui/StandardTable';
 import CategoryCascader from '../../components/ui/CategoryCascader';
-import categoryManager, { PRODUCT_CATEGORIES, getCategoryBreadcrumbBySlug, searchCategories } from '../../../../external_mock/products/categoryDataManager';
 import GlassModal from '../../components/ui/GlassModal';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 import ImageUpload from '../../components/products/ImageUpload';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import IconActionButton from '../../components/ui/IconActionButton';
 
 // 單一層分類表格（可展開顯示下一層）；透過遞迴支援最多五層（不限層數）
-const CategoryLevelTable = ({ data = [], depth = 1 }) => {
+const CategoryLevelTable = ({ data = [], depth = 1, onEdit, onDelete }) => {
+  // 計算階層路徑
+  const getBreadcrumb = (row, allData) => {
+    const path = [];
+    function findPath(id, items) {
+      for (const item of items) {
+        if (item.id === id) {
+          return [item.name];
+        }
+        if (item.children && item.children.length > 0) {
+          const result = findPath(id, item.children);
+          if (result) {
+            return [item.name, ...result];
+          }
+        }
+      }
+      return null;
+    }
+    const fullPath = findPath(row.id, allData);
+    return fullPath ? fullPath.join(' / ') : row.name;
+  };
+
   const columns = [
     {
       key: 'image',
@@ -38,9 +59,9 @@ const CategoryLevelTable = ({ data = [], depth = 1 }) => {
     {
       key: 'breadcrumb',
       label: '階層',
-      sortable: true,
+      sortable: false,
       render: (_v, row) => (
-        <span className="text-sm text-gray-600">{getCategoryBreadcrumbBySlug(PRODUCT_CATEGORIES, row.slug)}</span>
+        <span className="text-sm text-gray-600">{getBreadcrumb(row, data)}</span>
       )
     },
     {
@@ -55,8 +76,8 @@ const CategoryLevelTable = ({ data = [], depth = 1 }) => {
       sortable: false,
       render: (_v, row) => (
         <div className="flex items-center space-x-2">
-          <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" onClick={() => row.onEdit?.(row)} />
-          <IconActionButton Icon={TrashIcon} label="刪除" variant="red" onClick={() => row.onDelete?.(row)} />
+          <IconActionButton Icon={PencilIcon} label="編輯" variant="amber" onClick={() => onEdit?.(row)} />
+          <IconActionButton Icon={TrashIcon} label="刪除" variant="red" onClick={() => onDelete?.(row)} />
         </div>
       )
     }
@@ -66,7 +87,7 @@ const CategoryLevelTable = ({ data = [], depth = 1 }) => {
   const getSubRows = (row) => {
     const children = row.children || [];
     if (!children.length) return [];
-    return [{ __container__: true, children: children.map(c => ({ ...c, onEdit: row.onEdit, onDelete: row.onDelete })) }];
+    return [{ __container__: true, children }];
   };
 
   const subColumns = [
@@ -76,7 +97,7 @@ const CategoryLevelTable = ({ data = [], depth = 1 }) => {
       sortable: false,
       render: (_v, childRow) => (
         <div className="py-2">
-          <CategoryLevelTable data={childRow.children} depth={depth + 1} />
+          <CategoryLevelTable data={childRow.children} depth={depth + 1} onEdit={onEdit} onDelete={onDelete} />
         </div>
       )
     }
@@ -93,60 +114,199 @@ const CategoryLevelTable = ({ data = [], depth = 1 }) => {
       getSubRows={getSubRows}
       subColumns={subColumns}
       subtableClassName="bg-white/70 rounded-xl"
-      getRowId={(item, idx) => item.slug || item.id || idx}
+      getRowId={(item, idx) => item.id || item.slug || idx}
     />
   );
 };
 
 const CategoryManagement = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [term, setTerm] = useState('');
   const [selected, setSelected] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [target, setTarget] = useState(null);
-  const [parentSlug, setParentSlug] = useState(null);
-  const [form, setForm] = useState({ name: '', slug: '', image: '' });
-  const [createImages, setCreateImages] = useState([]);
+  const [parentId, setParentId] = useState(null);
+  const [form, setForm] = useState({ name: '', slug: '' });
   const [editImages, setEditImages] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  const filteredTree = useMemo(() => searchCategories(PRODUCT_CATEGORIES, term), [term]);
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
-  // 刷新視圖（mock 以記憶體儲存）
-  const refresh = () => setTerm(prev => prev);
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/backend/categories', { method: 'GET', credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch categories');
+      const data = await res.json();
+      setCategories(data || []);
+    } catch (err) {
+      setError(err.message || 'Error loading categories');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Search filter
+  const filteredTree = useMemo(() => {
+    if (!term) return categories;
+    const kw = term.toLowerCase();
+    function filterNode(node) {
+      const selfHit = (node.name || '').toLowerCase().includes(kw);
+      const children = (node.children || []).map(filterNode).filter(Boolean);
+      return (selfHit || children.length) ? { ...node, children } : null;
+    }
+    return categories.map(filterNode).filter(Boolean);
+  }, [categories, term]);
 
   const openCreate = (parent = null) => {
-    setParentSlug(parent?.slug || null);
-    setForm({ name: '', slug: '', image: '' });
-    setCreateImages([]);
+    setParentId(parent?.id || null);
+    setForm({ name: '', slug: '' });
+    setEditImages([]);
     setCreateOpen(true);
   };
 
   const openEdit = (row) => {
     setTarget(row);
-    setForm({ name: row.name || '', slug: row.slug || '', image: row.image || '' });
+    setForm({ name: row.name || '', slug: row.slug || '' });
     setEditImages(row.image ? [{ id: `${row.slug}-img`, url: row.image, name: row.name || 'image' }] : []);
     setEditOpen(true);
   };
 
-  const handleCreate = () => {
-    const imageUrl = createImages[0]?.url || form.image || '';
-    categoryManager.addCategory({ parentSlug, name: form.name, slug: form.slug, image: imageUrl });
-    setCreateOpen(false);
-    refresh();
+  const openDelete = (row) => {
+    setTarget(row);
+    setDeleteOpen(true);
   };
 
-  const handleUpdate = () => {
+  const handleCreate = async () => {
+    if (!form.name || !form.slug) {
+      alert('請填寫名稱和Slug');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      // First, create the category without image
+      const payload = {
+        name: form.name,
+        slug: form.slug,
+        parent_id: parentId,
+        image_url: ''
+      };
+      const res = await fetch('/backend/categories', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Failed to create category');
+      
+      const createdCategory = await res.json();
+      
+      // Then upload image if provided and has file
+      if (editImages.length > 0 && editImages[0].file) {
+        const formData = new FormData();
+        formData.append('file', editImages[0].file);
+        
+        const uploadRes = await fetch(`/backend/categories/${createdCategory.id}/upload-image`, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        
+        if (!uploadRes.ok) {
+          console.warn('Image upload failed, but category created');
+        }
+      }
+      
+      await fetchCategories();
+      setCreateOpen(false);
+      setForm({ name: '', slug: '' });
+      setEditImages([]);
+    } catch (err) {
+      alert(`建立失敗: ${err.message}`);
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!target || !form.name || !form.slug) {
+      alert('請填寫名稱和Slug');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const payload = {
+        name: form.name,
+        slug: form.slug
+      };
+      const res = await fetch(`/backend/categories/${target.id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('Failed to update category');
+      
+      // If there's a new image file (not just URL), upload it
+      if (editImages.length > 0 && editImages[0].file) {
+        const formData = new FormData();
+        formData.append('file', editImages[0].file);
+        
+        const uploadRes = await fetch(`/backend/categories/${target.id}/upload-image`, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        
+        if (!uploadRes.ok) {
+          console.warn('Image upload failed, but category updated');
+        }
+      }
+      
+      await fetchCategories();
+      setEditOpen(false);
+      setTarget(null);
+      setForm({ name: '', slug: '' });
+      setEditImages([]);
+    } catch (err) {
+      alert(`編輯失敗: ${err.message}`);
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
     if (!target) return;
-    const imageUrl = editImages[0]?.url || form.image || '';
-    categoryManager.updateCategory(target.slug, { name: form.name, slug: form.slug, image: imageUrl });
-    setEditOpen(false);
-    setTarget(null);
-    refresh();
-  };
 
-  const handleDelete = (row) => {
-    categoryManager.deleteCategory(row.slug);
-    refresh();
+    try {
+      setSubmitting(true);
+      const res = await fetch(`/backend/categories/${target.id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Failed to delete category');
+      await fetchCategories();
+      setDeleteOpen(false);
+      setTarget(null);
+    } catch (err) {
+      alert(`刪除失敗: ${err.message}`);
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -163,6 +323,12 @@ const CategoryManagement = () => {
           </button>
         </div>
 
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-300 rounded-lg text-red-700">
+            {error}
+          </div>
+        )}
+
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-sm p-6 mb-6">
           <div className="flex items-center space-x-3">
             <input
@@ -171,14 +337,23 @@ const CategoryManagement = () => {
               value={term}
               onChange={(e) => setTerm(e.target.value)}
             />
-            <CategoryCascader tree={PRODUCT_CATEGORIES} value={selected} onChange={setSelected} />
+            <CategoryCascader tree={categories} value={selected} onChange={setSelected} />
           </div>
         </div>
 
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 shadow-sm">
-          <CategoryLevelTable data={(filteredTree || []).map(n => ({ ...n, onEdit: openEdit, onDelete: handleDelete }))} />
+          {loading ? (
+            <div className="p-8 text-center text-gray-500">載入中...</div>
+          ) : (
+            <CategoryLevelTable 
+              data={filteredTree} 
+              onEdit={openEdit} 
+              onDelete={openDelete}
+            />
+          )}
         </div>
       </div>
+
       {/* 新增分類 Modal */}
       <GlassModal
         isOpen={createOpen}
@@ -191,23 +366,50 @@ const CategoryManagement = () => {
         <div className="p-6 pt-0 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">上層分類（可留空）</label>
-            <CategoryCascader tree={PRODUCT_CATEGORIES} value={parentSlug} onChange={setParentSlug} />
+            <CategoryCascader tree={categories} value={parentId} onChange={setParentId} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">名稱</label>
-            <input className="w-full px-3 py-2 border border-gray-300 rounded-lg" value={form.name} onChange={e=>setForm(f=>({ ...f, name: e.target.value }))} />
+            <label className="block text-sm font-medium text-gray-700 mb-1">名稱*</label>
+            <input 
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg" 
+              value={form.name} 
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))} 
+              disabled={submitting}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Slug（可留空自動生成）</label>
-            <input className="w-full px-3 py-2 border border-gray-300 rounded-lg" value={form.slug} onChange={e=>setForm(f=>({ ...f, slug: e.target.value }))} />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Slug*</label>
+            <input 
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg" 
+              value={form.slug} 
+              onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} 
+              disabled={submitting}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">分類圖片</label>
-            <ImageUpload images={createImages} onChange={(imgs)=>{ setCreateImages(imgs); setForm(f=>({ ...f, image: imgs[0]?.url || '' })); }} maxImages={1} />
+            <ImageUpload 
+              images={editImages} 
+              onChange={(imgs) => setEditImages(imgs)} 
+              maxImages={1}
+              disabled={submitting}
+            />
           </div>
           <div className="flex justify-end space-x-2 pt-2">
-            <button className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200" onClick={()=>setCreateOpen(false)}>取消</button>
-            <button className="px-4 py-2 rounded-lg bg-[#cc824d] text-white hover:bg-[#b86c37]" onClick={handleCreate}>新增</button>
+            <button 
+              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50" 
+              onClick={() => setCreateOpen(false)}
+              disabled={submitting}
+            >
+              取消
+            </button>
+            <button 
+              className="px-4 py-2 rounded-lg bg-[#cc824d] text-white hover:bg-[#b86c37] disabled:opacity-50" 
+              onClick={handleCreate}
+              disabled={submitting}
+            >
+              {submitting ? '建立中...' : '新增'}
+            </button>
           </div>
         </div>
       </GlassModal>
@@ -223,23 +425,61 @@ const CategoryManagement = () => {
       >
         <div className="p-6 pt-0 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">名稱</label>
-            <input className="w-full px-3 py-2 border border-gray-300 rounded-lg" value={form.name} onChange={e=>setForm(f=>({ ...f, name: e.target.value }))} />
+            <label className="block text-sm font-medium text-gray-700 mb-1">名稱*</label>
+            <input 
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg" 
+              value={form.name} 
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              disabled={submitting}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-            <input className="w-full px-3 py-2 border border-gray-300 rounded-lg" value={form.slug} onChange={e=>setForm(f=>({ ...f, slug: e.target.value }))} />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Slug*</label>
+            <input 
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg" 
+              value={form.slug} 
+              onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
+              disabled={submitting}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">分類圖片</label>
-            <ImageUpload images={editImages} onChange={(imgs)=>{ setEditImages(imgs); setForm(f=>({ ...f, image: imgs[0]?.url || '' })); }} maxImages={1} />
+            <ImageUpload 
+              images={editImages} 
+              onChange={(imgs) => setEditImages(imgs)} 
+              maxImages={1}
+              disabled={submitting}
+            />
           </div>
           <div className="flex justify-end space-x-2 pt-2">
-            <button className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200" onClick={()=>setEditOpen(false)}>取消</button>
-            <button className="px-4 py-2 rounded-lg bg-[#cc824d] text-white hover:bg-[#b86c37]" onClick={handleUpdate}>儲存</button>
+            <button 
+              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50" 
+              onClick={() => setEditOpen(false)}
+              disabled={submitting}
+            >
+              取消
+            </button>
+            <button 
+              className="px-4 py-2 rounded-lg bg-[#cc824d] text-white hover:bg-[#b86c37] disabled:opacity-50" 
+              onClick={handleUpdate}
+              disabled={submitting}
+            >
+              {submitting ? '儲存中...' : '儲存'}
+            </button>
           </div>
         </div>
       </GlassModal>
+
+      {/* 確認刪除 Modal */}
+      <ConfirmModal
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        title="確認刪除"
+        message={`確定要刪除分類「${target?.name}」及其所有子分類嗎？此操作無法復原。`}
+        confirmVariant="danger"
+        isLoading={submitting}
+      />
     </div>
   );
 };

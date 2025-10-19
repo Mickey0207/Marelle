@@ -1,18 +1,20 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
   ArchiveBoxIcon, 
   FunnelIcon, 
   ExclamationTriangleIcon,
   QrCodeIcon,
   BuildingStorefrontIcon,
-  EyeIcon
+  EyeIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 import SearchableSelect from "../../components/ui/SearchableSelect";
 import StandardTable from "../../components/ui/StandardTable";
-import { buildInventoryFromProducts, getInventoryFilters } from "../../../../external_mock/inventory/inventoryDataManager";
+import { getInventoryFilters } from "../../../../external_mock/inventory/inventoryDataManager";
 import { PRODUCT_CATEGORIES, getAllChildCategoryIds, getCategoryBreadcrumb } from "../../../../external_mock/products/categoryDataManager";
 import CategoryCascader from "../../components/ui/CategoryCascader";
 import { QRCodePreviewModal } from "../../components/ui/QRCodeGenerator";
+import GlassModal from "../../components/ui/GlassModal";
 import { ADMIN_STYLES } from "../../Style/adminStyles";
 import IconActionButton from "../../components/ui/IconActionButton";
 
@@ -21,9 +23,114 @@ const Inventory = () => {
   const [selectedCategory, setSelectedCategory] = useState(null); // 使用分類ID，null 代表全部
   const [previewItem, setPreviewItem] = useState(null);
   const [qrItem, setQrItem] = useState(null);
+  const [editItem, setEditItem] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
 
-  // 以產品資料動態建立 SKU 庫存列（多倉庫）
-  const [rows, setRows] = useState(() => buildInventoryFromProducts('*'));
+  // 從 API 加載庫存數據
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchInventoryData = async () => {
+      try {
+        setLoading(true);
+        // 先取得所有商品
+        const productsRes = await fetch('/backend/products', {
+          credentials: 'include'
+        });
+        
+        if (!productsRes.ok) {
+          throw new Error('加載商品失敗');
+        }
+        
+        const products = await productsRes.json() || [];
+        
+        // 為每個商品取得庫存記錄
+        const allInventoryRows = [];
+        
+        for (const product of products) {
+          try {
+            const inventoryRes = await fetch(`/backend/products/${product.id}/inventory`, {
+              credentials: 'include'
+            });
+            
+            if (inventoryRes.ok) {
+              const inventoryRecords = await inventoryRes.json() || [];
+              
+              // 將庫存記錄轉換為表格行格式
+              for (const inv of inventoryRecords) {
+                allInventoryRows.push({
+                  productId: product.id,
+                  baseSKU: product.base_sku,
+                  name: product.name,
+                  category: product.category_ids && product.category_ids.length > 0 ? product.category_ids.join(', ') : '未分類',
+                  categoryId: product.category_ids && product.category_ids.length > 0 ? product.category_ids[0] : null,
+                  productImageUrl: product.image_url,
+                  sku: inv.sku_key || product.base_sku,
+                  spec: (() => {
+                    // 從5層級SKU構建規格顯示
+                    const specs = [];
+                    for (let i = 1; i <= 5; i++) {
+                      const name = inv[`spec_level_${i}_name`];
+                      const value = inv[`sku_level_${i}_name`];
+                      if (name && value) {
+                        specs.push(`${name}: ${value}`);
+                      }
+                    }
+                    return specs.length > 0 ? specs.join(' / ') : (inv.barcode ? `條碼: ${inv.barcode}` : '標準規格');
+                  })(),
+                  warehouse: inv.warehouse || '主倉',
+                  currentStock: inv.current_stock_qty || 0,
+                  safeStock: inv.safety_stock_qty || 10,
+                  lowStockThreshold: inv.low_stock_threshold || 5,
+                  barcode: inv.barcode,
+                  origin: inv.origin,
+                  weight: inv.weight,
+                  status: (inv.current_stock_qty || 0) < (inv.low_stock_threshold || 5) ? 'low' : 'normal',
+                  // 5層級SKU欄位
+                  skuLevel1: inv.sku_level_1,
+                  skuLevel1Name: inv.sku_level_1_name,
+                  specLevel1Name: inv.spec_level_1_name,
+                  skuLevel2: inv.sku_level_2,
+                  skuLevel2Name: inv.sku_level_2_name,
+                  specLevel2Name: inv.spec_level_2_name,
+                  skuLevel3: inv.sku_level_3,
+                  skuLevel3Name: inv.sku_level_3_name,
+                  specLevel3Name: inv.spec_level_3_name,
+                  skuLevel4: inv.sku_level_4,
+                  skuLevel4Name: inv.sku_level_4_name,
+                  specLevel4Name: inv.spec_level_4_name,
+                  skuLevel5: inv.sku_level_5,
+                  skuLevel5Name: inv.sku_level_5_name,
+                  specLevel5Name: inv.spec_level_5_name,
+                  // 供明細使用
+                  id: inv.id,
+                  trackInventory: inv.track_inventory,
+                  allowBackorder: inv.allow_backorder,
+                  allowPreorder: inv.allow_preorder,
+                });
+              }
+            }
+          } catch (err) {
+            console.error(`加載商品 ${product.id} 的庫存失敗:`, err);
+          }
+        }
+        
+        setRows(allInventoryRows);
+        setError(null);
+      } catch (err) {
+        console.error('加載庫存數據失敗:', err);
+        setError(err.message);
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchInventoryData();
+  }, []);
+
   const { warehouses } = useMemo(() => getInventoryFilters(rows), [rows]);
 
   // 聚合為父表（商品層級）
@@ -150,16 +257,32 @@ const Inventory = () => {
           spec: r.spec,
           currentStock: 0,
           safeStock: r.safeStock,
-          avgCost: r.avgCost,
           totalValue: 0,
           barcode: r.barcode,
           imageUrl: r.variantImageUrl || r.productImageUrl || r.imageUrl,
           status: r.status,
-          // 供 QR 視窗使用的補充欄位
-          id: r.sku,
+          // 供編輯和 QR 視窗使用的補充欄位
+          id: r.id,
+          productId: parent.productId,
           name: parent.name,
           category: parent.category,
           warehouse: '彙總',
+          // 5層級SKU欄位
+          skuLevel1: r.skuLevel1,
+          skuLevel1Name: r.skuLevel1Name,
+          specLevel1Name: r.specLevel1Name,
+          skuLevel2: r.skuLevel2,
+          skuLevel2Name: r.skuLevel2Name,
+          specLevel2Name: r.specLevel2Name,
+          skuLevel3: r.skuLevel3,
+          skuLevel3Name: r.skuLevel3Name,
+          specLevel3Name: r.specLevel3Name,
+          skuLevel4: r.skuLevel4,
+          skuLevel4Name: r.skuLevel4Name,
+          specLevel4Name: r.specLevel4Name,
+          skuLevel5: r.skuLevel5,
+          skuLevel5Name: r.skuLevel5Name,
+          specLevel5Name: r.specLevel5Name,
         });
       }
       const agg = skuMap.get(key);
@@ -197,7 +320,6 @@ const Inventory = () => {
       <span className={`font-bold ${v < 0 ? 'text-purple-600' : v < (r.safeStock ?? 0) ? 'text-red-600' : 'text-green-600'}`}>{v}</span>
     ) },
     { key: 'safeStock', label: '安全庫存', sortable: true },
-    { key: 'avgCost', label: '平均成本', sortable: true },
     { key: 'totalValue', label: '庫存價值(總)', sortable: true },
     { key: 'barcode', label: '條碼', sortable: true, render: (v, r) => (
       <button
@@ -210,6 +332,22 @@ const Inventory = () => {
       </button>
     ) },
     { key: 'status', label: '狀態', sortable: true, render: (_v, r) => getStatusBadge(r) },
+    {
+      key: 'actions',
+      label: '操作',
+      sortable: false,
+      render: (_v, row) => (
+        <IconActionButton
+          Icon={PencilIcon}
+          label="編輯"
+          variant="gray"
+          onClick={() => {
+            setEditItem(row);
+            setEditFormData({ ...row });
+          }}
+        />
+      )
+    },
   ];
 
   return (
@@ -220,7 +358,26 @@ const Inventory = () => {
         <h1 className="text-3xl font-bold text-gray-800 font-chinese">庫存管理</h1>
       </div>
 
+      {/* 加載狀態 */}
+      {loading && (
+        <div className="glass rounded-2xl p-12 mb-6 flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mb-4"></div>
+          <p className="text-gray-600 font-chinese">正在加載庫存數據...</p>
+        </div>
+      )}
+
+      {/* 錯誤狀態 */}
+      {error && !loading && (
+        <div className="glass rounded-2xl p-4 mb-6 bg-red-50 border border-red-200">
+          <div className="flex items-center">
+            <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-3" />
+            <p className="text-red-700 font-chinese">加載庫存數據失敗: {error}</p>
+          </div>
+        </div>
+      )}
+
       {/* 篩選區域 */}
+      {!loading && (
       <div className="glass rounded-2xl p-6 mb-6">
         <div className="flex flex-wrap gap-4 items-center">
           
@@ -256,8 +413,10 @@ const Inventory = () => {
           </div>
         </div>
       </div>
+      )}
 
       {/* 主要庫存表格 */}
+      {!loading && (
       <StandardTable
         data={productRows}
         columns={columns}
@@ -275,6 +434,7 @@ const Inventory = () => {
         )}
         subtableClassName="rounded-lg"
       />
+      )}
 
       {/* 右側抽屜：庫存詳情與即時編輯 */}
       {previewItem && (
@@ -421,6 +581,113 @@ const Inventory = () => {
           { label: '更新日期', value: qrItem.lastUpdated },
         ] : undefined}
       />
+
+      {/* 編輯 Modal */}
+      <GlassModal
+        isOpen={!!editItem}
+        onClose={() => setEditItem(null)}
+        title={`編輯 SKU: ${editItem?.sku}`}
+        size="max-w-md"
+        contentClass="pt-0"
+        actions={[
+          {
+            label: '取消',
+            variant: 'secondary',
+            onClick: () => setEditItem(null)
+          },
+          {
+            label: '保存',
+            onClick: async () => {
+              try {
+                const response = await fetch(`/backend/products/${editFormData.productId}/inventory/${editFormData.id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({
+                    current_stock_qty: Number(editFormData.currentStock),
+                    safety_stock_qty: Number(editFormData.safeStock),
+                    low_stock_threshold: Number(editFormData.lowStockThreshold),
+                    warehouse: editFormData.warehouse,
+                  })
+                });
+
+                if (response.ok) {
+                  // 更新本地行數據
+                  setRows(prev => prev.map(r => r.id === editFormData.id ? {
+                    ...r,
+                    currentStock: Number(editFormData.currentStock),
+                    safeStock: Number(editFormData.safeStock),
+                    lowStockThreshold: Number(editFormData.lowStockThreshold),
+                    warehouse: editFormData.warehouse,
+                  } : r));
+                  setEditItem(null);
+                }
+              } catch (err) {
+                console.error('保存庫存記錄失敗:', err);
+              }
+            }
+          }
+        ]}
+      >
+        <div className="p-6 space-y-4">
+          {/* 基本資訊 */}
+          <div className="bg-white/50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 font-chinese">基本資訊</h3>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1 font-chinese">SKU</label>
+              <input
+                type="text"
+                value={editFormData.sku || ''}
+                disabled
+                className="w-full px-3 py-2 bg-gray-100 border rounded text-sm font-mono"
+              />
+            </div>
+          </div>
+
+          {/* 庫存信息 */}
+          <div className="bg-white/50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 font-chinese">庫存信息</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1 font-chinese">庫存量</label>
+                <input
+                  type="number"
+                  value={editFormData.currentStock ?? ''}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, currentStock: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1 font-chinese">安全庫存</label>
+                <input
+                  type="number"
+                  value={editFormData.safeStock ?? ''}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, safeStock: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1 font-chinese">低庫存警告</label>
+                <input
+                  type="number"
+                  value={editFormData.lowStockThreshold ?? ''}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, lowStockThreshold: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1 font-chinese">倉庫</label>
+                <input
+                  type="text"
+                  value={editFormData.warehouse || ''}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, warehouse: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </GlassModal>
     </div>
   </div>
   );

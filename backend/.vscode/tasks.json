@@ -11,6 +11,17 @@
 				"$tsc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "build-backend-web",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
 		}
 	]
 }

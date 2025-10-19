@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { 
   ChevronRightIcon, 
   ChevronDownIcon,
@@ -6,8 +6,7 @@ import {
   MinusIcon
 } from '@heroicons/react/24/outline';
 
-// 從數據管理器導入分類數據和工具函數
-import { PRODUCT_CATEGORIES } from '../../../../external_mock/products/categoryDataManager.js';
+// 改為從後端 API 載入分類樹
 
 // 本地搜尋與樹工具，避免外部匯出差異造成建置失敗
 const searchCategories = (tree, term) => {
@@ -201,8 +200,38 @@ const CategoryTreeItem = ({
 };
 
 const CategoryTreeSelector = ({ selectedCategories = [], onChange }) => {
-  const [expandedItems, setExpandedItems] = useState(['electronics', 'clothing']);
+  const [expandedItems, setExpandedItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [categoriesTree, setCategoriesTree] = useState([]);
+
+  // 載入分類樹
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch('/backend/categories', { credentials: 'include' });
+        if (!res.ok) throw new Error('分類載入失敗');
+        const data = await res.json();
+        if (!mounted) return;
+        setCategoriesTree(Array.isArray(data) ? data : []);
+        // 預設展開第一層
+        const rootIds = (Array.isArray(data) ? data : []).map(c => c.id);
+        setExpandedItems(rootIds);
+      } catch (e) {
+        if (!mounted) return;
+        setError(e?.message || '載入分類發生錯誤');
+        setCategoriesTree([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   const handleToggle = (categoryId) => {
     const newSelected = selectedCategories.includes(categoryId)
@@ -221,7 +250,7 @@ const CategoryTreeSelector = ({ selectedCategories = [], onChange }) => {
   };
 
   const handleExpandAll = () => {
-    const allIds = CategoryTreeUtils.collectAllIds(PRODUCT_CATEGORIES);
+    const allIds = CategoryTreeUtils.collectAllIds(categoriesTree);
     setExpandedItems(allIds);
   };
 
@@ -233,8 +262,8 @@ const CategoryTreeSelector = ({ selectedCategories = [], onChange }) => {
     onChange([]);
   };
 
-  // 搜尋功能 - 使用數據管理器的搜尋函數
-  const filteredCategories = searchCategories(PRODUCT_CATEGORIES, searchTerm);
+  // 搜尋功能
+  const filteredCategories = useMemo(() => searchCategories(categoriesTree, searchTerm), [categoriesTree, searchTerm]);
 
   // 獲取選中分類的名稱
   const getSelectedCategoryNames = () => {
@@ -249,7 +278,7 @@ const CategoryTreeSelector = ({ selectedCategories = [], onChange }) => {
         }
       });
     };
-    findNames(PRODUCT_CATEGORIES);
+    findNames(categoriesTree);
     return names;
   };
 
@@ -314,7 +343,11 @@ const CategoryTreeSelector = ({ selectedCategories = [], onChange }) => {
 
       {/* 分類樹狀列表 */}
       <div className="p-4 max-h-96 overflow-y-auto">
-        {filteredCategories.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-8 text-gray-500">載入中...</div>
+        ) : error ? (
+          <div className="text-center py-8 text-red-600">{error}</div>
+        ) : filteredCategories.length > 0 ? (
           <div className="space-y-1">
             {filteredCategories.map(category => (
               <CategoryTreeItem

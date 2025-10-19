@@ -6,39 +6,27 @@ import {
   CubeIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
   PencilIcon,
   ArrowRightIcon,
-  Cog6ToothIcon,
-  QrCodeIcon
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import { ADMIN_STYLES } from '../../Style/adminStyles';
-import { QRCodePreviewModal } from '../../components/ui/QRCodeGenerator';
 import ImageUpload from './ImageUpload';
 
 // 模組層級純函式：避免在 hooks 依賴中產生不必要的重新建立
 const generateId = () => Date.now() + Math.random();
 
 const createDefaultConfig = () => ({
-  price: '',
-  comparePrice: '',
-  costPrice: '',
-  quantity: '',
-  lowStockThreshold: 5,
-  allowBackorder: false,
-  trackQuantity: true,
   weight: '',
   dimensions: { length: '', width: '', height: '' },
   isActive: true,
-  barcode: '',
   hsCode: '',
   origin: '',
   note: '',
   variantImages: []
 });
 
-const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [], singleVariant = false, variantSelected = null }) => {
+const NestedSKUManager = ({ baseSKU, skuVariants, onChange, productName = '', productCategories = [], productId = null, singleVariant = false, variantSelected = null }) => {
   const [skuTree, setSKUTree] = useState([]);
   const [expandedItems, setExpandedItems] = useState(new Set());
   const [selectedSKU, setSelectedSKU] = useState(null);
@@ -46,21 +34,32 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
   const [levelTitles, setLevelTitles] = useState({});
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // 從變體重建樹狀結構
-  const rebuildTreeFromVariants = useCallback((variants) => {
-    if (!variants || variants.length === 0) return;
-    
+  // 當切換商品或基礎 SKU 時重置狀態，避免卡在已初始化狀態
+  useEffect(() => {
+    setSKUTree([]);
+    setLevelTitles({});
+    setExpandedItems(new Set());
+    setSelectedSKU(null);
+    setShowDetailPanel(false);
+    setIsInitialized(false);
+  }, [productId, baseSKU]);
+
+  // 初始化效果：從 skuVariants 重建樹狀結構（僅當有資料時才初始化）
+  useEffect(() => {
+    if (isInitialized) return;
+    if (!skuVariants || skuVariants.length === 0) return;
+
     const tree = [];
     const levelTitlesMap = {};
     
     // 構建樹狀結構
-    variants.forEach(variant => {
+    skuVariants.forEach(variant => {
       if (variant.path && variant.path.length > 0) {
         let currentLevel = tree;
         
         variant.path.forEach((pathItem, index) => {
           const level = index + 1;
-          levelTitlesMap[level] = pathItem.level;
+          if (pathItem.level) levelTitlesMap[level] = pathItem.level;
           
           // 檢查當前層級是否已有該選項
           let existingNode = currentLevel.find(node => 
@@ -72,8 +71,8 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
             existingNode = {
               id: generateId(),
               name: pathItem.option,
-              skuCode: '', // 重建時 SKU 代碼需要用戶重新設定
-              fullSKU: baseSKU || '',
+              skuCode: (pathItem.code || '').toLowerCase(),
+              fullSKU: (baseSKU || '') + (pathItem.code || ''),
               level: level,
               children: [],
               config: createDefaultConfig()
@@ -87,9 +86,8 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
             if (variant.config) {
               existingNode.config = { ...createDefaultConfig(), ...variant.config };
             }
-            if (variant.sku) {
-              existingNode.fullSKU = variant.sku;
-            }
+            // 最末層的 fullSKU = 累加碼；若傳入 sku 也同步覆蓋
+            if (variant.sku) existingNode.fullSKU = variant.sku;
           }
           
           // 移動到下一層級
@@ -100,20 +98,11 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     
     setSKUTree(tree);
     setLevelTitles(levelTitlesMap);
-  }, [baseSKU]);
-
-  // 初始化效果：從 skuVariants 重建樹狀結構（放在 rebuildTreeFromVariants 之後避免 TDZ）
-  useEffect(() => {
-    // 如果有 skuVariants 但沒有樹狀結構，且還沒有初始化過
-    if (skuVariants && skuVariants.length > 0 && skuTree.length === 0 && !isInitialized) {
-      rebuildTreeFromVariants(skuVariants);
-      setIsInitialized(true);
-    }
-    // 如果沒有 skuVariants 但還沒初始化，標記為已初始化
-    else if (!isInitialized && (!skuVariants || skuVariants.length === 0)) {
-      setIsInitialized(true);
-    }
-  }, [skuVariants, baseSKU, skuTree.length, isInitialized, rebuildTreeFromVariants]);
+    setIsInitialized(true);
+    // 初始化完成後，立刻把 variants 告知父層，避免驗證時抓不到
+    const initialVariants = autoGenerateVariants(tree);
+    if (onChange) onChange(initialVariants);
+  }, [baseSKU, skuVariants, isInitialized]);
 
   // 單一變體模式：初始化右側詳情
   useEffect(() => {
@@ -166,12 +155,8 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
     const newNode = createNewNode(1, baseSKU || '');
     setSKUTree(prev => {
       const updatedTree = [...prev, newNode];
-      setTimeout(() => {
-        const currentVariants = autoGenerateVariants(updatedTree);
-        if (onChange) {
-          onChange(currentVariants);
-        }
-      }, 50);
+      const currentVariants = autoGenerateVariants(updatedTree);
+      if (onChange) onChange(currentVariants);
       return updatedTree;
     });
   };
@@ -287,11 +272,9 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
         updatedTree = updateNodeInTree(prev, nodeId, { [field]: value });
       }
       
-      setTimeout(() => {
+      {
         const currentVariants = autoGenerateVariants(updatedTree);
-        if (onChange) {
-          onChange(currentVariants);
-        }
+        if (onChange) onChange(currentVariants);
         // 若當前右側面板選中的是同一節點，則同步更新其顯示資料（包含 fullSKU 與路徑）
         if (selectedSKU && selectedSKU.id === nodeId) {
           const findInNodes = (nodes) => {
@@ -319,7 +302,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
             setSelectedSKU({ ...fresh, pathInfo: newPathInfo });
           }
         }
-      }, 50);
+      }
       
       return updatedTree;
     });
@@ -354,13 +337,9 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
         ]
       });
       
-      // 延遲觸發自動變體更新
-      setTimeout(() => {
-        const currentVariants = autoGenerateVariants(updatedTree);
-        if (onChange) {
-          onChange(currentVariants);
-        }
-      }, 100);
+      // 立即同步變體
+      const currentVariants = autoGenerateVariants(updatedTree);
+      if (onChange) onChange(currentVariants);
       
       return updatedTree;
     });
@@ -414,13 +393,8 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
 
       const updatedTree = addSiblingInTree(prev);
       
-      // 延遲觸發自動變體更新
-      setTimeout(() => {
-        const currentVariants = autoGenerateVariants(updatedTree);
-        if (onChange) {
-          onChange(currentVariants);
-        }
-      }, 100);
+      const currentVariants = autoGenerateVariants(updatedTree);
+      if (onChange) onChange(currentVariants);
       
       return updatedTree;
     });
@@ -437,13 +411,8 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
       };
       const updatedTree = deleteFromTree(prev);
       
-      // 延遲觸發自動變體更新
-      setTimeout(() => {
-        const currentVariants = autoGenerateVariants(updatedTree);
-        if (onChange) {
-          onChange(currentVariants);
-        }
-      }, 100);
+      const currentVariants = autoGenerateVariants(updatedTree);
+      if (onChange) onChange(currentVariants);
       
       return updatedTree;
     });
@@ -500,13 +469,6 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
   const autoGenerateVariants = useCallback((currentTree = null) => {
     const treeToUse = currentTree || skuTree;
     const variants = [];
-    const toNum = (v) => {
-      const n = parseFloat(v);
-      return Number.isFinite(n) ? n : 0;
-    };
-    const bp = toNum(basePrice);
-    const bcp = toNum(baseComparePrice);
-    const bcost = toNum(baseCostPrice);
     
     const collectLeafNodes = (nodes, accumulatedSKU = baseSKU || '', path = []) => {
       nodes.forEach(node => {
@@ -521,9 +483,6 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
           // 這是葉子節點，生成變體
           if (node.skuCode && node.skuCode.trim()) {
             const cfg = node.config || createDefaultConfig();
-            const deltaPrice = toNum(cfg.price);
-            const deltaCompare = toNum(cfg.comparePrice);
-            const deltaCost = toNum(cfg.costPrice);
 
             variants.push({
               id: `sku-${node.id}`,
@@ -532,17 +491,7 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
               path: currentPath,
               pathDisplay: currentPath.map(p => `${p.level}: ${p.option}`).join(' → '),
               config: cfg,
-              // 展平部分欄位（便於驗證/提交）
-              price: cfg.price,
-              comparePrice: cfg.comparePrice,
-              costPrice: cfg.costPrice,
-              quantity: cfg.quantity,
-              trackQuantity: cfg.trackQuantity,
-              isActive: cfg.isActive,
-              // 計算最終價格（基礎價 + 差額；允許負數；無差額時等於基礎價）
-              finalPrice: bp + deltaPrice,
-              finalComparePrice: bcp + deltaCompare,
-              finalCostPrice: bcost + deltaCost
+              isActive: cfg.isActive
             });
           }
         } else {
@@ -554,17 +503,15 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
 
     collectLeafNodes(treeToUse);
     return variants;
-  }, [skuTree, baseSKU, levelTitles, basePrice, baseComparePrice, baseCostPrice]);
+  }, [skuTree, baseSKU, levelTitles]);
 
   // 當樹狀結構變化時自動更新變體
   useEffect(() => {
     if (skuTree.length > 0 && isInitialized) {
       const currentVariants = autoGenerateVariants();
-      if (onChange && currentVariants.length > 0) {
-        onChange(currentVariants);
-      }
+      if (onChange) onChange(currentVariants);
     }
-  }, [skuTree, baseSKU, isInitialized, basePrice, baseComparePrice, baseCostPrice, autoGenerateVariants, onChange]);
+  }, [skuTree, baseSKU, isInitialized, autoGenerateVariants, onChange]);
 
   return (
     <div className="space-y-6">
@@ -646,9 +593,6 @@ const NestedSKUManager = ({ baseSKU, skuVariants, onChange, basePrice = 0, baseC
                 onUpdate={(field, value) => updateNode(selectedSKU.id, field, value)}
                 baseSKU={baseSKU}
                 getLevelTitle={getLevelTitle}
-                basePrice={basePrice}
-                baseComparePrice={baseComparePrice}
-                baseCostPrice={baseCostPrice}
                 productName={productName}
                 productCategories={productCategories}
               />
@@ -841,8 +785,9 @@ const SKUTreeNode = ({
               <button
                 onClick={saveEdit}
                 className="text-green-600 hover:text-green-700 p-1"
+                title="保存"
               >
-                <CheckCircleIcon className="w-4 h-4" />
+                ✓
               </button>
               <button
                 onClick={cancelEdit}
@@ -947,22 +892,8 @@ const SKUTreeNode = ({
 };
 
 // SKU 詳細設定面板組件
-const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle: _getLevelTitle, basePrice = 0, baseComparePrice = 0, baseCostPrice = 0, productName = '', productCategories = [] }) => {
-  const stockStatus = sku.config.trackQuantity 
-    ? (parseInt(sku.config.quantity) || 0) <= (parseInt(sku.config.lowStockThreshold) || 0)
-      ? 'low'
-      : 'normal'
-    : 'unlimited';
-
+const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle: _getLevelTitle, productName = '', productCategories = [] }) => {
   const pathInfo = sku.pathInfo || [];
-  // 計算最終價格（基礎價 + 差額）
-  const toNum = (v) => {
-    const n = parseFloat(v);
-    return Number.isFinite(n) ? n : 0;
-  };
-  const finalSale = toNum(basePrice) + toNum(sku.config.price);
-  const finalCompare = toNum(baseComparePrice) + toNum(sku.config.comparePrice);
-  const finalCost = toNum(baseCostPrice) + toNum(sku.config.costPrice);
 
   return (
     <div className="space-y-6">
@@ -1020,80 +951,9 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle: _getLevelTitle,
             />
             <span className="ml-2 text-sm text-gray-700">啟用此變體</span>
           </div>
-          
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">條碼</label>
-            <input
-              type="text"
-              value={sku.config.barcode}
-              onChange={(e) => onUpdate('config.barcode', e.target.value)}
-              className={`${ADMIN_STYLES.input} text-sm`}
-              placeholder="條碼"
-            />
-            {/* 小按鈕觸發玻璃態 QR 預覽彈窗 */}
-            <QRPreviewButton
-              label="預覽 QR"
-              product={{ name: productName, categories: productCategories, slug: baseSKU || sku.fullSKU, price: finalSale, comparePrice: finalCompare, costPrice: finalCost }}
-              sku={{
-                sku: sku.fullSKU,
-                salePrice: finalSale,
-                comparePrice: finalCompare,
-                costPrice: finalCost,
-                variantPath: pathInfo.map((p) => ({ level: p.level, option: p.option })),
-                images: Array.isArray(sku.config.variantImages) ? sku.config.variantImages : []
-              }}
-            />
-          </div>
         </div>
       </div>
 
-      {/* 價格設定 */}
-      <div>
-        <h6 className="text-sm font-medium text-gray-900 mb-3">價格設定</h6>
-  <p className="text-xs text-gray-500 mb-2">提示：此處輸入的是&quot;差額&quot;，會與定價設定中的基礎價格相加（可為負數）。</p>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">售價 *</label>
-            <input
-              type="number"
-              value={sku.config.price}
-              onChange={(e) => onUpdate('config.price', e.target.value)}
-              className={`${ADMIN_STYLES.input} text-sm`}
-              placeholder="0"
-              step="0.01"
-            />
-            <div className="mt-1 text-xs text-gray-600">最終售價：NT${Number(finalSale).toLocaleString()}</div>
-          </div>
-          
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">原價</label>
-            <input
-              type="number"
-              value={sku.config.comparePrice}
-              onChange={(e) => onUpdate('config.comparePrice', e.target.value)}
-              className={`${ADMIN_STYLES.input} text-sm`}
-              placeholder="0"
-              step="0.01"
-            />
-            <div className="mt-1 text-xs text-gray-600">最終原價：NT${Number(finalCompare).toLocaleString()}</div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">成本價</label>
-            <input
-              type="number"
-              value={sku.config.costPrice}
-              onChange={(e) => onUpdate('config.costPrice', e.target.value)}
-              className={`${ADMIN_STYLES.input} text-sm`}
-              placeholder="0"
-              step="0.01"
-            />
-            <div className="mt-1 text-xs text-gray-600">最終成本：NT${Number(finalCost).toLocaleString()}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* 庫存管理 */}
       {/* 變體圖片 */}
       <div>
         <h6 className="text-sm font-medium text-gray-900 mb-3">變體圖片</h6>
@@ -1104,99 +964,8 @@ const SKUDetailPanel = ({ sku, onUpdate, baseSKU, getLevelTitle: _getLevelTitle,
           maxImages={3}
         />
       </div>
-
-      {/* 庫存管理 */}
-      <div>
-        <h6 className="text-sm font-medium text-gray-900 mb-3">庫存管理</h6>
-        <div className="space-y-3">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              checked={sku.config.trackQuantity}
-              onChange={(e) => onUpdate('config.trackQuantity', e.target.checked)}
-              className="h-4 w-4 text-[#cc824d] border-gray-300 rounded"
-            />
-            <span className="ml-2 text-sm text-gray-700">追蹤庫存</span>
-          </div>
-
-          {sku.config.trackQuantity && (
-            <>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">庫存數量 *</label>
-                <input
-                  type="number"
-                  value={sku.config.quantity}
-                  onChange={(e) => onUpdate('config.quantity', e.target.value)}
-                  className={`${ADMIN_STYLES.input} text-sm`}
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">低庫存警告</label>
-                <input
-                  type="number"
-                  value={sku.config.lowStockThreshold}
-                  onChange={(e) => onUpdate('config.lowStockThreshold', e.target.value)}
-                  className={`${ADMIN_STYLES.input} text-sm`}
-                  placeholder="5"
-                  min="0"
-                />
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={sku.config.allowBackorder}
-                  onChange={(e) => onUpdate('config.allowBackorder', e.target.checked)}
-                  className="h-4 w-4 text-[#cc824d] border-gray-300 rounded"
-                />
-                <span className="ml-2 text-sm text-gray-700">允許缺貨預訂</span>
-              </div>
-
-              <div className={`flex items-center text-xs px-2 py-1 rounded-full ${
-                stockStatus === 'low' 
-                  ? 'bg-red-100 text-red-800' 
-                  : 'bg-green-100 text-green-800'
-              }`}>
-                {stockStatus === 'low' ? (
-                  <ExclamationTriangleIcon className="w-3 h-3 mr-1" />
-                ) : (
-                  <CheckCircleIcon className="w-3 h-3 mr-1" />
-                )}
-                {stockStatus === 'low' ? '庫存不足' : '庫存充足'}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
     </div>
   );
 };
 
 export default NestedSKUManager;
-
-// 內部小元件：小按鈕觸發 QR 預覽
-const QRPreviewButton = ({ label = '預覽 QR', product, sku }) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="mt-2">
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center px-2.5 py-1.5 text-xs border border-[#cc824d] text-[#cc824d] rounded hover:bg-[#cc824d] hover:text-white transition-colors"
-      >
-        <QrCodeIcon className="w-4 h-4 mr-1" /> {label}
-      </button>
-      <QRCodePreviewModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        title={`QR 預覽 - ${sku?.sku || ''}`}
-        product={product}
-        sku={sku}
-        size="max-w-2xl"
-      />
-    </div>
-  );
-};
