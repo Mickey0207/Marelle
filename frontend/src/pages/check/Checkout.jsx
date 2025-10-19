@@ -29,12 +29,61 @@ const Checkout = () => {
   });
 
   const [paymentInfo, setPaymentInfo] = useState({
-    method: 'credit-card',
+    method: 'CREDIT', // CREDIT | INSTALLMENT | APPLE_PAY | ATM | CVS_CODE | WEBATM | TWQR | LINEPAY
     cardNumber: '',
     expiryDate: '',
     cvv: '',
     cardName: ''
   });
+
+  // 付款方式定義與開發用開關
+  const PAYMENT_DEFS = [
+    { id: 'CREDIT', label: '信用卡（一次付清）' },
+    { id: 'INSTALLMENT', label: '信用卡分期' },
+    { id: 'APPLE_PAY', label: 'Apple Pay（僅 iOS Safari）' },
+    { id: 'ATM', label: 'ATM 轉帳付款' },
+    { id: 'CVS_CODE', label: '超商代碼付款' },
+    { id: 'WEBATM', label: 'WEBATM 網路轉帳' },
+    { id: 'TWQR', label: 'TWQR 行動支付' },
+    { id: 'LINEPAY', label: 'LINE Pay' },
+  ];
+  const [paymentSwitches, setPaymentSwitches] = useState({
+    CREDIT: true,
+    INSTALLMENT: true,
+    APPLE_PAY: true,
+    ATM: true,
+    CVS_CODE: true,
+    WEBATM: true,
+    TWQR: true,
+    LINEPAY: true,
+  });
+
+  const [isApplePayAvailable, setIsApplePayAvailable] = useState(false);
+  useEffect(() => {
+    try {
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPhone|iPad|iPod/.test(ua);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+      const hasAPS = typeof window !== 'undefined' && 'ApplePaySession' in window;
+      setIsApplePayAvailable(Boolean(isIOS && isSafari && hasAPS));
+    } catch {
+      setIsApplePayAvailable(false);
+    }
+  }, []);
+
+  const isMethodEnabled = (id) => {
+    if (!paymentSwitches[id]) return false;
+    if (id === 'APPLE_PAY') return isApplePayAvailable && paymentSwitches.APPLE_PAY;
+    return true;
+  };
+
+  // 若目前選取的方式被關閉或不可用，自動回退到第一個可用方式
+  useEffect(() => {
+    if (!isMethodEnabled(paymentInfo.method)) {
+      const first = PAYMENT_DEFS.find(m => isMethodEnabled(m.id));
+      if (first) setPaymentInfo(prev => ({ ...prev, method: first.id }));
+    }
+  }, [paymentSwitches, isApplePayAvailable]);
 
   // 配送方式與地址簿/超商資訊
   const [shippingMethod, setShippingMethod] = useState('home'); // 'home' | 'cvs'
@@ -126,7 +175,7 @@ const Checkout = () => {
       // 超商取貨：需姓名、電話、品牌與門市名稱
       return shippingInfo.fullName && shippingInfo.phone && cvsInfo.brand && cvsInfo.storeName;
     } else if (step === 2) {
-      if (paymentInfo.method === 'credit-card') {
+      if (paymentInfo.method === 'CREDIT' || paymentInfo.method === 'INSTALLMENT') {
         return paymentInfo.cardNumber && 
                paymentInfo.expiryDate && 
                paymentInfo.cvv && 
@@ -542,36 +591,41 @@ const Checkout = () => {
                   付款方式
                 </h2>
                 
-                {/* Payment Method Selection */}
+                {/* Payment Method Selection with dev toggles */}
                 <div className="space-y-3 xs:space-y-3 sm:space-y-4 md:space-y-4 mb-5 xs:mb-5 sm:mb-6 md:mb-6">
-                  <label className="flex items-center p-3 xs:p-3 sm:p-4 md:p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="credit-card"
-                      checked={paymentInfo.method === 'credit-card'}
-                      onChange={(e) => handleInputChange('payment', 'method', e.target.value)}
-                      className="mr-3"
-                    />
-                    <CreditCardIcon className="w-4 h-4 xs:w-4 xs:h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 mr-2" />
-                    <span className="text-sm xs:text-sm sm:text-base md:text-base font-medium font-chinese">信用卡</span>
-                  </label>
-                  
-                  <label className="flex items-center p-3 xs:p-3 sm:p-4 md:p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="bank-transfer"
-                      checked={paymentInfo.method === 'bank-transfer'}
-                      onChange={(e) => handleInputChange('payment', 'method', e.target.value)}
-                      className="mr-3"
-                    />
-                    <span className="text-sm xs:text-sm sm:text-base md:text-base font-medium font-chinese">銀行轉帳</span>
-                  </label>
+                  {PAYMENT_DEFS.map((m) => {
+                    const enabled = isMethodEnabled(m.id);
+                    const selected = paymentInfo.method === m.id;
+                    return (
+                      <div key={m.id} className={`p-3 xs:p-3 sm:p-4 md:p-4 border rounded-lg ${enabled ? 'cursor-pointer hover:bg-gray-50' : 'opacity-50'} transition`}
+                        onClick={() => enabled && handleInputChange('payment', 'method', m.id)}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <input type="radio" name="paymentMethod" value={m.id} checked={selected} onChange={() => {}} className="mr-3" disabled={!enabled} />
+                            {m.id === 'CREDIT' && (<CreditCardIcon className="w-4 h-4 mr-2" />)}
+                            <span className="text-sm xs:text-sm sm:text-base md:text-base font-medium font-chinese">{m.label}</span>
+                            {m.id === 'APPLE_PAY' && !isApplePayAvailable && (
+                              <span className="ml-2 text-xs text-gray-500">僅 iOS Safari 可用</span>
+                            )}
+                          </div>
+                          {/* 開發用開關 */}
+                          <label className="flex items-center gap-2 text-xs text-gray-600 select-none">
+                            <span>啟用</span>
+                            <input
+                              type="checkbox"
+                              checked={!!paymentSwitches[m.id]}
+                              onChange={(e) => setPaymentSwitches(prev => ({ ...prev, [m.id]: e.target.checked }))}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Credit Card Details */}
-                {paymentInfo.method === 'credit-card' && (
+                {(paymentInfo.method === 'CREDIT' || paymentInfo.method === 'INSTALLMENT') && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 xs:gap-3 sm:gap-4 md:gap-4 lg:gap-5">
                     <div className="md:col-span-2">
                       <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
@@ -681,8 +735,17 @@ const Checkout = () => {
                   <div className="p-3 xs:p-3 sm:p-4 md:p-4 bg-white/50 rounded-lg">
                     <h3 className="text-sm xs:text-sm sm:text-base md:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">付款方式</h3>
                     <p className="text-xs xs:text-xs sm:text-sm md:text-sm text-gray-600 font-chinese">
-                      {paymentInfo.method === 'credit-card' ? '信用卡' : '銀行轉帳'}
-                      {paymentInfo.method === 'credit-card' && paymentInfo.cardNumber && (
+                      {{
+                        CREDIT: '信用卡（一次付清）',
+                        INSTALLMENT: '信用卡分期',
+                        APPLE_PAY: 'Apple Pay',
+                        ATM: 'ATM 轉帳付款',
+                        CVS_CODE: '超商代碼付款',
+                        WEBATM: 'WEBATM 網路轉帳',
+                        TWQR: 'TWQR 行動支付',
+                        LINEPAY: 'LINE Pay',
+                      }[paymentInfo.method] || '—'}
+                      {(paymentInfo.method === 'CREDIT' || paymentInfo.method === 'INSTALLMENT') && paymentInfo.cardNumber && (
                         <span className="block">**** **** **** {paymentInfo.cardNumber.slice(-4)}</span>
                       )}
                     </p>
