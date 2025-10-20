@@ -119,7 +119,7 @@ const EditProduct = () => {
     // 優先使用庫存記錄，結合定價記錄重建變體
     if (inventory.length > 0) {
       const priceMap = new Map(prices.map(pr => [pr.sku_key, pr]));
-      const variantPhotos = Array.isArray(p.variant_photos) ? p.variant_photos : [];
+  const variantPhotos = Array.isArray(p.variant_photos) ? p.variant_photos : [];
       // 以 sku_key 去重（避免多倉庫重複）
       const bySku = new Map();
       for (const inv of inventory) {
@@ -142,12 +142,11 @@ const EditProduct = () => {
           if (option && level) path.push({ level, option, code });
         }
 
-        // 變體圖片：由 backend_products_photo 表的 inventory 綁定列取得（最多 3 張）
-        const vp = variantPhotos.find(v => v.inventory_id === invRecord.id);
+        // 變體圖片：優先使用 inventory 列上的 variant_photo_url_1..3，其次相容舊回應的 variant_photos 陣列
         const variantImages = [];
-        if (vp) {
-          const urls = [vp.variant_photo_url_1, vp.variant_photo_url_2, vp.variant_photo_url_3].filter(Boolean);
-          urls.forEach((u, idx) => {
+        const directUrls = [invRecord.variant_photo_url_1, invRecord.variant_photo_url_2, invRecord.variant_photo_url_3].filter(Boolean);
+        if (directUrls.length > 0) {
+          directUrls.forEach((u, idx) => {
             variantImages.push({
               id: `vimg_${invRecord.id}_${idx + 1}`,
               url: u,
@@ -156,6 +155,20 @@ const EditProduct = () => {
               type: 'image/jpeg'
             });
           });
+        } else {
+          const vp = variantPhotos.find(v => v.inventory_id === invRecord.id);
+          if (vp) {
+            const urls = [vp.variant_photo_url_1, vp.variant_photo_url_2, vp.variant_photo_url_3].filter(Boolean);
+            urls.forEach((u, idx) => {
+              variantImages.push({
+                id: `vimg_${invRecord.id}_${idx + 1}`,
+                url: u,
+                name: `variant-${idx + 1}.jpg`,
+                size: 0,
+                type: 'image/jpeg'
+              });
+            });
+          }
         }
 
         // 構造變體物件（NestedSKUManager 需要 path 才能重建樹）

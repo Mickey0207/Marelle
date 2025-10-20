@@ -1307,10 +1307,10 @@ var require_cjs = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-DfZEjZ/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-GkhLMj/middleware-loader.entry.ts
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-DfZEjZ/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-GkhLMj/middleware-insertion-facade.js
 init_modules_watch_stub();
 
 // ../backend/API/index.ts
@@ -12189,10 +12189,15 @@ app4.get("/backend/products/:id", async (c) => {
     const { data: product, error: prodErr } = await svc.from("backend_products").select("*").eq("id", id).single();
     if (prodErr || !product) return c.json({ error: "Product not found" }, 404);
     const { data: photos } = await svc.from("backend_products_photo").select("photo_url_1, photo_url_2, photo_url_3, photo_url_4, photo_url_5, photo_url_6, photo_url_7, photo_url_8, photo_url_9, photo_url_10").eq("product_id", id).is("inventory_id", null).maybeSingle();
-    const { data: variantPhotos } = await svc.from("backend_products_photo").select("inventory_id, variant_photo_url_1, variant_photo_url_2, variant_photo_url_3").eq("product_id", id).not("inventory_id", "is", null);
     const { data: seo } = await svc.from("backend_products_seo").select("*").eq("product_id", id).single();
     const { data: inventory } = await svc.from("backend_products_inventory").select("*").eq("product_id", id);
     const { data: prices } = await svc.from("backend_products_prices").select("*").eq("product_id", id);
+    const variantPhotos = (inventory || []).map((inv) => ({
+      inventory_id: inv.id,
+      variant_photo_url_1: inv.variant_photo_url_1 ?? null,
+      variant_photo_url_2: inv.variant_photo_url_2 ?? null,
+      variant_photo_url_3: inv.variant_photo_url_3 ?? null
+    }));
     return c.json({
       ...product,
       photos: photos || [],
@@ -12510,6 +12515,9 @@ app4.patch("/backend/products/:productId/inventory/:inventoryId", async (c) => {
     if (body.spec_level_3_name !== void 0) allowed.spec_level_3_name = body.spec_level_3_name || null;
     if (body.spec_level_4_name !== void 0) allowed.spec_level_4_name = body.spec_level_4_name || null;
     if (body.spec_level_5_name !== void 0) allowed.spec_level_5_name = body.spec_level_5_name || null;
+    if (body.variant_photo_url_1 !== void 0) allowed.variant_photo_url_1 = body.variant_photo_url_1 || null;
+    if (body.variant_photo_url_2 !== void 0) allowed.variant_photo_url_2 = body.variant_photo_url_2 || null;
+    if (body.variant_photo_url_3 !== void 0) allowed.variant_photo_url_3 = body.variant_photo_url_3 || null;
     if (Object.keys(allowed).length === 0) return c.json({ error: "No fields to update" }, 400);
     const { data, error } = await svc.from("backend_products_inventory").update(allowed).eq("id", inventoryId).eq("product_id", productId).select().single();
     if (error) return c.json({ error: "Update failed" }, 500);
@@ -12541,9 +12549,9 @@ app4.post("/backend/products/:productId/variant-photos/:inventoryId/upload", asy
     if (!file) return c.json({ error: "No file provided" }, 400);
     const svc = makeSvc3(c);
     const filename = `${productId}-${inventoryId}-${Date.now()}-${file.name}`;
-    const { error: uploadErr } = await svc.storage.from("products").upload(filename, file, { upsert: false });
-    if (uploadErr) return c.json({ error: "Upload failed" }, 500);
-    const { data: publicUrl } = svc.storage.from("products").getPublicUrl(filename);
+    const { error: uploadErr } = await svc.storage.from("products-sku").upload(filename, file, { upsert: false });
+    if (uploadErr) return c.json({ error: "Upload failed", details: String(uploadErr?.message || uploadErr) }, 500);
+    const { data: publicUrl } = svc.storage.from("products-sku").getPublicUrl(filename);
     return c.json({ url: publicUrl?.publicUrl || "" });
   } catch (e) {
     return c.json({ error: e?.message || "Internal error" }, 500);
@@ -12556,18 +12564,23 @@ app4.patch("/backend/products/:productId/variant-photos/:inventoryId", async (c)
     const inventoryId = c.req.param("inventoryId");
     const body = await c.req.json();
     const svc = makeSvc3(c);
-    const { data: existing } = await svc.from("backend_products_photo").select("id, variant_photo_url_1, variant_photo_url_2, variant_photo_url_3").eq("product_id", productId).eq("inventory_id", inventoryId).maybeSingle();
+    const pId = parseInt(productId, 10);
+    const invId = parseInt(inventoryId, 10);
+    if (Number.isNaN(pId) || Number.isNaN(invId)) {
+      return c.json({ error: "Invalid productId or inventoryId" }, 400);
+    }
+    const { data: existing } = await svc.from("backend_products_inventory").select("id, variant_photo_url_1, variant_photo_url_2, variant_photo_url_3").eq("product_id", pId).eq("id", invId).maybeSingle();
     const nextUrls = [body.variant_photo_url_1 || null, body.variant_photo_url_2 || null, body.variant_photo_url_3 || null];
     const prevUrls = existing ? [existing.variant_photo_url_1, existing.variant_photo_url_2, existing.variant_photo_url_3] : [];
     const removed = (prevUrls || []).filter((u) => !!u && !nextUrls.includes(u));
     if (removed.length > 0) {
       const paths = removed.map((u) => {
-        const marker = "/object/public/products/";
+        const marker = "/object/public/products-sku/";
         const idx = u.indexOf(marker);
         return idx >= 0 ? u.substring(idx + marker.length) : "";
       }).filter((p) => !!p);
       if (paths.length > 0) {
-        await svc.storage.from("products").remove(paths);
+        await svc.storage.from("products-sku").remove(paths);
       }
     }
     const updateData = {
@@ -12575,15 +12588,9 @@ app4.patch("/backend/products/:productId/variant-photos/:inventoryId", async (c)
       variant_photo_url_2: nextUrls[1],
       variant_photo_url_3: nextUrls[2]
     };
-    if (existing) {
-      const { data, error } = await svc.from("backend_products_photo").update(updateData).eq("product_id", productId).eq("inventory_id", inventoryId).select().single();
-      if (error) return c.json({ error: "Update failed" }, 500);
-      return c.json(data);
-    } else {
-      const { data, error } = await svc.from("backend_products_photo").insert({ product_id: parseInt(productId), inventory_id: parseInt(inventoryId), ...updateData }).select().single();
-      if (error) return c.json({ error: "Insert failed" }, 500);
-      return c.json(data);
-    }
+    const { data, error } = await svc.from("backend_products_inventory").update(updateData).eq("product_id", pId).eq("id", invId).select().single();
+    if (error) return c.json({ error: "Update failed", details: String(error?.message || error) }, 500);
+    return c.json(data);
   } catch (e) {
     return c.json({ error: e?.message || "Internal error" }, 500);
   }
@@ -13715,7 +13722,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-DfZEjZ/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-GkhLMj/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -13748,7 +13755,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-DfZEjZ/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-GkhLMj/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

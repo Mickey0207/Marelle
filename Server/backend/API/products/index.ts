@@ -79,12 +79,6 @@ app.get('/backend/products/:id', async (c) => {
       .eq('product_id', id)
       .is('inventory_id', null)
       .maybeSingle()
-    // Fetch variant-level photos (by inventory)
-    const { data: variantPhotos } = await svc
-      .from('backend_products_photo')
-      .select('inventory_id, variant_photo_url_1, variant_photo_url_2, variant_photo_url_3')
-      .eq('product_id', id)
-      .not('inventory_id', 'is', null)
 
 
     // Fetch SEO
@@ -106,10 +100,18 @@ app.get('/backend/products/:id', async (c) => {
       .select('*')
       .eq('product_id', id)
 
+    // Compute variant-level photos from inventory columns (for backward compatibility response)
+    const variantPhotos = (inventory || []).map((inv: any) => ({
+      inventory_id: inv.id,
+      variant_photo_url_1: inv.variant_photo_url_1 ?? null,
+      variant_photo_url_2: inv.variant_photo_url_2 ?? null,
+      variant_photo_url_3: inv.variant_photo_url_3 ?? null
+    }))
+
     return c.json({
       ...product,
-  photos: photos || [],
-  variant_photos: variantPhotos || [],
+      photos: photos || [],
+      variant_photos: variantPhotos || [],
       seo: seo || null,
       inventory: inventory || [],
       prices: prices || []
@@ -565,6 +567,10 @@ app.patch('/backend/products/:productId/inventory/:inventoryId', async (c) => {
     if (body.spec_level_3_name !== undefined) allowed.spec_level_3_name = body.spec_level_3_name || null
     if (body.spec_level_4_name !== undefined) allowed.spec_level_4_name = body.spec_level_4_name || null
     if (body.spec_level_5_name !== undefined) allowed.spec_level_5_name = body.spec_level_5_name || null
+  // Support updating variant photos directly through inventory PATCH as well
+  if (body.variant_photo_url_1 !== undefined) allowed.variant_photo_url_1 = body.variant_photo_url_1 || null
+  if (body.variant_photo_url_2 !== undefined) allowed.variant_photo_url_2 = body.variant_photo_url_2 || null
+  if (body.variant_photo_url_3 !== undefined) allowed.variant_photo_url_3 = body.variant_photo_url_3 || null
 
     if (Object.keys(allowed).length === 0) return c.json({ error: 'No fields to update' }, 400)
 
@@ -622,11 +628,11 @@ app.post('/backend/products/:productId/variant-photos/:inventoryId/upload', asyn
     const svc = makeSvc(c)
     const filename = `${productId}-${inventoryId}-${Date.now()}-${file.name}`
     const { error: uploadErr } = await svc.storage
-      .from('products')
+      .from('products-sku')
       .upload(filename, file, { upsert: false })
-    if (uploadErr) return c.json({ error: 'Upload failed' }, 500)
+    if (uploadErr) return c.json({ error: 'Upload failed', details: String((uploadErr as any)?.message || uploadErr) }, 500)
     const { data: publicUrl } = svc.storage
-      .from('products')
+      .from('products-sku')
       .getPublicUrl(filename)
     return c.json({ url: publicUrl?.publicUrl || '' })
   } catch (e: any) {
@@ -642,13 +648,18 @@ app.patch('/backend/products/:productId/variant-photos/:inventoryId', async (c) 
     const inventoryId = c.req.param('inventoryId')
     const body = await c.req.json()
     const svc = makeSvc(c)
+    const pId = parseInt(productId, 10)
+    const invId = parseInt(inventoryId, 10)
+    if (Number.isNaN(pId) || Number.isNaN(invId)) {
+      return c.json({ error: 'Invalid productId or inventoryId' }, 400)
+    }
 
-    // Fetch existing for diff
+    // Fetch existing inventory row for diff
     const { data: existing } = await svc
-      .from('backend_products_photo')
+      .from('backend_products_inventory')
       .select('id, variant_photo_url_1, variant_photo_url_2, variant_photo_url_3')
-      .eq('product_id', productId)
-      .eq('inventory_id', inventoryId)
+      .eq('product_id', pId)
+      .eq('id', invId)
       .maybeSingle()
 
     const nextUrls = [body.variant_photo_url_1 || null, body.variant_photo_url_2 || null, body.variant_photo_url_3 || null]
@@ -659,13 +670,13 @@ app.patch('/backend/products/:productId/variant-photos/:inventoryId', async (c) 
     if (removed.length > 0) {
       const paths = removed
         .map(u => {
-          const marker = '/object/public/products/'
+          const marker = '/object/public/products-sku/'
           const idx = u.indexOf(marker)
           return idx >= 0 ? u.substring(idx + marker.length) : ''
         })
         .filter(p => !!p)
       if (paths.length > 0) {
-        await svc.storage.from('products').remove(paths)
+        await svc.storage.from('products-sku').remove(paths)
       }
     }
 
@@ -675,25 +686,15 @@ app.patch('/backend/products/:productId/variant-photos/:inventoryId', async (c) 
       variant_photo_url_3: nextUrls[2]
     }
 
-    if (existing) {
-      const { data, error } = await svc
-        .from('backend_products_photo')
-        .update(updateData)
-        .eq('product_id', productId)
-        .eq('inventory_id', inventoryId)
-        .select()
-        .single()
-      if (error) return c.json({ error: 'Update failed' }, 500)
-      return c.json(data)
-    } else {
-      const { data, error } = await svc
-        .from('backend_products_photo')
-        .insert({ product_id: parseInt(productId), inventory_id: parseInt(inventoryId), ...updateData })
-        .select()
-        .single()
-      if (error) return c.json({ error: 'Insert failed' }, 500)
-      return c.json(data)
-    }
+    const { data, error } = await svc
+      .from('backend_products_inventory')
+      .update(updateData)
+      .eq('product_id', pId)
+      .eq('id', invId)
+      .select()
+      .single()
+    if (error) return c.json({ error: 'Update failed', details: String((error as any)?.message || error) }, 500)
+    return c.json(data)
   } catch (e: any) {
     return c.json({ error: e?.message || 'Internal error' }, 500)
   }

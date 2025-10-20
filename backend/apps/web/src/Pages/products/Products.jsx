@@ -77,26 +77,28 @@ const AdminProducts = () => {
         const productsWithData = await Promise.all(
           products.map(async (product) => {
             try {
+              // 直接抓詳細，取得 photos + inventory + prices 一次到位
+              const detailRes = await fetch(`/backend/products/${product.id}`, { credentials: 'include' });
+              if (detailRes.ok) {
+                const detail = await detailRes.json();
+                return {
+                  ...product,
+                  photos: detail.photos || null,
+                  prices: detail.prices || [],
+                  inventory: detail.inventory || []
+                };
+              }
+              // 後援：若詳細失敗，至少取回 inventory/prices（與舊行為一致）
               const [pricesRes, inventoryRes] = await Promise.all([
                 fetch(`/backend/products/${product.id}/prices`, { credentials: 'include' }),
                 fetch(`/backend/products/${product.id}/inventory`, { credentials: 'include' })
               ]);
-              
               const prices = pricesRes.ok ? await pricesRes.json() : [];
               const inventory = inventoryRes.ok ? await inventoryRes.json() : [];
-              
-              return {
-                ...product,
-                prices: prices || [],
-                inventory: inventory || []
-              };
+              return { ...product, prices: prices || [], inventory: inventory || [] };
             } catch (err) {
-              console.warn(`加載商品 ${product.id} 的價格/庫存失敗:`, err);
-              return {
-                ...product,
-                prices: [],
-                inventory: []
-              };
+              console.warn(`加載商品 ${product.id} 的詳細/價格/庫存失敗:`, err);
+              return { ...product, prices: [], inventory: [] };
             }
           })
         );
@@ -147,6 +149,11 @@ const AdminProducts = () => {
         const code = inv[`sku_level_${i}`] || '';
         if (option && level) path.push({ level, option, code });
       }
+      // 從 inventory 的變體圖片欄位組合圖片陣列
+      const variantImages = [];
+      const urls = [inv.variant_photo_url_1, inv.variant_photo_url_2, inv.variant_photo_url_3].filter(Boolean);
+      urls.forEach((u, idx) => variantImages.push({ id: `v_${inv.id}_${idx+1}`, url: u, name: `variant-${idx+1}.jpg`, size: 0, type: 'image/jpeg' }));
+
       skuVariants.push({
         sku: skuKey,
         fullSKU: skuKey,
@@ -160,7 +167,7 @@ const AdminProducts = () => {
         barcode: inv?.barcode ?? '',
         config: {
           isActive: true,
-          variantImages: []
+          variantImages
         }
       });
     }
@@ -298,10 +305,15 @@ const AdminProducts = () => {
       label: '商品',
       sortable: true,
       render: (_, product) => {
-        // 從 photos 陣列找主圖，否則用第一張
-        const photos = product?.photos || [];
-        const primaryPhoto = photos.find(p => p.is_primary);
-        const cover = primaryPhoto?.image_url || photos[0]?.image_url || '/placeholder-image.jpg';
+        // 產品封面：使用 backend_products_photo 的 photo_url_1..10（第一張）
+        let cover = '/placeholder-image.jpg';
+        const photos = product?.photos || null;
+        if (photos && typeof photos === 'object') {
+          for (let i = 1; i <= 10; i++) {
+            const u = photos[`photo_url_${i}`];
+            if (u) { cover = u; break; }
+          }
+        }
         return (
           <div className="flex items-center">
             <img
@@ -412,8 +424,9 @@ const AdminProducts = () => {
       width: 'w-12',
       render: (_v, row) => {
         const variantImages = row?.config?.variantImages || [];
-        const variantCover = (variantImages[0]?.url || variantImages[0]) || null;
-        const cover = variantCover || '/placeholder-image.jpg';
+        const variantCoverFromConfig = (variantImages[0]?.url || variantImages[0]) || null;
+        const variantCoverFromInv = row?.variant_photo_url_1 || row?.variant_photo_url_2 || row?.variant_photo_url_3 || null;
+        const cover = variantCoverFromConfig || variantCoverFromInv || '/placeholder-image.jpg';
         return (
           <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
             {cover ? (

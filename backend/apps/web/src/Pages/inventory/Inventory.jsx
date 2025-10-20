@@ -48,15 +48,31 @@ const Inventory = () => {
         
         // 為每個商品取得庫存記錄
         const allInventoryRows = [];
-        
+        const productCoverById = new Map();
+
         for (const product of products) {
           try {
-            const inventoryRes = await fetch(`/backend/products/${product.id}/inventory`, {
-              credentials: 'include'
-            });
+            // 讀取詳細，取得 photos（封面）+ inventory
+            const detailRes = await fetch(`/backend/products/${product.id}`, { credentials: 'include' });
+            let inventoryRecords = [];
+            let cover = null;
+            if (detailRes.ok) {
+              const detail = await detailRes.json();
+              inventoryRecords = detail.inventory || [];
+              const photos = detail.photos || null;
+              if (photos && typeof photos === 'object') {
+                for (let i = 1; i <= 10; i++) {
+                  const u = photos[`photo_url_${i}`];
+                  if (u) { cover = u; break; }
+                }
+              }
+            } else {
+              const inventoryRes = await fetch(`/backend/products/${product.id}/inventory`, { credentials: 'include' });
+              if (inventoryRes.ok) inventoryRecords = await inventoryRes.json() || [];
+            }
+            if (cover) productCoverById.set(product.id, cover);
             
-            if (inventoryRes.ok) {
-              const inventoryRecords = await inventoryRes.json() || [];
+            if (Array.isArray(inventoryRecords)) {
               
               // 將庫存記錄轉換為表格行格式
               for (const inv of inventoryRecords) {
@@ -66,7 +82,8 @@ const Inventory = () => {
                   name: product.name,
                   category: product.category_ids && product.category_ids.length > 0 ? product.category_ids.join(', ') : '未分類',
                   categoryId: product.category_ids && product.category_ids.length > 0 ? product.category_ids[0] : null,
-                  productImageUrl: product.image_url,
+                  productImageUrl: productCoverById.get(product.id) || product.image_url,
+                  variantImageUrl: inv.variant_photo_url_1 || inv.variant_photo_url_2 || inv.variant_photo_url_3 || null,
                   sku: inv.sku_key || product.base_sku,
                   spec: (() => {
                     // 從5層級SKU構建規格顯示
@@ -193,15 +210,18 @@ const Inventory = () => {
       key: 'imageUrl',
       label: '圖片',
       sortable: false,
-      render: (value, item) => (
-        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-          {value ? (
-            <img src={value} alt={item.name} className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-[10px] text-gray-400">無圖</span>
-          )}
-        </div>
-      )
+      render: (value, item) => {
+        const cover = value || '/placeholder-image.jpg';
+        return (
+          <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+            {cover ? (
+              <img src={cover} alt={item.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[10px] text-gray-400">無圖</span>
+            )}
+          </div>
+        );
+      }
     },
     {
       key: 'name',
@@ -304,15 +324,18 @@ const Inventory = () => {
       key: 'imageUrl',
       label: '圖片',
       sortable: false,
-      render: (value, item) => (
-        <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-          {value ? (
-            <img src={value} alt={item.sku} className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-[10px] text-gray-400">無圖</span>
-          )}
-        </div>
-      )
+      render: (value, item) => {
+        const cover = value || '/placeholder-image.jpg';
+        return (
+          <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+            {cover ? (
+              <img src={cover} alt={item.sku} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[10px] text-gray-400">無圖</span>
+            )}
+          </div>
+        );
+      }
     },
     { key: 'sku', label: 'SKU', sortable: true, render: (v) => <span className="font-mono text-xs text-gray-800">{v}</span> },
     { key: 'spec', label: '規格', sortable: true, render: (v) => <span className="text-sm text-gray-700 font-chinese">{v || '-'}</span> },
