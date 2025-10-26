@@ -31,20 +31,24 @@ const Checkout = () => {
   const [paymentInfo, setPaymentInfo] = useState({
     method: 'CREDIT' // CREDIT | ATM | CVS_CODE | WEBATM | (其他之後再開)
   });
+  // 是否在付款前預先建立物流託運單
+  const [createLogistics, setCreateLogistics] = useState(true);
 
   // 付款方式定義與開發用開關
   const PAYMENT_DEFS = [
     { id: 'CREDIT', label: '信用卡（導轉綠界）' },
     { id: 'ATM', label: 'ATM 轉帳（導轉綠界）' },
     { id: 'CVS_CODE', label: '超商代碼（導轉綠界）' },
-    { id: 'WEBATM', label: 'WEBATM（導轉綠界）' }
+    { id: 'WEBATM', label: 'WEBATM（導轉綠界）' },
+    { id: 'CVS_COD', label: '超商取貨付款（到店付款）' }
     // 其餘之後再開
   ];
   const [paymentSwitches, setPaymentSwitches] = useState({
     CREDIT: true,
     ATM: true,
     CVS_CODE: true,
-    WEBATM: true
+    WEBATM: true,
+    CVS_COD: true
   });
 
   const [isApplePayAvailable, setIsApplePayAvailable] = useState(false);
@@ -172,7 +176,8 @@ const Checkout = () => {
                shippingInfo.address;
       }
       // 超商取貨：需姓名、電話、品牌與門市名稱
-      return shippingInfo.fullName && shippingInfo.phone && cvsInfo.brand && cvsInfo.storeName;
+      // 補強：需要門市代碼（ReceiverStoreID）才能建立託運單
+      return shippingInfo.fullName && shippingInfo.phone && cvsInfo.brand && cvsInfo.storeName && cvsInfo.storeId;
     } else if (step === 2) {
       // 導轉綠界：不需要站內信用卡欄位
       return !!paymentInfo.method;
@@ -226,6 +231,51 @@ const Checkout = () => {
     try {
       setIsProcessing(true);
       // 準備導轉到綠界的資料（後端會回傳自動送出的 HTML 表單）
+      // 根據配送方式組裝物流參數（開關開啟時才帶入）
+      const isCod = paymentInfo.method === 'CVS_COD';
+      const logistics = (isCod || createLogistics)
+        ? (() => {
+            const type = shippingMethod === 'cvs' ? 'CVS' : 'Home';
+            const subType = shippingMethod === 'cvs' ? (cvsInfo.brand || 'FAMIC2C') : 'TCAT';
+            const mode = shippingMethod === 'cvs' ? 'C2C' : 'B2C';
+            const receiverBase = {
+              name: shippingInfo.fullName || '',
+              phone: shippingInfo.phone || '',
+              cellphone: shippingInfo.phone || '',
+              email: '',
+            };
+            const receiver =
+              shippingMethod === 'cvs'
+                ? { ...receiverBase, storeId: cvsInfo.storeId || '' }
+                : {
+                    ...receiverBase,
+                    zip: shippingInfo.zip3 || '',
+                    address: `${shippingInfo.city || ''}${shippingInfo.district || ''}${shippingInfo.address || ''}`,
+                  };
+            return {
+              type,
+              subType,
+              mode,
+              reverse: false,
+              goodsAmount: Math.max(1, Math.round(cartTotal || 0)),
+              isCollection: isCod ? 'Y' : 'N',
+              collectionAmount: isCod ? Math.max(1, Math.round(cartTotal || 0)) : 0,
+              goodsName: 'Marelle 訂單商品',
+              sender: {},
+              receiver,
+              // 其他進階欄位留空，由後端或日後後台填寫
+              temperature: '',
+              distance: '',
+              specification: '',
+              scheduledPickupTime: '',
+              scheduledDeliveryTime: '',
+              scheduledDeliveryDate: '',
+              remark: '',
+              platformId: '',
+            };
+          })()
+        : null;
+
       const payload = {
         method: paymentInfo.method,
         amount: Math.max(1, Math.round(cartTotal || 0)),
@@ -234,7 +284,9 @@ const Checkout = () => {
           shippingInfo,
           cvsInfo,
           items: (cartItems || []).map(it => ({ id: it.id, name: it.name, price: it.price, qty: it.quantity }))
-        }
+        },
+        createLogistics: isCod ? true : !!createLogistics,
+        logistics
       };
       const res = await fetch('/frontend/pay/ecpay/checkout', {
         method: 'POST',
@@ -613,7 +665,7 @@ const Checkout = () => {
                 {/* Payment Method Selection (導轉至綠界，不顯示站內卡片欄位) */}
                 <div className="space-y-3 xs:space-y-3 sm:space-y-4 md:space-y-4 mb-5 xs:mb-5 sm:mb-6 md:mb-6">
                   {PAYMENT_DEFS.map((m) => {
-                    const enabled = isMethodEnabled(m.id);
+                    const enabled = isMethodEnabled(m.id) && (m.id !== 'CVS_COD' ? true : (shippingMethod === 'cvs'));
                     const selected = paymentInfo.method === m.id;
                     return (
                       <div key={m.id} className={`p-3 xs:p-3 sm:p-4 md:p-4 border rounded-lg ${enabled ? 'cursor-pointer hover:bg-gray-50' : 'opacity-50'} transition`}
@@ -712,6 +764,22 @@ const Checkout = () => {
                         <span className="block">**** **** **** {paymentInfo.cardNumber.slice(-4)}</span>
                       )}
                     </p>
+                    {/* 建立物流託運單開關 */}
+                    <div className="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-gray-900 font-chinese">建立物流託運單</div>
+                        <div className="text-xs text-gray-500 font-chinese mt-0.5">送出訂單時，同步向物流建立託運單（不影響付款流程）</div>
+                      </div>
+                      <label className="inline-flex items-center gap-2 select-none text-sm text-gray-700">
+                        <span className="font-chinese">啟用</span>
+                        <input
+                          type="checkbox"
+                          checked={paymentInfo.method === 'CVS_COD' ? true : createLogistics}
+                          disabled={paymentInfo.method === 'CVS_COD'}
+                          onChange={(e)=>setCreateLogistics(e.target.checked)}
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>

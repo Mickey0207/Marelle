@@ -6,10 +6,15 @@ const app = new Hono<{ Bindings: any }>({ strict: false })
 app.use('*', cors({ origin: (o)=>o||'*', allowHeaders: ['Content-Type'], allowMethods: ['GET','POST','OPTIONS'], credentials: true }))
 
 function endpoint(env?: string) {
-  return env === 'prod' ? 'https://logistics.ecpay.com.tw/Express/map' : 'https://logistics-stage.ecpay.com.tw/Express/map'
+  // 空字串或非 'stage' 一律使用正式環境
+  return (env && env.toLowerCase() === 'stage')
+    ? 'https://logistics-stage.ecpay.com.tw/Express/map'
+    : 'https://logistics.ecpay.com.tw/Express/map'
 }
 function cashierEndpoint(env?: string) {
-  return env === 'prod' ? 'https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5' : 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5'
+  return (env && env.toLowerCase() === 'stage')
+    ? 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5'
+    : 'https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5'
 }
 
 async function sha256HexUpper(s: string) {
@@ -99,6 +104,60 @@ function intOrNull(v: any) {
 function numOrNull(v: any) {
   const n = Number(String(v ?? ''))
   return Number.isFinite(n) ? n : null
+}
+
+// ===== Logistics creation after payment success =====
+async function createLogisticsAfterPaid(c: any, tradeNo: string, tradeAmt: number) {
+  const svc = makeSvc(c)
+  // 讀取在 checkout 時保存的需求
+  const { data: req, error } = await svc
+    .from('fronted_checkout_request')
+    .select('*')
+    .eq('merchant_trade_no', tradeNo)
+    .maybeSingle()
+  if (error) throw new Error('read checkout_request failed')
+  if (!req || !req.create_logistics) return { skipped: true }
+  if (req.logistics_created_at) return { skipped: true, reason: 'already-created' }
+
+  // 準備呼叫物流 API
+  let base = ''
+  try { const u = new URL(c.req.url); base = u.origin } catch {}
+  const frontBase = String(c.env.FRONTEND_SITE_URL || base)
+
+  const logistics = req.logistics || {}
+  const body = {
+    merchantTradeNo: tradeNo,
+    logisticsType: String(logistics?.type || 'CVS'),
+    logisticsSubType: String(logistics?.subType || ''),
+    mode: String(logistics?.mode || 'B2C'),
+    reverse: !!logistics?.reverse,
+    goodsAmount: Number(logistics?.goodsAmount || tradeAmt || 0),
+    isCollection: String(logistics?.isCollection || 'N'),
+    collectionAmount: Number(logistics?.collectionAmount || 0),
+    goodsName: String(logistics?.goodsName || 'Marelle 訂單商品'),
+    sender: logistics?.sender || {},
+    receiver: logistics?.receiver || {},
+    serverReplyURL: `${base}/frontend/logistics/ecpay/notify`,
+    clientReplyURL: `${frontBase}/orders/shipment`,
+    temperature: String(logistics?.temperature || ''),
+    distance: String(logistics?.distance || ''),
+    specification: String(logistics?.specification || ''),
+    scheduledPickupTime: String(logistics?.scheduledPickupTime || ''),
+    scheduledDeliveryTime: String(logistics?.scheduledDeliveryTime || ''),
+    scheduledDeliveryDate: String(logistics?.scheduledDeliveryDate || ''),
+    remark: String(logistics?.remark || ''),
+    platformId: String(logistics?.platformId || ''),
+  }
+
+  const res = await fetch(base + '/frontend/logistics/ecpay/create', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+  })
+  const json = await res.json().catch(()=>({}))
+  try { console.log('[ECPay][logistics][create][after-paid]', tradeNo, { status: res.status, ok: json?.ok, rtnCode: json?.rtnCode, rtnMsg: json?.rtnMsg }) } catch {}
+
+  // 紀錄結果，避免重複建立
+  await svc.from('fronted_checkout_request').update({ logistics_created_at: new Date().toISOString(), logistics_last_result: json }).eq('merchant_trade_no', tradeNo)
+  return { ok: !!json?.ok, result: json }
 }
 
 async function upsertPayment(c: any, body: Record<string, any>) {
@@ -284,12 +343,14 @@ app.post('/frontend/pay/ecpay/checkout', async (c) => {
     const env = (c.env.ECPAY_ENV || 'stage') as string
     const action = cashierEndpoint(env)
     const body = await c.req.json()
-    const method = String(body?.method || 'CREDIT').toUpperCase()
+  const method = String(body?.method || 'CREDIT').toUpperCase()
     const amount = parseInt(String(body?.amount || '0'), 10) || 0
-    const order = body?.order || {}
+  const order = body?.order || {}
+  const createLogistics = !!body?.createLogistics
+  const logistics = body?.logistics || null
 
-    // 只允許四種付款方式
-    const allowed = new Set(['CREDIT','ATM','CVS_CODE','WEBATM'])
+    // 允許的付款方式（新增：CVS_COD=超商取貨付款）
+    const allowed = new Set(['CREDIT','ATM','CVS_CODE','WEBATM','CVS_COD'])
     if (!allowed.has(method)) {
       return c.text('Unsupported payment method', 400)
     }
@@ -342,7 +403,57 @@ app.post('/frontend/pay/ecpay/checkout', async (c) => {
       // StoreExpireDate: default 7 days, can be set 1~60; skip for now
     }
 
-    const cmv = await buildCMV(payload, key, iv)
+  const cmv = await buildCMV(payload, key, iv)
+
+    // 在付款前只保存建立物流的需求與資料，不實際建立；待付款成功（RtnCode=1）再建立。
+    try {
+      const svc = makeSvc(c)
+      await svc.from('fronted_checkout_request').upsert({
+        merchant_trade_no: tradeNo,
+        create_logistics: !!createLogistics,
+        logistics: logistics || null,
+        order_json: order || null,
+        payment_method: method,
+      })
+    } catch (e: any) {
+      try { console.error('[ECPay][checkout] save request error', e?.message) } catch {}
+      // 不阻斷付款流程
+    }
+
+    // 例外：超商取貨付款（CVS_COD 或 logistics.isCollection='Y'）需先建立物流單，因為付款發生在取貨現場
+    if (method === 'CVS_COD' || (createLogistics && logistics && String(logistics?.type || 'CVS') === 'CVS' && String(logistics?.isCollection || 'N') === 'Y')) {
+      try {
+        const res = await fetch(base + '/frontend/logistics/ecpay/create', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+            merchantTradeNo: tradeNo,
+            logisticsType: 'CVS',
+            logisticsSubType: String(logistics?.subType || ''),
+            mode: 'C2C',
+            reverse: !!logistics?.reverse,
+            goodsAmount: Number(logistics?.goodsAmount || amount),
+            isCollection: 'Y',
+            collectionAmount: Number(logistics?.collectionAmount || 0),
+            goodsName: String(logistics?.goodsName || itemName),
+            sender: logistics?.sender || {},
+            receiver: logistics?.receiver || {},
+            serverReplyURL: `${base}/frontend/logistics/ecpay/notify`,
+            clientReplyURL: `${frontBase}/orders/shipment`,
+          })
+        })
+        try { const data = await res.clone().json().catch(()=>null); console.log('[ECPay][logistics][create][cvs-collection]', tradeNo, { status: res.status, data }) } catch {}
+      } catch (e: any) {
+        try { console.error('[ECPay][logistics][create][cvs-collection] error', tradeNo, e?.message) } catch {}
+      }
+
+      // 若是 CVS_COD，直接導回前台訂單頁，不走金流收銀台
+      if (method === 'CVS_COD') {
+        const html = `<!doctype html><html><head><meta charset="utf-8"/></head><body>
+          <script>location.replace(${JSON.stringify(frontBase + '/orders?cod=1&orderNo=' + encodeURIComponent(tradeNo))});</script>
+        </body></html>`
+        return c.html(html)
+      }
+    }
+
     const html = `<!doctype html><html><body>
       <form id="f" method="POST" action="${action}">
         ${Object.entries(payload).map(([k,v])=>`<input type="hidden" name="${k}" value="${v}"/>`).join('')}
@@ -388,6 +499,13 @@ app.post('/frontend/pay/ecpay/notify', async (c) => {
       return c.text('error', 500)
     }
 
+    // 若付款成功 (RtnCode=1)，於伺服器端自動建立物流託運單（若使用者在結帳時有開啟 createLogistics）
+    const tradeNo = String(params['MerchantTradeNo'] || '')
+    const tradeAmt = intOrNull(params['TradeAmt']) ?? 0
+    if (String(params['RtnCode'] || '') === '1' && tradeNo) {
+      try { await createLogisticsAfterPaid(c, tradeNo, tradeAmt) } catch (e: any) { try { console.error('[ECPay][notify] create logistics error', tradeNo, e?.message) } catch {} }
+    }
+
     // 規範：成功需回覆字串 1|OK
     return c.text('1|OK')
   } catch (e: any) {
@@ -417,6 +535,11 @@ app.post('/frontend/pay/ecpay/result', async (c) => {
     // 亦在此嘗試寫入（例如 ATM/CVS 配號多半出現在結果頁）；若驗證通過則 upsert。
     if (ok) {
       try { await upsertPayment(c, body as any); try { console.log('[ECPay][result] upsert ok', { merchantTradeNo: tradeNo, paymentType: params['PaymentType'] }) } catch {} } catch (e: any) { try { console.error('[ECPay][result] upsert error', { merchantTradeNo: tradeNo, error: e?.message }) } catch {} }
+    }
+
+    // 付款成功但若 notify 尚未觸發或失敗，這裡做一次補償嘗試建立物流單（不保證一定執行到，僅後援）
+    if (ok && rtnCode === '1' && tradeNo) {
+      try { await createLogisticsAfterPaid(c, tradeNo, intOrNull(body['TradeAmt']) ?? 0) } catch {}
     }
 
     // 以前端站台的網域做導轉，避免導到 API 網域造成 404

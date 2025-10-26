@@ -1307,10 +1307,10 @@ var require_cjs = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-AzaLGy/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-xB1r4N/middleware-loader.entry.ts
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-AzaLGy/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-xB1r4N/middleware-insertion-facade.js
 init_modules_watch_stub();
 
 // ../backend/API/index.ts
@@ -2090,14 +2090,14 @@ var Hono = class {
   }
   #notFoundHandler = notFoundHandler;
   errorHandler = errorHandler;
-  route(path, app13) {
+  route(path, app14) {
     const subApp = this.basePath(path);
-    app13.routes.map((r) => {
+    app14.routes.map((r) => {
       let handler;
-      if (app13.errorHandler === errorHandler) {
+      if (app14.errorHandler === errorHandler) {
         handler = r.handler;
       } else {
-        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app13.errorHandler)(c, () => r.handler(c, next))).res, "handler");
+        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app14.errorHandler)(c, () => r.handler(c, next))).res, "handler");
         handler[COMPOSED_HANDLER] = r.handler;
       }
       subApp.#addRoute(r.method, r.path, handler);
@@ -13655,11 +13655,11 @@ init_modules_watch_stub();
 var app7 = new Hono2({ strict: false });
 app7.use("*", cors({ origin: /* @__PURE__ */ __name((o) => o || "*", "origin"), allowHeaders: ["Content-Type"], allowMethods: ["GET", "POST", "OPTIONS"], credentials: true }));
 function endpoint(env) {
-  return env === "prod" ? "https://logistics.ecpay.com.tw/Express/map" : "https://logistics-stage.ecpay.com.tw/Express/map";
+  return env && env.toLowerCase() === "stage" ? "https://logistics-stage.ecpay.com.tw/Express/map" : "https://logistics.ecpay.com.tw/Express/map";
 }
 __name(endpoint, "endpoint");
 function cashierEndpoint(env) {
-  return env === "prod" ? "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" : "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5";
+  return env && env.toLowerCase() === "stage" ? "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5" : "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5";
 }
 __name(cashierEndpoint, "cashierEndpoint");
 async function sha256HexUpper(s) {
@@ -13737,6 +13737,57 @@ function numOrNull(v) {
   return Number.isFinite(n) ? n : null;
 }
 __name(numOrNull, "numOrNull");
+async function createLogisticsAfterPaid(c, tradeNo, tradeAmt) {
+  const svc2 = makeSvc4(c);
+  const { data: req, error } = await svc2.from("fronted_checkout_request").select("*").eq("merchant_trade_no", tradeNo).maybeSingle();
+  if (error) throw new Error("read checkout_request failed");
+  if (!req || !req.create_logistics) return { skipped: true };
+  if (req.logistics_created_at) return { skipped: true, reason: "already-created" };
+  let base = "";
+  try {
+    const u = new URL(c.req.url);
+    base = u.origin;
+  } catch {
+  }
+  const frontBase = String(c.env.FRONTEND_SITE_URL || base);
+  const logistics = req.logistics || {};
+  const body = {
+    merchantTradeNo: tradeNo,
+    logisticsType: String(logistics?.type || "CVS"),
+    logisticsSubType: String(logistics?.subType || ""),
+    mode: String(logistics?.mode || "B2C"),
+    reverse: !!logistics?.reverse,
+    goodsAmount: Number(logistics?.goodsAmount || tradeAmt || 0),
+    isCollection: String(logistics?.isCollection || "N"),
+    collectionAmount: Number(logistics?.collectionAmount || 0),
+    goodsName: String(logistics?.goodsName || "Marelle \u8A02\u55AE\u5546\u54C1"),
+    sender: logistics?.sender || {},
+    receiver: logistics?.receiver || {},
+    serverReplyURL: `${base}/frontend/logistics/ecpay/notify`,
+    clientReplyURL: `${frontBase}/orders/shipment`,
+    temperature: String(logistics?.temperature || ""),
+    distance: String(logistics?.distance || ""),
+    specification: String(logistics?.specification || ""),
+    scheduledPickupTime: String(logistics?.scheduledPickupTime || ""),
+    scheduledDeliveryTime: String(logistics?.scheduledDeliveryTime || ""),
+    scheduledDeliveryDate: String(logistics?.scheduledDeliveryDate || ""),
+    remark: String(logistics?.remark || ""),
+    platformId: String(logistics?.platformId || "")
+  };
+  const res = await fetch(base + "/frontend/logistics/ecpay/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const json = await res.json().catch(() => ({}));
+  try {
+    console.log("[ECPay][logistics][create][after-paid]", tradeNo, { status: res.status, ok: json?.ok, rtnCode: json?.rtnCode, rtnMsg: json?.rtnMsg });
+  } catch {
+  }
+  await svc2.from("fronted_checkout_request").update({ logistics_created_at: (/* @__PURE__ */ new Date()).toISOString(), logistics_last_result: json }).eq("merchant_trade_no", tradeNo);
+  return { ok: !!json?.ok, result: json };
+}
+__name(createLogisticsAfterPaid, "createLogisticsAfterPaid");
 async function upsertPayment(c, body) {
   const svc2 = makeSvc4(c);
   const paymentType = String(body["PaymentType"] || "");
@@ -13900,7 +13951,9 @@ app7.post("/frontend/pay/ecpay/checkout", async (c) => {
     const method = String(body?.method || "CREDIT").toUpperCase();
     const amount = parseInt(String(body?.amount || "0"), 10) || 0;
     const order = body?.order || {};
-    const allowed = /* @__PURE__ */ new Set(["CREDIT", "ATM", "CVS_CODE", "WEBATM"]);
+    const createLogistics = !!body?.createLogistics;
+    const logistics = body?.logistics || null;
+    const allowed = /* @__PURE__ */ new Set(["CREDIT", "ATM", "CVS_CODE", "WEBATM", "CVS_COD"]);
     if (!allowed.has(method)) {
       return c.text("Unsupported payment method", 400);
     }
@@ -13942,6 +13995,60 @@ app7.post("/frontend/pay/ecpay/checkout", async (c) => {
     } else if (choosePayment === "CVS") {
     }
     const cmv = await buildCMV(payload, key, iv);
+    try {
+      const svc2 = makeSvc4(c);
+      await svc2.from("fronted_checkout_request").upsert({
+        merchant_trade_no: tradeNo,
+        create_logistics: !!createLogistics,
+        logistics: logistics || null,
+        order_json: order || null,
+        payment_method: method
+      });
+    } catch (e) {
+      try {
+        console.error("[ECPay][checkout] save request error", e?.message);
+      } catch {
+      }
+    }
+    if (method === "CVS_COD" || createLogistics && logistics && String(logistics?.type || "CVS") === "CVS" && String(logistics?.isCollection || "N") === "Y") {
+      try {
+        const res = await fetch(base + "/frontend/logistics/ecpay/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            merchantTradeNo: tradeNo,
+            logisticsType: "CVS",
+            logisticsSubType: String(logistics?.subType || ""),
+            mode: "C2C",
+            reverse: !!logistics?.reverse,
+            goodsAmount: Number(logistics?.goodsAmount || amount),
+            isCollection: "Y",
+            collectionAmount: Number(logistics?.collectionAmount || 0),
+            goodsName: String(logistics?.goodsName || itemName),
+            sender: logistics?.sender || {},
+            receiver: logistics?.receiver || {},
+            serverReplyURL: `${base}/frontend/logistics/ecpay/notify`,
+            clientReplyURL: `${frontBase}/orders/shipment`
+          })
+        });
+        try {
+          const data = await res.clone().json().catch(() => null);
+          console.log("[ECPay][logistics][create][cvs-collection]", tradeNo, { status: res.status, data });
+        } catch {
+        }
+      } catch (e) {
+        try {
+          console.error("[ECPay][logistics][create][cvs-collection] error", tradeNo, e?.message);
+        } catch {
+        }
+      }
+      if (method === "CVS_COD") {
+        const html2 = `<!doctype html><html><head><meta charset="utf-8"/></head><body>
+          <script>location.replace(${JSON.stringify(frontBase + "/orders?cod=1&orderNo=" + encodeURIComponent(tradeNo))});<\/script>
+        </body></html>`;
+        return c.html(html2);
+      }
+    }
     const html = `<!doctype html><html><body>
       <form id="f" method="POST" action="${action}">
         ${Object.entries(payload).map(([k, v]) => `<input type="hidden" name="${k}" value="${v}"/>`).join("")}
@@ -13987,6 +14094,18 @@ app7.post("/frontend/pay/ecpay/notify", async (c) => {
       }
       return c.text("error", 500);
     }
+    const tradeNo = String(params["MerchantTradeNo"] || "");
+    const tradeAmt = intOrNull(params["TradeAmt"]) ?? 0;
+    if (String(params["RtnCode"] || "") === "1" && tradeNo) {
+      try {
+        await createLogisticsAfterPaid(c, tradeNo, tradeAmt);
+      } catch (e) {
+        try {
+          console.error("[ECPay][notify] create logistics error", tradeNo, e?.message);
+        } catch {
+        }
+      }
+    }
     return c.text("1|OK");
   } catch (e) {
     return c.text("error", 500);
@@ -14020,6 +14139,12 @@ app7.post("/frontend/pay/ecpay/result", async (c) => {
           console.error("[ECPay][result] upsert error", { merchantTradeNo: tradeNo, error: e?.message });
         } catch {
         }
+      }
+    }
+    if (ok && rtnCode === "1" && tradeNo) {
+      try {
+        await createLogisticsAfterPaid(c, tradeNo, intOrNull(body["TradeAmt"]) ?? 0);
+      } catch {
       }
     }
     let base = "";
@@ -14587,18 +14712,256 @@ app10.get("/frontend/products/:slugOrId", async (c) => {
   }
 });
 
+// ../fronted/API/logistics/ecpay/index.ts
+init_modules_watch_stub();
+var app11 = new Hono2({ strict: false });
+app11.use("*", cors({ origin: /* @__PURE__ */ __name((o) => o || "*", "origin"), allowHeaders: ["Content-Type"], allowMethods: ["GET", "POST", "OPTIONS"], credentials: true }));
+function logisticsAPIBase(env) {
+  return env && env.toLowerCase() === "stage" ? "https://logistics-stage.ecpay.com.tw/Express" : "https://logistics.ecpay.com.tw/Express";
+}
+__name(logisticsAPIBase, "logisticsAPIBase");
+async function sha256HexUpper2(s) {
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.digest("SHA-256", enc.encode(s));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+__name(sha256HexUpper2, "sha256HexUpper");
+function normalizeUrlEncoded2(str2) {
+  return encodeURIComponent(str2).toLowerCase().replace(/%2d/g, "-").replace(/%5f/g, "_").replace(/%2e/g, ".").replace(/%21/g, "!").replace(/%2a/g, "*").replace(/%28/g, "(").replace(/%29/g, ")").replace(/%20/g, "+");
+}
+__name(normalizeUrlEncoded2, "normalizeUrlEncoded");
+function buildCMV2(params, key, iv) {
+  const sorted = Object.keys(params).filter((k) => params[k] !== void 0 && params[k] !== "").sort((a, b) => a.localeCompare(b, "en")).map((k) => `${k}=${params[k]}`).join("&");
+  const raw2 = `HashKey=${key}&${sorted}&HashIV=${iv}`;
+  return sha256HexUpper2(normalizeUrlEncoded2(raw2));
+}
+__name(buildCMV2, "buildCMV");
+function makeSvc5(c) {
+  const url = c.env.SUPABASE_URL;
+  const key = c.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Supabase not configured");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+__name(makeSvc5, "makeSvc");
+function tableFor(logisticsType, reverse) {
+  const lt = logisticsType.toLowerCase();
+  if (reverse) {
+    if (lt === "home") return "fronted_home_reverse_logistics_order";
+    return "fronted_b2c_reverse_logistics_order";
+  }
+  if (lt === "home") return "fronted_home_logistics_order";
+  return null;
+}
+__name(tableFor, "tableFor");
+function decideCvsTable(mode, reverse) {
+  if (reverse) return null;
+  return "fronted_c2c_logistics_order";
+}
+__name(decideCvsTable, "decideCvsTable");
+async function callEcpayCreate(c, payload, reverse, type) {
+  const base = logisticsAPIBase(c.env.ECPAY_ENV || "stage");
+  const endpoint2 = reverse ? type === "Home" ? base + "/ReturnHome" : base + "/ReturnCVS" : base + "/Create";
+  const form = new URLSearchParams();
+  Object.entries(payload).forEach(([k, v]) => form.append(k, v ?? ""));
+  const res = await fetch(endpoint2, { method: "POST", body: form, headers: { "Content-Type": "application/x-www-form-urlencoded" } });
+  const text = await res.text();
+  const out = {};
+  text.split("&").forEach((pair) => {
+    const [k, ...rest] = pair.split("=");
+    if (!k) return;
+    out[k] = decodeURIComponent((rest.join("=") || "").replace(/\+/g, " "));
+  });
+  return { ok: res.ok, status: res.status, body: text, data: out };
+}
+__name(callEcpayCreate, "callEcpayCreate");
+function intOrNull2(v) {
+  const n = parseInt(String(v ?? ""), 10);
+  return Number.isFinite(n) ? n : null;
+}
+__name(intOrNull2, "intOrNull");
+async function upsertLogistics(c, table, fields) {
+  const svc2 = makeSvc5(c);
+  const { error } = await svc2.from(table).upsert(fields, { onConflict: "merchant_trade_no" });
+  if (error) throw new Error(error.message);
+}
+__name(upsertLogistics, "upsertLogistics");
+app11.post("/frontend/logistics/ecpay/create", async (c) => {
+  try {
+    const body = await c.req.json();
+    const reverse = !!body?.reverse;
+    const mode = String(body?.mode || "B2C").toUpperCase();
+    const logisticsType = String(body?.logisticsType || "CVS");
+    const env = String(c.env.ECPAY_ENV || "");
+    const isStage = env.toLowerCase() === "stage";
+    let merchantId = "";
+    let key = "";
+    let iv = "";
+    if (isStage) {
+      if (logisticsType === "CVS" && mode === "C2C") {
+        merchantId = c.env.ECPAY_LOGISTICS_C2C_MERCHANT_ID || c.env.ECPAY_LOGISTICS_MERCHANT_ID || "";
+        key = c.env.ECPAY_LOGISTICS_C2C_HASH_KEY || c.env.ECPAY_LOGISTICS_HASH_KEY || c.env.ECPAY_HASH_KEY || "";
+        iv = c.env.ECPAY_LOGISTICS_C2C_HASH_IV || c.env.ECPAY_LOGISTICS_HASH_IV || c.env.ECPAY_HASH_IV || "";
+      } else if (logisticsType === "Home") {
+        merchantId = c.env.ECPAY_LOGISTICS_HOME_MERCHANT_ID || c.env.ECPAY_LOGISTICS_MERCHANT_ID || "";
+        key = c.env.ECPAY_LOGISTICS_HOME_HASH_KEY || c.env.ECPAY_LOGISTICS_HASH_KEY || c.env.ECPAY_HASH_KEY || "";
+        iv = c.env.ECPAY_LOGISTICS_HOME_HASH_IV || c.env.ECPAY_LOGISTICS_HASH_IV || c.env.ECPAY_HASH_IV || "";
+      } else {
+        merchantId = c.env.ECPAY_LOGISTICS_MERCHANT_ID || "";
+        key = c.env.ECPAY_LOGISTICS_HASH_KEY || c.env.ECPAY_HASH_KEY || "";
+        iv = c.env.ECPAY_LOGISTICS_HASH_IV || c.env.ECPAY_HASH_IV || "";
+      }
+    } else {
+      merchantId = c.env.ECPAY_LOGISTICS_MERCHANT_ID || "";
+      key = c.env.ECPAY_LOGISTICS_HASH_KEY || c.env.ECPAY_HASH_KEY || "";
+      iv = c.env.ECPAY_LOGISTICS_HASH_IV || c.env.ECPAY_HASH_IV || "";
+    }
+    if (!merchantId || !key || !iv) return c.json({ error: "ECPay logistics not configured" }, 500);
+    const tradeNo = String(body?.merchantTradeNo || "");
+    if (!tradeNo) return c.json({ error: "merchantTradeNo required" }, 400);
+    const senderDefaults = (() => {
+      if (logisticsType === "Home") {
+        return {
+          name: String(c.env.LOGISTICS_SENDER_HOME_NAME || c.env.LOGISTICS_SENDER_NAME || ""),
+          phone: String(c.env.LOGISTICS_SENDER_HOME_PHONE || c.env.LOGISTICS_SENDER_PHONE || ""),
+          cellphone: String(c.env.LOGISTICS_SENDER_HOME_CELLPHONE || c.env.LOGISTICS_SENDER_CELLPHONE || ""),
+          zip: String(c.env.LOGISTICS_SENDER_HOME_ZIP || c.env.LOGISTICS_SENDER_ZIP || ""),
+          address: String(c.env.LOGISTICS_SENDER_HOME_ADDRESS || c.env.LOGISTICS_SENDER_ADDRESS || "")
+        };
+      }
+      return {
+        name: String(c.env.LOGISTICS_SENDER_C2C_NAME || c.env.LOGISTICS_SENDER_NAME || ""),
+        phone: String(c.env.LOGISTICS_SENDER_C2C_PHONE || c.env.LOGISTICS_SENDER_PHONE || ""),
+        cellphone: String(c.env.LOGISTICS_SENDER_C2C_CELLPHONE || c.env.LOGISTICS_SENDER_CELLPHONE || ""),
+        zip: String(c.env.LOGISTICS_SENDER_C2C_ZIP || c.env.LOGISTICS_SENDER_ZIP || ""),
+        address: String(c.env.LOGISTICS_SENDER_C2C_ADDRESS || c.env.LOGISTICS_SENDER_ADDRESS || "")
+      };
+    })();
+    const payload = {
+      MerchantID: String(merchantId),
+      MerchantTradeNo: tradeNo,
+      LogisticsType: logisticsType,
+      LogisticsSubType: String(body?.logisticsSubType || ""),
+      GoodsAmount: String(intOrNull2(body?.goodsAmount) ?? 0),
+      IsCollection: String(body?.isCollection || "N"),
+      CollectionAmount: String(intOrNull2(body?.collectionAmount) ?? 0),
+      GoodsName: String(body?.goodsName || "\u5546\u54C1"),
+      SenderName: String(body?.sender?.name || senderDefaults.name),
+      SenderPhone: String(body?.sender?.phone || senderDefaults.phone),
+      SenderCellPhone: String(body?.sender?.cellphone || senderDefaults.cellphone),
+      SenderZipCode: String(body?.sender?.zip || senderDefaults.zip),
+      SenderAddress: String(body?.sender?.address || senderDefaults.address),
+      ReceiverName: String(body?.receiver?.name || ""),
+      ReceiverPhone: String(body?.receiver?.phone || ""),
+      ReceiverCellPhone: String(body?.receiver?.cellphone || ""),
+      ReceiverEmail: String(body?.receiver?.email || ""),
+      ReceiverZipCode: String(body?.receiver?.zip || ""),
+      ReceiverAddress: String(body?.receiver?.address || ""),
+      ServerReplyURL: String(body?.serverReplyURL || ""),
+      ClientReplyURL: String(body?.clientReplyURL || ""),
+      Temperature: String(body?.temperature || ""),
+      Distance: String(body?.distance || ""),
+      Specification: String(body?.specification || ""),
+      ScheduledPickupTime: String(body?.scheduledPickupTime || ""),
+      ScheduledDeliveryTime: String(body?.scheduledDeliveryTime || ""),
+      ScheduledDeliveryDate: String(body?.scheduledDeliveryDate || ""),
+      Remark: String(body?.remark || ""),
+      PlatformID: String(body?.platformId || "")
+    };
+    if (logisticsType === "CVS") {
+      if (reverse) {
+        return c.json({ error: "CVS reverse logistics not supported" }, 400);
+      }
+      payload.ReceiverStoreID = String(body?.receiver?.storeId || "");
+      if (reverse) {
+        payload.ReturnStoreID = String(body?.returnStoreId || "");
+      }
+    }
+    if (logisticsType === "CVS") {
+      if (!String(body?.receiver?.storeId || "")) {
+        return c.json({ error: "ReceiverStoreID required for CVS" }, 400);
+      }
+      if (!payload.ReceiverName || !(payload.ReceiverPhone || payload.ReceiverCellPhone)) {
+        return c.json({ error: "Receiver name and phone required for CVS" }, 400);
+      }
+    } else if (logisticsType === "Home") {
+      if (!payload.ReceiverZipCode || !payload.ReceiverAddress) {
+        return c.json({ error: "Receiver zip and address required for Home" }, 400);
+      }
+    }
+    payload.CheckMacValue = await buildCMV2(payload, key, iv);
+    const result = await callEcpayCreate(c, payload, reverse, logisticsType);
+    let table = tableFor(logisticsType, reverse);
+    if (!table && logisticsType === "CVS") {
+      table = decideCvsTable(mode, reverse);
+    }
+    if (!table) return c.json({ error: "Unable to decide table" }, 400);
+    const rtn_code = String(result.data?.RtnCode || "");
+    const rtn_msg = String(result.data?.RtnMsg || "");
+    const success = rtn_code === "1" || Boolean(result.data?.LogisticsID || result.data?.AllPayLogisticsID);
+    const common = {
+      merchant_id: merchantId,
+      merchant_trade_no: tradeNo,
+      logistics_type: logisticsType,
+      logistics_sub_type: String(body?.logisticsSubType || ""),
+      goods_amount: intOrNull2(body?.goodsAmount) ?? null,
+      is_collection: String(body?.isCollection || "N"),
+      collection_amount: intOrNull2(body?.collectionAmount) ?? null,
+      goods_name: String(body?.goodsName || "\u5546\u54C1"),
+      sender_name: String(body?.sender?.name || ""),
+      sender_phone: String(body?.sender?.phone || ""),
+      sender_cellphone: String(body?.sender?.cellphone || ""),
+      sender_zip_code: String(body?.sender?.zip || ""),
+      sender_address: String(body?.sender?.address || ""),
+      receiver_name: String(body?.receiver?.name || ""),
+      receiver_phone: String(body?.receiver?.phone || ""),
+      receiver_cellphone: String(body?.receiver?.cellphone || ""),
+      receiver_email: String(body?.receiver?.email || ""),
+      receiver_zip_code: String(body?.receiver?.zip || ""),
+      receiver_address: String(body?.receiver?.address || ""),
+      receiver_store_id: String(body?.receiver?.storeId || ""),
+      return_store_id: String(body?.returnStoreId || ""),
+      server_reply_url: String(body?.serverReplyURL || ""),
+      client_reply_url: String(body?.clientReplyURL || ""),
+      check_mac_value: payload.CheckMacValue,
+      status: success ? "created" : "failed",
+      rtn_code,
+      rtn_msg,
+      raw_result: result.data || {}
+    };
+    const fields = {
+      ...common,
+      logistics_id: result.data?.AllPayLogisticsID || result.data?.LogisticsID || "",
+      booking_note: result.data?.BookingNote || "",
+      trade_desc: String(body?.tradeDesc || ""),
+      temperature: String(body?.temperature || ""),
+      distance: String(body?.distance || ""),
+      specification: String(body?.specification || ""),
+      scheduled_pickup_time: String(body?.scheduledPickupTime || ""),
+      scheduled_delivery_time: String(body?.scheduledDeliveryTime || ""),
+      scheduled_delivery_date: String(body?.scheduledDeliveryDate || ""),
+      remark: String(body?.remark || ""),
+      platform_id: String(body?.platformId || "")
+    };
+    await upsertLogistics(c, table, fields);
+    return c.json({ ok: success, status: result.status, rtnCode: rtn_code, rtnMsg: rtn_msg, data: result.data });
+  } catch (e) {
+    return c.json({ error: e?.message || "error" }, 500);
+  }
+});
+var ecpay_default2 = app11;
+
 // ../backend/API/orders/index.ts
 init_modules_watch_stub();
-var app11 = new Hono2();
+var app12 = new Hono2();
 var ACCESS_COOKIE8 = "sb-access-token";
 var ADMIN_SESSION_COOKIE5 = "admin-session";
-function makeSvc5(c) {
+function makeSvc6(c) {
   const url = c.env.SUPABASE_URL;
   const key = c.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("Server misconfigured");
   return createClient(url, key, { auth: { persistSession: false } });
 }
-__name(makeSvc5, "makeSvc");
+__name(makeSvc6, "makeSvc");
 async function requireAuth4(c) {
   const access = getCookie(c, ACCESS_COOKIE8);
   if (access) return true;
@@ -14609,7 +14972,7 @@ __name(requireAuth4, "requireAuth");
 async function listTable(c, table) {
   if (!await requireAuth4(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
-    const svc2 = makeSvc5(c);
+    const svc2 = makeSvc6(c);
     const page = Math.max(parseInt(String(c.req.query("page") || "1"), 10) || 1, 1);
     const pageSize = Math.min(Math.max(parseInt(String(c.req.query("pageSize") || "20"), 10) || 20, 1), 100);
     const from = (page - 1) * pageSize;
@@ -14623,26 +14986,27 @@ async function listTable(c, table) {
   }
 }
 __name(listTable, "listTable");
-app11.get("/backend/orders/credit", (c) => listTable(c, "fronted_credit_order"));
-app11.get("/backend/orders/atm", (c) => listTable(c, "fronted_atm_order"));
-app11.get("/backend/orders/cvscode", (c) => listTable(c, "fronted_cvscode_order"));
-app11.get("/backend/orders/webatm", (c) => listTable(c, "fronted_webatm_order"));
-var orders_default = app11;
+app12.get("/backend/orders/credit", (c) => listTable(c, "fronted_credit_order"));
+app12.get("/backend/orders/atm", (c) => listTable(c, "fronted_atm_order"));
+app12.get("/backend/orders/cvscode", (c) => listTable(c, "fronted_cvscode_order"));
+app12.get("/backend/orders/webatm", (c) => listTable(c, "fronted_webatm_order"));
+var orders_default = app12;
 
 // ../backend/API/index.ts
-var app12 = new Hono2();
-app12.route("/", auth_default);
-app12.route("/", admin_default);
-app12.route("/", categories_default);
-app12.route("/", products_default);
-app12.route("/", auth_default2);
-app12.route("/", addresses_default);
-app12.route("/", ecpay_default);
-app12.route("/", cart_default);
-app12.route("/", categories_default2);
-app12.route("/", products_default2);
-app12.route("/", orders_default);
-var API_default = app12;
+var app13 = new Hono2();
+app13.route("/", auth_default);
+app13.route("/", admin_default);
+app13.route("/", categories_default);
+app13.route("/", products_default);
+app13.route("/", auth_default2);
+app13.route("/", addresses_default);
+app13.route("/", ecpay_default);
+app13.route("/", cart_default);
+app13.route("/", categories_default2);
+app13.route("/", products_default2);
+app13.route("/", ecpay_default2);
+app13.route("/", orders_default);
+var API_default = app13;
 
 // ../node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
 init_modules_watch_stub();
@@ -14687,7 +15051,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-AzaLGy/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-xB1r4N/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -14720,7 +15084,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-AzaLGy/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-xB1r4N/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
