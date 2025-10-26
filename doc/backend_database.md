@@ -96,6 +96,17 @@
 - short_description (text, nullable)：簡短描述（列表頁用）
 - description (text, not null)：詳細描述
 - tags (text[], default '{}')：商品標籤陣列
+- promotion_label (text, nullable)：優惠標籤文字（例如「限時」、「新品」、「HOT」）
+- promotion_label_bg_color (text, nullable)：優惠標籤背景色（十六進位色碼，如 #CC824D）
+- promotion_label_text_color (text, nullable)：優惠標籤文字色（十六進位色碼，如 #FFFFFF）
+- product_tag_bg_color (text, nullable)：產品標籤（左上角）背景色（十六進位色碼）
+- product_tag_text_color (text, nullable)：產品標籤文字色（十六進位色碼）
+- auto_hide_when_oos (boolean, default false)：缺貨自動下架（當變體庫存低於或等於門檻時，店面自動隱藏該變體；所有變體皆缺貨時可配合將商品隱藏）
+- enable_preorder (boolean, default false)：是否啟用預購
+- preorder_start_at (timestamptz, nullable)：預購開始時間（留空則立即生效）
+- preorder_end_at (timestamptz, nullable)：預購結束時間（留空則不自動結束）
+- preorder_max_qty (integer, nullable)：預購最大數量（保留；實際扣減需依訂單流程實作）
+- oos_status (text, nullable)：缺貨狀態（保留給營運標註用途；前端不依此欄位判斷顯示）
 - base_sku (text, not null, unique)：基礎 SKU 編碼
 - has_variants (boolean, default false)：是否有變體（用於後端決定庫存邏輯）
 - status (text, default 'draft', check in ('draft','active','archived'))：狀態
@@ -119,6 +130,20 @@
 - RLS：僅後台管理員可讀/寫/刪。
 
 遷移檔：`Server/supabase/migrations/20251019170100_create_backend_products_tables.sql`
+
+補充：
+
+- 新增「優惠標籤與顏色」、「產品標籤顏色」欄位之遷移檔：`Server/supabase/migrations/20251026120000_backend_products_add_labels_and_colors.sql`
+- 遷移中以 UPDATE 將空值初始化為預設色：
+  - promotion_label_bg_color：#CC824D
+  - promotion_label_text_color：#FFFFFF
+  - product_tag_bg_color：#CC824D
+  - product_tag_text_color：#FFFFFF
+ （注意：此為一次性初始化，非欄位層級 DEFAULT 約束；後續可由後台頁面自由設定。）
+
+  - 新增「缺貨/預購」欄位之遷移檔：`Server/supabase/migrations/20251026140000_backend_products_oos_preorder.sql`
+    - 新增欄位：auto_hide_when_oos, enable_preorder, preorder_start_at, preorder_end_at, preorder_max_qty, oos_status
+    - 建議搭配 `backend_products_inventory.low_stock_threshold` 判斷「缺貨」：當 `current_stock_qty <= low_stock_threshold` 視為缺貨/低庫存
 
 ## 表：public.backend_products_photo（商品圖片 / 變體圖片）
 

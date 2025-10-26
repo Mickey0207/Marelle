@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
-import { mockProducts, getProductsByCategory } from "../../../external_mock/data/products.mock.js";
+// 移除產品 mock，改由後端 API 取得
 import { categories, findCategoryById, getCategoryPath } from "../../../external_mock/data/categories.js";
 import { useCart } from "../../../external_mock/state/cart.jsx";
 import ProductQuickAddModal from "../../components/product/ProductQuickAddModal.jsx";
@@ -61,7 +61,7 @@ function findNodePath(targetSlug) {
 export default function Products() {
   const location = useLocation();
   const { addToCart } = useCart();
-  const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
   const [currentPathSegments, setCurrentPathSegments] = useState([]);
   const [expanded, setExpanded] = useState({});
@@ -110,43 +110,40 @@ export default function Products() {
 
   // 處理產品篩選和排序
   useEffect(() => {
-    let filtered = [...mockProducts];
-
-    // 根據搜尋詞篩選
-    if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // 根據當前選中的分類節點篩選產品
-    if (selectedNode) {
-      filtered = getProductsByCategory(selectedNode);
-      
-      // 如果有搜尋詞,在已篩選的結果中再次搜尋
-      if (searchTerm) {
-        filtered = filtered.filter(product =>
-          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.description?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+    let cancelled = false;
+    (async () => {
+      try {
+        const categoryPath = currentPathSegments.join('/');
+        const params = new URLSearchParams();
+        if (categoryPath) params.set('category', categoryPath);
+        // 先讓後端只做基本篩選；搜尋與排序先在前端處理
+        const res = await fetch(`/frontend/products?${params.toString()}`, { credentials: 'include' });
+        if (!res.ok) { setFilteredProducts([]); return; }
+        const data = await res.json();
+        let items = Array.isArray(data?.items) ? data.items : [];
+        // 搜尋（前端）
+        if (searchTerm) {
+          const kw = searchTerm.toLowerCase();
+          items = items.filter(p => String(p.name||'').toLowerCase().includes(kw));
+        }
+        // 排序（前端）
+        items.sort((a, b) => {
+          switch (sortBy) {
+            case 'price-low':
+              return (a.price||0) - (b.price||0);
+            case 'price-high':
+              return (b.price||0) - (a.price||0);
+            case 'name':
+            default:
+              return String(a.name||'').localeCompare(String(b.name||''));
+          }
+        });
+        if (!cancelled) setFilteredProducts(items);
+      } catch {
+        if (!cancelled) setFilteredProducts([]);
       }
-    }
-
-    // 排序
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'price-low':
-          return a.price - b.price;
-        case 'price-high':
-          return b.price - a.price;
-        case 'name':
-        default:
-          return a.name.localeCompare(b.name);
-      }
-    });
-
-    setFilteredProducts(filtered);
+    })();
+    return () => { cancelled = true; }
   }, [searchTerm, currentPathSegments, sortBy]);
 
   const handleAddToCart = (product, quantity, variant) => {

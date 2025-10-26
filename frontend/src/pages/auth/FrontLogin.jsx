@@ -58,8 +58,47 @@ const FrontLogin = () => {
         else setError(data?.error || `登入失敗 (${res.status})`);
         return;
       }
-  const to = '/';
-  navigate(to, { replace: true });
+      // 登入成功：嘗試合併前端購物車至後端
+      try {
+        const params = new URLSearchParams(location.search);
+        const redirect = params.get('redirect') || location.state?.from || '/';
+        const action = params.get('action') || '';
+
+        // 從 localStorage 讀取購物車草稿
+        let draft_items = [];
+        try {
+          const raw = localStorage.getItem('marelle:cart:v1');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const items = Array.isArray(parsed?.items) ? parsed.items : [];
+            draft_items = items.map((i) => {
+              const sku = i?.variant?.payload?.sku || i?.sku || i?.sku_key || null;
+              return {
+                product_id: Number(i?.id ?? i?.product_id) || null,
+                inventory_id: i?.inventory_id ?? null,
+                sku_key: sku,
+                quantity: Number(i?.quantity) || 1,
+                selected_options: i?.variant ? { variant: i.variant } : {}
+              };
+            }).filter(d => d.product_id && (d.inventory_id || d.sku_key));
+          }
+        } catch {}
+
+        if (draft_items.length > 0) {
+          await fetch('/frontend/cart/merge', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ draft_items })
+          }).catch(() => {});
+        }
+
+        // 導回原頁；若帶有 action，保留在查詢參數供原頁處理
+        const nextUrl = action ? `${redirect}?action=${encodeURIComponent(action)}` : redirect;
+        navigate(nextUrl, { replace: true });
+      } catch {
+        navigate('/', { replace: true });
+      }
     } catch (err) {
       setError(err.message || '發生錯誤');
     } finally {

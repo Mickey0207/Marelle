@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { categories } from "../../../external_mock/data/categories.js";
 import MegaPanel from './navbar/MegaPanel.jsx';
 import NavActions from './navbar/NavActions.jsx';
 import MobileMenu from './navbar/MobileMenu.jsx';
@@ -31,8 +30,26 @@ const Navbar = () => {
     if (activeRoot) setPanelHeight(520); else setPanelHeight(0);
   }, [activeRoot, panelMode]);
 
-  // 導航列改為直接使用第一層分類 (不再顯示單一『商品』節點)
-  const topLevelCategories = categories; // 第一層
+  // 從後端載入分類
+  const [topLevelCategories, setTopLevelCategories] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/frontend/categories', { method: 'GET', credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) {
+          const cats = Array.isArray(data?.categories) ? data.categories : [];
+          setTopLevelCategories(cats);
+        }
+      } catch {
+        if (!cancelled) setTopLevelCategories([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const isActive = (path) => location.pathname === path || (path.startsWith('/products/') && location.pathname.startsWith(path));
 

@@ -11,7 +11,6 @@ import {
 import SearchableSelect from "../../components/ui/SearchableSelect";
 import StandardTable from "../../components/ui/StandardTable";
 import { getInventoryFilters } from "../../../../external_mock/inventory/inventoryDataManager";
-import { PRODUCT_CATEGORIES, getAllChildCategoryIds, getCategoryBreadcrumb } from "../../../../external_mock/products/categoryDataManager";
 import CategoryCascader from "../../components/ui/CategoryCascader";
 import { QRCodePreviewModal } from "../../components/ui/QRCodeGenerator";
 import GlassModal from "../../components/ui/GlassModal";
@@ -20,7 +19,11 @@ import IconActionButton from "../../components/ui/IconActionButton";
 
 const Inventory = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState('全部');
-  const [selectedCategory, setSelectedCategory] = useState(null); // 使用分類ID，null 代表全部
+  const [selectedCategory, setSelectedCategory] = useState(null); // 使用分類ID（字串化），null 代表全部
+  // 從後端載入分類樹，並建立 id->name 與 id->parent 對照
+  const [categories, setCategories] = useState([]);
+  const [catNameMap, setCatNameMap] = useState(new Map());
+  const [catParentMap, setCatParentMap] = useState(new Map());
   const [previewItem, setPreviewItem] = useState(null);
   const [qrItem, setQrItem] = useState(null);
   const [editItem, setEditItem] = useState(null);
@@ -32,6 +35,36 @@ const Inventory = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // 先載入分類樹，建立對照表
+    const loadCategories = async () => {
+      try {
+        const res = await fetch('/backend/categories', { credentials: 'include' });
+        if (!res.ok) throw new Error('載入分類失敗');
+        const tree = await res.json();
+        setCategories(Array.isArray(tree) ? tree : []);
+        // 建立對照表
+        const nameMap = new Map();
+        const parentMap = new Map();
+        const walk = (nodes, parentId = null) => {
+          if (!Array.isArray(nodes)) return;
+          for (const n of nodes) {
+            if (!n) continue;
+            nameMap.set(String(n.id), n.name);
+            parentMap.set(String(n.id), parentId !== null ? String(parentId) : null);
+            if (n.children && n.children.length) walk(n.children, n.id);
+          }
+        };
+        walk(tree, null);
+        setCatNameMap(nameMap);
+        setCatParentMap(parentMap);
+      } catch (e) {
+        console.error(e);
+        setCategories([]);
+        setCatNameMap(new Map());
+        setCatParentMap(new Map());
+      }
+    };
+
     const fetchInventoryData = async () => {
       try {
         setLoading(true);
@@ -76,12 +109,29 @@ const Inventory = () => {
               
               // 將庫存記錄轉換為表格行格式
               for (const inv of inventoryRecords) {
+                // 取得分類麵包屑（顯示母/子中文名稱），來自資料庫分類
+                const firstCategoryId = (product.category_ids && product.category_ids.length > 0) ? product.category_ids[0] : null;
+                const firstCategoryIdStr = firstCategoryId !== null && firstCategoryId !== undefined ? String(firstCategoryId) : null;
+                const categoryBreadcrumb = (() => {
+                  if (!firstCategoryIdStr) return '未分類';
+                  // 從 parentMap 逐層往上組裝
+                  const names = [];
+                  let cur = firstCategoryIdStr;
+                  const guard = new Set();
+                  while (cur && !guard.has(cur)) {
+                    guard.add(cur);
+                    const nm = catNameMap.get(cur);
+                    if (nm) names.push(nm);
+                    cur = catParentMap.get(cur) || null;
+                  }
+                  return names.length ? names.reverse().join(' / ') : '未分類';
+                })();
                 allInventoryRows.push({
                   productId: product.id,
                   baseSKU: product.base_sku,
                   name: product.name,
-                  category: product.category_ids && product.category_ids.length > 0 ? product.category_ids.join(', ') : '未分類',
-                  categoryId: product.category_ids && product.category_ids.length > 0 ? product.category_ids[0] : null,
+                  category: categoryBreadcrumb,
+                  categoryId: firstCategoryIdStr,
                   productImageUrl: productCoverById.get(product.id) || product.image_url,
                   variantImageUrl: inv.variant_photo_url_1 || inv.variant_photo_url_2 || inv.variant_photo_url_3 || null,
                   sku: inv.sku_key || product.base_sku,
@@ -145,10 +195,36 @@ const Inventory = () => {
       }
     };
     
-    fetchInventoryData();
+    (async () => {
+      await loadCategories();
+      await fetchInventoryData();
+    })();
   }, []);
 
   const { warehouses } = useMemo(() => getInventoryFilters(rows), [rows]);
+
+  // 工具：由當前選取分類找出所有子分類 id (含自身)
+  const getAllChildCategoryIdsFromTree = (tree, rootId) => {
+    const result = [];
+    const walk = (nodes) => {
+      if (!Array.isArray(nodes)) return;
+      for (const n of nodes) {
+        if (!n) continue;
+        if (String(n.id) === rootId) {
+          // 收集此節點與所有子節點
+          const collect = (x) => {
+            result.push(String(x.id));
+            if (x.children && x.children.length) x.children.forEach(collect);
+          };
+          collect(n);
+        } else if (n.children && n.children.length) {
+          walk(n.children);
+        }
+      }
+    };
+    walk(tree);
+    return result;
+  };
 
   // 聚合為父表（商品層級）
   const productRows = useMemo(() => {
@@ -157,7 +233,8 @@ const Inventory = () => {
       const matchWarehouse = selectedWarehouse === '全部' || item.warehouse === selectedWarehouse;
       let matchCategory = true;
       if (selectedCategory) {
-        const allowed = new Set([selectedCategory, ...getAllChildCategoryIds(PRODUCT_CATEGORIES, selectedCategory)]);
+        const children = getAllChildCategoryIdsFromTree(categories, selectedCategory);
+        const allowed = new Set([selectedCategory, ...children]);
         matchCategory = item.categoryId ? allowed.has(item.categoryId) : false;
       }
       return matchWarehouse && matchCategory;
@@ -277,6 +354,7 @@ const Inventory = () => {
           spec: r.spec,
           currentStock: 0,
           safeStock: r.safeStock,
+          lowStockThreshold: r.lowStockThreshold,
           totalValue: 0,
           barcode: r.barcode,
           imageUrl: r.variantImageUrl || r.productImageUrl || r.imageUrl,
@@ -311,6 +389,10 @@ const Inventory = () => {
       // 以較緊的 safeStock
       if (typeof r.safeStock === 'number' && (typeof agg.safeStock !== 'number' || r.safeStock < agg.safeStock)) {
         agg.safeStock = r.safeStock;
+      }
+      // 以較緊的 lowStockThreshold
+      if (typeof r.lowStockThreshold === 'number' && (typeof agg.lowStockThreshold !== 'number' || r.lowStockThreshold < agg.lowStockThreshold)) {
+        agg.lowStockThreshold = r.lowStockThreshold;
       }
       // 若任一倉庫為低庫存，整體標為低；若全部正常則正常；若有負數標預售
       if (r.currentStock < 0) agg.status = 'presale';
@@ -418,16 +500,27 @@ const Inventory = () => {
           <div className="flex items-center space-x-2">
             <FunnelIcon className="w-5 h-5 text-gray-400" />
             <CategoryCascader
-              tree={PRODUCT_CATEGORIES}
+              tree={categories}
               value={selectedCategory}
-              onChange={setSelectedCategory}
+              onChange={(val) => setSelectedCategory(val != null ? String(val) : null)}
               placeholder="選擇分類"
             />
           </div>
 
           {selectedCategory && (
             <div className="text-xs text-gray-500 font-chinese">
-              分類路徑：{getCategoryBreadcrumb(PRODUCT_CATEGORIES, selectedCategory)}
+              分類路徑：{(() => {
+                const names = [];
+                let cur = selectedCategory;
+                const guard = new Set();
+                while (cur && !guard.has(cur)) {
+                  guard.add(cur);
+                  const nm = catNameMap.get(cur);
+                  if (nm) names.push(nm);
+                  cur = catParentMap.get(cur) || null;
+                }
+                return names.length ? names.reverse().join(' / ') : '未分類';
+              })()}
             </div>
           )}
 
@@ -488,7 +581,24 @@ const Inventory = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-500 font-chinese">分類</span>
-                    <span className="font-chinese text-gray-900"><span className="px-2 py-0.5 rounded bg-gray-100">{previewItem.category}</span></span>
+                    <span className="font-chinese text-gray-900">
+                      <span className="px-2 py-0.5 rounded bg-gray-100">
+                        {(() => {
+                          const cid = previewItem?.categoryId;
+                          if (!cid) return (previewItem?.category || '未分類');
+                          const names = [];
+                          let cur = cid;
+                          const guard = new Set();
+                          while (cur && !guard.has(cur)) {
+                            guard.add(cur);
+                            const nm = catNameMap.get(cur);
+                            if (nm) names.push(nm);
+                            cur = catParentMap.get(cur) || null;
+                          }
+                          return names.length ? names.reverse().join(' / ') : (previewItem?.category || '未分類');
+                        })()}
+                      </span>
+                    </span>
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1 font-chinese">倉庫</label>
@@ -505,23 +615,6 @@ const Inventory = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-gray-500 font-chinese">更新日期</span>
                     <span className="text-gray-600">{previewItem.lastUpdated}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 數量與安全庫存（可即時編輯） */}
-              <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-2 font-chinese">數量設定</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1 font-chinese">庫存量</label>
-                    <input type="number" className="w-full border rounded px-3 py-2" value={previewItem.currentStock}
-                      onChange={(e)=> setPreviewItem(prev => ({...prev, currentStock: Number(e.target.value)}))} />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1 font-chinese">安全庫存</label>
-                    <input type="number" className="w-full border rounded px-3 py-2" value={previewItem.safeStock}
-                      onChange={(e)=> setPreviewItem(prev => ({...prev, safeStock: Number(e.target.value)}))} />
                   </div>
                 </div>
               </div>
@@ -546,13 +639,6 @@ const Inventory = () => {
               {/* 其他設定 */}
               <div>
                 <h4 className="text-sm font-semibold text-gray-700 mb-2 font-chinese">其他</h4>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 font-chinese">允許預購</span>
-                  <button className={`px-3 py-1 rounded text-xs font-chinese ${previewItem.allowNegative ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}
-                    onClick={() => setPreviewItem(prev => ({...prev, allowNegative: !prev.allowNegative}))}>
-                    {previewItem.allowNegative ? '允許' : '禁止'}
-                  </button>
-                </div>
                 <div className="mt-4">
                   <label className="block text-xs text-gray-500 mb-1 font-chinese">條碼</label>
                   <div className="flex items-center justify-between">
@@ -622,16 +708,20 @@ const Inventory = () => {
             label: '保存',
             onClick: async () => {
               try {
+                const payload = {
+                  current_stock_qty: Number(editFormData.currentStock),
+                  safety_stock_qty: Number(editFormData.safeStock),
+                  low_stock_threshold: Number(editFormData.lowStockThreshold),
+                };
+                if (editFormData.warehouse && editFormData.warehouse !== '彙總') {
+                  payload.warehouse = editFormData.warehouse;
+                }
+
                 const response = await fetch(`/backend/products/${editFormData.productId}/inventory/${editFormData.id}`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   credentials: 'include',
-                  body: JSON.stringify({
-                    current_stock_qty: Number(editFormData.currentStock),
-                    safety_stock_qty: Number(editFormData.safeStock),
-                    low_stock_threshold: Number(editFormData.lowStockThreshold),
-                    warehouse: editFormData.warehouse,
-                  })
+                  body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
@@ -644,9 +734,14 @@ const Inventory = () => {
                     warehouse: editFormData.warehouse,
                   } : r));
                   setEditItem(null);
+                } else {
+                  const errText = await response.text();
+                  console.error('保存庫存記錄失敗:', errText);
+                  alert('保存失敗：' + (errText || response.status));
                 }
               } catch (err) {
                 console.error('保存庫存記錄失敗:', err);
+                alert('保存失敗：' + (err?.message || '未知錯誤'));
               }
             }
           }
@@ -676,7 +771,7 @@ const Inventory = () => {
                 <input
                   type="number"
                   value={editFormData.currentStock ?? ''}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, currentStock: e.target.value }))}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, currentStock: e.target.value === '' ? '' : Number(e.target.value) }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                 />
               </div>
@@ -685,7 +780,7 @@ const Inventory = () => {
                 <input
                   type="number"
                   value={editFormData.safeStock ?? ''}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, safeStock: e.target.value }))}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, safeStock: e.target.value === '' ? '' : Number(e.target.value) }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                 />
               </div>
@@ -694,7 +789,7 @@ const Inventory = () => {
                 <input
                   type="number"
                   value={editFormData.lowStockThreshold ?? ''}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, lowStockThreshold: e.target.value }))}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, lowStockThreshold: e.target.value === '' ? '' : Number(e.target.value) }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-sm"
                 />
               </div>

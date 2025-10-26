@@ -7,6 +7,9 @@ const ProductQuickAddModal = ({ product, isOpen, onClose, onAddToCart }) => {
   const [quantity, setQuantity] = useState(1);
   // 五層規格選擇狀態
   const [variantState, setVariantState] = useState({ path: [], isComplete: false, leaf: undefined });
+  // 詳情資料（若外部產品無 variants，則在開啟時載入）
+  const [detail, setDetail] = useState(null);
+  const [detailImages, setDetailImages] = useState([]);
 
   const handleAddToCart = () => {
     const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
@@ -18,11 +21,45 @@ const ProductQuickAddModal = ({ product, isOpen, onClose, onAddToCart }) => {
     setVariantState({ path: [], isComplete: false, leaf: undefined });
   };
 
+  // 開啟時若需要，載入產品詳情以取得規格與價格
+  useEffect(() => {
+    let cancelled = false;
+    async function loadDetail() {
+      if (!isOpen || !product) return;
+      const needsDetail = !Array.isArray(product.variants) || product.variants.length === 0;
+      if (!needsDetail) { setDetail(null); setDetailImages([]); return; }
+      try {
+        const slugOrId = product.slug || product.id;
+        if (!slugOrId) return;
+        const res = await fetch(`/frontend/products/${encodeURIComponent(slugOrId)}`, { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        setDetail({
+          id: data.id,
+          name: data.name,
+          slug: data.slug,
+          description: data.description,
+          price: data.price ?? 0,
+          originalPrice: data.originalPrice ?? null,
+          inStock: !!data.inStock,
+          variants: Array.isArray(data.variants) ? data.variants : [],
+          specsLabels: Array.isArray(data.specsLabels) ? data.specsLabels : undefined,
+        });
+        setDetailImages(Array.isArray(data.images) ? data.images : []);
+      } catch {}
+    }
+    loadDetail();
+    return () => { cancelled = true; };
+  }, [isOpen, product]);
+
   // 當 modal 關閉時重置狀態
   useEffect(() => {
     if (!isOpen) {
       setQuantity(1);
       setVariantState({ path: [], isComplete: false, leaf: undefined });
+      setDetail(null);
+      setDetailImages([]);
     }
   }, [isOpen]);
 
@@ -50,11 +87,14 @@ const ProductQuickAddModal = ({ product, isOpen, onClose, onAddToCart }) => {
     return makeSvg('#E5E7EB', initial);
   };
 
-  const hasVariants = Array.isArray(product.variants) && product.variants.length > 0;
-  const effectivePrice = hasVariants ? (variantState.leaf?.payload?.price ?? product.price) : product.price;
+  const base = detail || product || {};
+  const hasVariants = Array.isArray(base.variants) && base.variants.length > 0;
+  const effectivePrice = hasVariants ? (variantState.leaf?.payload?.price ?? base.price) : base.price;
   const effectiveInStock = hasVariants
     ? (variantState.isComplete ? ((variantState.leaf?.payload?.stock ?? 0) > 0) : true)
-    : product.inStock;
+    : base.inStock;
+  const images = (detailImages && detailImages.length) ? detailImages : (product?.image ? [product.image] : []);
+  const activeImage = variantState?.leaf?.payload?.image || images[0] || (product?.image || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==');
 
   return (
     <>
@@ -68,15 +108,15 @@ const ProductQuickAddModal = ({ product, isOpen, onClose, onAddToCart }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-0 px-5 sm:px-6 pb-6 mt-6">
               <div className="relative">
                 <div className="rounded-xl overflow-hidden bg-gray-100 aspect-square sm:aspect-square h-48 sm:h-auto">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                  <img src={activeImage} alt={(base.name||'')} className="w-full h-full object-cover" />
                 </div>
               </div>
               <div className="flex flex-col">
                 <h3 className="text-xl font-medium font-chinese mb-2" style={{ color: '#333333' }}>{product.name}</h3>
                 <div className="flex items-baseline gap-3 mb-4">
                   <span className="text-2xl font-bold font-chinese" style={{ color: '#CC824D' }}>NT$ {effectivePrice?.toLocaleString()}</span>
-                  {product.originalPrice && !hasVariants && (
-                    <span className="text-sm line-through" style={{ color: '#999999' }}>NT$ {product.originalPrice.toLocaleString()}</span>
+                  {base.originalPrice && !hasVariants && (
+                    <span className="text-sm line-through" style={{ color: '#999999' }}>NT$ {base.originalPrice.toLocaleString()}</span>
                   )}
                 </div>
                 <div className="mb-6">
@@ -86,10 +126,10 @@ const ProductQuickAddModal = ({ product, isOpen, onClose, onAddToCart }) => {
                   <div className="mb-6">
                     <label className="block text-sm font-medium font-chinese mb-3" style={{ color: '#666666' }}>選擇規格</label>
                     <VariantTreeSelector
-                      data={product.variants}
+                      data={base.variants}
                       maxDepth={5}
                       onChange={setVariantState}
-                      labels={["顏色", "尺寸", "內頁", "封面", "包裝"]}
+                      labels={base.specsLabels || ["顏色", "尺寸", "內頁", "封面", "包裝"]}
                       renderSelect={({ level, options, value, onChange, disabled, label }) => (
                         <div className="flex flex-col gap-2 mb-2">
                           {label && (

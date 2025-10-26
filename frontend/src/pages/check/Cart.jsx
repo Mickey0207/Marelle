@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { 
   TrashIcon,
@@ -12,6 +12,8 @@ import { useCart } from "../../../external_mock/state/cart.jsx";
 import { buildProductDetailUrl } from "../../../external_mock/data/products.mock.js";
 
 const Cart = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { 
     cartItems, 
     removeFromCart, 
@@ -76,6 +78,35 @@ const Cart = () => {
       ease: 'power2.in',
       onComplete: () => removeFromCart(productId)
     });
+  };
+
+  // 若攜帶 action=checkout，且使用者已登入，回到 /cart 後自動導向 /checkout
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const action = params.get('action');
+    if (action === 'checkout') {
+      (async () => {
+        try {
+          const res = await fetch('/frontend/auth/me', { method: 'GET', credentials: 'include' });
+          if (res.ok) navigate('/checkout', { replace: true });
+        } catch {}
+      })();
+    }
+  }, [location.search, navigate]);
+
+  const handleProceedCheckout = async () => {
+    try {
+      const res = await fetch('/frontend/auth/me', { method: 'GET', credentials: 'include' });
+      if (res.ok) {
+        navigate('/checkout');
+      } else {
+        const redirect = '/cart?action=checkout';
+        navigate(`/login?redirect=${encodeURIComponent(redirect)}`);
+      }
+    } catch {
+      const redirect = '/cart?action=checkout';
+      navigate(`/login?redirect=${encodeURIComponent(redirect)}`);
+    }
   };
 
   if (cartItems.length === 0) {
@@ -245,12 +276,12 @@ const Cart = () => {
                 </div>
               </div>
 
-              <Link
-                to="/checkout"
+              <button
+                onClick={handleProceedCheckout}
                 className="btn-primary w-full mt-6 xs:mt-7 sm:mt-8 md:mt-8 py-3 xs:py-3.5 sm:py-4 md:py-4 text-base xs:text-base sm:text-lg md:text-lg font-chinese inline-block text-center"
               >
                 前往結帳
-              </Link>
+              </button>
 
               <Link
                 to="/products"

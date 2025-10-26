@@ -78,3 +78,83 @@ RLS 策略
 
 - email 索引：`fronted_users_email_idx`
 
+## 資料表：public.fronted_carts（購物車主表）
+
+- 用途：前台購物車容器。一位登入使用者（user_id）或一組訪客 token（guest_token）在同一時間僅能有一個 `active` 狀態的購物車。
+- 關聯：
+  - `user_id` → `public.fronted_users(id)`（登入者）
+  - `merged_from_cart_id` → `public.fronted_carts(id)`（合併來源）
+
+欄位
+
+- id (uuid, PK)
+- user_id (uuid, FK → fronted_users.id, on delete set null)
+- guest_token (text, nullable)：訪客識別（由後端以 Cookie 維護）
+- status (text, default 'active')：active | merged | abandoned | converted
+- expires_at (timestamptz, nullable)：訪客車 TTL
+- currency (text, default 'TWD')
+- subtotal_amount (numeric(12,2), default 0)
+- discount_amount (numeric(12,2), default 0)
+- shipping_fee_amount (numeric(12,2), default 0)
+- tax_amount (numeric(12,2), default 0)
+- grand_total_amount (numeric(12,2), default 0)
+- total_quantity (int, default 0)
+- merged_from_cart_id (uuid, nullable)
+- coupon_code (text, nullable)
+- source_channel (text, nullable)
+- schema_version (int, default 1)
+- metadata (jsonb, default {})
+- created_at/updated_at (timestamptz, UTC)
+
+索引與約束
+
+- Unique（partial）：同一使用者僅能有一個 active：`uq_fronted_carts_active_user (user_id) where status='active' and user_id is not null`
+- Unique（partial）：同一 guest_token 僅能有一個 active：`uq_fronted_carts_active_guest (guest_token) where status='active' and guest_token is not null`
+- 常用索引：`(user_id, status)`、`updated_at desc`
+
+RLS 策略
+
+- 啟用 RLS；僅 `auth.uid() = user_id` 的登入者可 select/insert/update/delete 自己的購物車。
+- 訪客模式建議由後端（Service Role）代為操作。
+
+## 資料表：public.fronted_cart_items（購物車明細）
+
+- 用途：購物車內的商品變體行；每筆明細必須綁定到後端庫存資料列（變體）。
+- 關聯：
+  - `cart_id` → `public.fronted_carts(id)`（on delete cascade）
+  - `product_id` → `public.backend_products(id)`（bigint, on delete restrict）
+  - `inventory_id` → `public.backend_products_inventory(id)`（bigint, on delete restrict）
+
+欄位
+
+- id (uuid, PK)
+- cart_id (uuid, FK → fronted_carts.id)
+- product_id (bigint, FK → backend_products.id)
+- inventory_id (bigint, FK → backend_products_inventory.id)
+- sku_key (text, nullable)：SKU 文字快照（顯示/查詢方便）
+- name_snapshot (text)：商品名稱快照
+- image_url (text, nullable)
+- selected_options (jsonb, default {})：選配/規格結構的摘要
+- quantity (int > 0)
+- unit_price (numeric(12,2), default 0)
+- currency (text, default 'TWD')
+- line_total_amount (numeric(12,2), default 0)
+- is_gift (boolean, default false)
+- added_at/updated_at (timestamptz, UTC)
+- metadata (jsonb, default {})
+
+索引與約束
+
+- Unique：`(cart_id, inventory_id)`（同車同變體僅一行；如需同變體多行，後續可增 `personalization_hash` 調整唯一鍵）
+- 常用索引：`cart_id`、`product_id`、`inventory_id`
+
+RLS 策略
+
+- 啟用 RLS；僅擁有該 `cart_id` 的登入者可 select/insert/update/delete 該購物車的明細：
+  - 條件：存在 `fronted_carts c` 使得 `c.id = cart_id and c.user_id = auth.uid()`
+
+彙總與觸發器
+
+- `fronted_cart_recalc_totals(cart_id uuid)`：在 items 新增/更新/刪除後更新主表的 `total_quantity` 與金額（subtotal/grand_total）。
+- 更新邏輯保守：折扣/運費/稅額由訂價引擎或 API 計算，觸發器不主動干涉。
+

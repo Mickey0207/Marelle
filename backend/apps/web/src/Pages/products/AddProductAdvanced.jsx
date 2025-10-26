@@ -29,7 +29,19 @@ const AddProductAdvanced = () => {
     description: '',
     shortDescription: '',
     categories: [], // 複選分類
-    tags: [],
+  tags: [],
+  // 標籤與顏色
+  promotionLabel: '',
+  promotionLabelBgColor: '#CC824D',
+  promotionLabelTextColor: '#FFFFFF',
+  productTagBgColor: '#CC824D',
+  productTagTextColor: '#FFFFFF',
+  // 缺貨/預購控制
+  autoHideWhenOOS: false,
+  enablePreorder: false,
+  preorderStartAt: '',
+  preorderEndAt: '',
+  preorderMaxQty: '',
     
     // 定價資訊 (僅用於無變體商品)
     price: '',
@@ -138,8 +150,9 @@ const AddProductAdvanced = () => {
   // 已不再使用的巢狀輸入處理器，移除以降低噪音
 
   const addTag = () => {
-    if (newTag.trim() && !productData.tags.includes(newTag.trim())) {
-      handleInputChange('tags', [...productData.tags, newTag.trim()]);
+    if (newTag.trim()) {
+      // 限制僅一個產品標籤
+      handleInputChange('tags', [newTag.trim()]);
       setNewTag('');
     }
   };
@@ -392,6 +405,17 @@ const AddProductAdvanced = () => {
           short_description: productData.shortDescription || null,
           description: productData.description,
           tags: productData.tags,
+          promotion_label: productData.promotionLabel || null,
+          promotion_label_bg_color: productData.promotionLabelBgColor || null,
+          promotion_label_text_color: productData.promotionLabelTextColor || null,
+          product_tag_bg_color: productData.productTagBgColor || null,
+          product_tag_text_color: productData.productTagTextColor || null,
+          // 缺貨/預購
+          auto_hide_when_oos: !!productData.autoHideWhenOOS,
+          enable_preorder: !!productData.enablePreorder,
+          preorder_start_at: productData.preorderStartAt ? new Date(productData.preorderStartAt).toISOString() : null,
+          preorder_end_at: productData.preorderEndAt ? new Date(productData.preorderEndAt).toISOString() : null,
+          preorder_max_qty: productData.preorderMaxQty === '' ? null : Number(productData.preorderMaxQty),
           base_sku: productData.baseSKU,
           has_variants: productData.hasVariants,
           status: productData.status,
@@ -842,42 +866,100 @@ const AddProductAdvanced = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      產品標籤
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">產品標籤</label>
                     <div className="flex flex-wrap gap-2 mb-2">
                       {productData.tags.map(tag => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-[#cc824d] text-white"
-                        >
+                        <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-sm" style={{background: productData.productTagBgColor, color: productData.productTagTextColor}}>
                           {tag}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(tag)}
-                            className="ml-2 text-white hover:text-gray-200"
-                          >
+                          <button type="button" onClick={() => removeTag(tag)} className="ml-2" style={{color: productData.productTagTextColor}}>
                             <XMarkIcon className="w-4 h-4" />
                           </button>
                         </span>
                       ))}
                     </div>
                     <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                        className={ADMIN_STYLES.input}
-                        placeholder="輸入標籤名稱"
-                      />
-                      <button
-                        type="button"
-                        onClick={addTag}
-                        className={ADMIN_STYLES.btnSecondary}
-                      >
-                        <PlusIcon className="w-4 h-4" />
-                      </button>
+                      <input type="text" value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())} className={ADMIN_STYLES.input} placeholder="輸入標籤名稱" />
+                      <button type="button" onClick={addTag} className={ADMIN_STYLES.btnSecondary}><PlusIcon className="w-4 h-4" /></button>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">產品標籤背景色</label>
+                        <input type="color" value={productData.productTagBgColor} onChange={(e)=>handleInputChange('productTagBgColor', e.target.value)} className="w-16 h-10 p-0 border rounded" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">產品標籤字體色</label>
+                        <input type="color" value={productData.productTagTextColor} onChange={(e)=>handleInputChange('productTagTextColor', e.target.value)} className="w-16 h-10 p-0 border rounded" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 優惠標籤 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">優惠標籤</label>
+                    <div className="grid grid-cols-3 gap-4 items-end">
+                      <div className="col-span-2">
+                        <div className="flex gap-2">
+                          <input type="text" value={productData.promotionLabel} onChange={(e)=>handleInputChange('promotionLabel', e.target.value)} className={`flex-1 ${ADMIN_STYLES.input}`} placeholder="如：滿千折百 / 限時優惠" />
+                          <button type="button" onClick={() => handleInputChange('promotionLabel', (productData.promotionLabel || '').trim())} className={ADMIN_STYLES.btnSecondary} title="新增優惠標籤">
+                            <PlusIcon className="w-4 h-4" />
+                          </button>
+                          {productData.promotionLabel && (
+                            <button type="button" onClick={() => handleInputChange('promotionLabel', '')} className={ADMIN_STYLES.btnSecondary} title="清除優惠標籤">
+                              <XMarkIcon className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {productData.promotionLabel && (
+                          <span className="inline-block px-3 py-1 rounded-full text-sm" style={{background: productData.promotionLabelBgColor, color: productData.promotionLabelTextColor}}>
+                            {productData.promotionLabel}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">優惠標籤背景色</label>
+                        <input type="color" value={productData.promotionLabelBgColor} onChange={(e)=>handleInputChange('promotionLabelBgColor', e.target.value)} className="w-16 h-10 p-0 border rounded" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">優惠標籤字體色</label>
+                        <input type="color" value={productData.promotionLabelTextColor} onChange={(e)=>handleInputChange('promotionLabelTextColor', e.target.value)} className="w-16 h-10 p-0 border rounded" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 缺貨與預購設定 */}
+                  <div className="mt-6 border-t border-gray-200 pt-6">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3">缺貨與預購</h4>
+                    <div className="space-y-3">
+                      <label className="inline-flex items-center gap-2">
+                        <input type="checkbox" className="h-4 w-4 text-[#cc824d] border-gray-300 rounded focus:ring-[#cc824d]" checked={productData.autoHideWhenOOS} onChange={(e)=>handleInputChange('autoHideWhenOOS', e.target.checked)} />
+                        <span className="text-sm text-gray-700">缺貨自動下架</span>
+                      </label>
+                      <div className="flex flex-col gap-3">
+                        <label className="inline-flex items-center gap-2">
+                          <input type="checkbox" className="h-4 w-4 text-[#cc824d] border-gray-300 rounded focus:ring-[#cc824d]" checked={productData.enablePreorder} onChange={(e)=>handleInputChange('enablePreorder', e.target.checked)} />
+                          <span className="text-sm text-gray-700">啟用預購</span>
+                        </label>
+                        {productData.enablePreorder && (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1">預購開始時間</label>
+                              <input type="datetime-local" value={productData.preorderStartAt} onChange={(e)=>handleInputChange('preorderStartAt', e.target.value)} className={ADMIN_STYLES.input} />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1">預購結束時間</label>
+                              <input type="datetime-local" value={productData.preorderEndAt} onChange={(e)=>handleInputChange('preorderEndAt', e.target.value)} className={ADMIN_STYLES.input} />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1">最大預購數</label>
+                              <input type="number" min="0" value={productData.preorderMaxQty} onChange={(e)=>handleInputChange('preorderMaxQty', e.target.value)} className={ADMIN_STYLES.input} placeholder="例如 100" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

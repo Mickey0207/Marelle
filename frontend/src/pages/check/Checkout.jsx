@@ -94,6 +94,20 @@ const Checkout = () => {
   const [cvsInfo, setCvsInfo] = useState({ brand: '', storeName: '', storeId: '', storeAddress: '' });
 
   useEffect(() => {
+    // 路由保護：未登入者導向登入頁
+    (async () => {
+      try {
+        const res = await fetch('/frontend/auth/me', { method: 'GET', credentials: 'include' });
+        if (!res.ok) {
+          navigate(`/login?redirect=${encodeURIComponent('/checkout')}`, { replace: true });
+          return;
+        }
+      } catch {
+        navigate(`/login?redirect=${encodeURIComponent('/checkout')}`, { replace: true });
+        return;
+      }
+    })();
+
     if (cartItems.length === 0 && !orderComplete) {
       navigate('/cart');
     }

@@ -1,9 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
-import { mockProducts, getProductByUrlKey } from "../../../external_mock/data/products.mock.js";
 import { useCart } from "../../../external_mock/state/cart.jsx";
-import { getCategoryPath } from "../../../external_mock/data/categories.js";
 import ProductBreadcrumb from '../../components/product/Detail/ProductBreadcrumb.jsx';
 import ProductImageGallery from '../../components/product/Detail/ProductImageGallery.jsx';
 import ProductPurchasePanel from '../../components/product/Detail/ProductPurchasePanel.jsx';
@@ -16,19 +14,18 @@ const ProductDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState('details');
   const { addToCart } = useCart();
   // 規格選擇狀態
   const [variantState, setVariantState] = useState({ path: [], isComplete: false, leaf: undefined });
 
-  // Mock additional images
-  const productImages = product ? [
-    product.image,
-    product.image,
-    product.image,
-    product.image
-  ] : [];
+  // 取得透明像素做為圖片缺省
+  const transparentPng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg=='
+  const variantImage = variantState?.leaf?.payload?.image;
+  const baseImages = images && images.length ? images : (product?.image ? [product.image] : [transparentPng]);
+  const productImages = variantImage ? [variantImage, ...baseImages.filter(u => u !== variantImage)] : baseImages;
 
   // 自動輪播
   useEffect(() => {
@@ -49,34 +46,37 @@ const ProductDetail = () => {
   const handleNextImage = () => setSelectedImage((prev) => (prev + 1) % productImages.length);
 
   useEffect(() => {
-    const parseLegacyId = (s) => {
-      const m = String(s || '').match(/-(\d+)$/);
-      return m ? parseInt(m[1], 10) : null;
-    };
-
-    let targetId = id ? parseInt(id) : null;
-    if (!targetId) {
-      // 從萬用字元路由中取最後一段，優先以 urlKey 查找，找不到再嘗試舊版 slug-id 解析
-      const parts = location.pathname.split('/').filter(Boolean);
-      const last = parts[parts.length - 1];
-      const byKey = getProductByUrlKey(last);
-      targetId = byKey ? byKey.id : parseLegacyId(last);
+    let cancelled = false;
+    async function load() {
+      try {
+        // 從當前路徑取 slug 或 id
+        const parts = location.pathname.split('/').filter(Boolean);
+        let slugOrId = id || parts[parts.length - 1];
+        if (!slugOrId) throw new Error('no slug');
+        const res = await fetch(`/frontend/products/${encodeURIComponent(slugOrId)}`, { credentials: 'include' });
+        if (!res.ok) throw new Error('not found');
+        const data = await res.json();
+        if (cancelled) return;
+        // 後端已經給 price（未選規格時顯示最便宜），variants（樹狀），images
+        setProduct({
+          id: data.id,
+          name: data.name,
+          slug: data.slug,
+          description: data.description,
+          price: data.price ?? 0,
+          originalPrice: data.originalPrice ?? null,
+          inStock: !!data.inStock,
+          variants: Array.isArray(data.variants) ? data.variants : [],
+          specsLabels: Array.isArray(data.specsLabels) ? data.specsLabels : undefined,
+        });
+        setImages(Array.isArray(data.images) ? data.images : []);
+      } catch (e) {
+        if (!cancelled) navigate('/products');
+      }
     }
-    if (!targetId || Number.isNaN(targetId)) {
-      setProduct(null);
-      navigate('/products');
-      return;
-    }
-    const foundProduct = mockProducts.find(p => p.id === targetId);
-    if (foundProduct) {
-      setProduct(foundProduct);
-    } else {
-      setProduct(null);
-      navigate('/products');
-    }
-    // 僅在 id 或 hash 變更時重查
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, location.hash, navigate]);
+    load();
+    return () => { cancelled = true; };
+  }, [id, location.pathname, navigate]);
 
   // 在 product 狀態更新且 DOM 已渲染後再進行動畫，避免 GSAP target not found 警告
   useEffect(() => {
@@ -138,12 +138,10 @@ const ProductDetail = () => {
     );
   }
 
-  const relatedProducts = mockProducts
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
+  const relatedProducts = [];
 
-  // 取得分類路徑用於麵包屑
-  const categoryPath = product?.categoryId ? getCategoryPath(product.categoryId) : [];
+  // 取得分類路徑用於麵包屑（先暫空，等後端分類接上）
+  const categoryPath = [];
 
   return (
     <div className="min-h-screen bg-white">
@@ -160,6 +158,7 @@ const ProductDetail = () => {
             <ProductPurchasePanel
               product={{
                 ...product,
+                // 即時價格更新：若已選到葉節點使用其價格，否則顯示最便宜價格（後端已計算）
                 price: variantState.leaf?.payload?.price ?? product.price,
                 // 修正：未完成變體選擇時，避免顯示缺貨，改為維持可購買狀態並提示需完成規格
                 inStock: (Array.isArray(product.variants) && product.variants.length > 0)
@@ -178,7 +177,7 @@ const ProductDetail = () => {
                       data={product.variants}
                       maxDepth={5}
                       onChange={setVariantState}
-                      labels={["顏色", "尺寸", "內頁", "封面", "包裝"]}
+                      labels={product.specsLabels || ["顏色", "尺寸", "內頁", "封面", "包裝"]}
                       renderSelect={({ level, options, value, onChange, disabled, label }) => (
                         <div className="flex flex-col gap-2">
                           {label && (

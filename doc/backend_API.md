@@ -460,7 +460,7 @@
 
 
 
-### 1) GET /backend/products### 1) GET /backend/products
+### 1) GET /backend/products
 
 
 
@@ -474,13 +474,14 @@
 
   - `search`：搜尋商品名稱或 slug（選填）  - `search`：搜尋商品名稱或 slug（選填）
 
-- 回傳：`200 Array<{ id, name, slug, short_description, status, visibility, is_featured, base_sku, has_variants, tags, created_at, updated_at }>`- 回傳：`200 Array<{ id, name, slug, short_description, status, visibility, is_featured, base_sku, has_variants, tags, created_at, updated_at }>`
+- 回傳：
+  - `200 Array<{ id, name, slug, short_description, status, visibility, is_featured, base_sku, has_variants, tags, promotion_label, promotion_label_bg_color, promotion_label_text_color, product_tag_bg_color, product_tag_text_color, auto_hide_when_oos, enable_preorder, preorder_start_at, preorder_end_at, preorder_max_qty, oos_status, created_at, updated_at }>`
 
 - 失敗：`500 { error: 'Failed to list products' }`- 失敗：`500 { error: 'Failed to list products' }`
 
 
 
-### 2) GET /backend/products/:id### 2) GET /backend/products/:id
+### 2) GET /backend/products/:id
 
 
 
@@ -492,7 +493,7 @@
 
 
 
-### 3) POST /backend/products### 3) POST /backend/products
+### 3) POST /backend/products
 
 
 
@@ -500,39 +501,34 @@
 
 - 請求：- 請求：
 
-  ```json  ```json
-
-  {  {
-
-    "name": "商品名稱",    "name": "商品名稱",
-
-    "slug": "product-slug",    "slug": "product-slug",
-
-    "description": "詳細描述",    "description": "詳細描述",
-
-    "short_description": "簡短描述（可選）",    "short_description": "簡短描述（可選）",
-
-    "tags": ["標籤1", "標籤2"],    "tags": ["標籤1", "標籤2"],
-
-    "base_sku": "SKU-001",    "base_sku": "SKU-001",
-
-    "has_variants": false,    "has_variants": false,
-
-    "status": "draft",    "status": "draft",
-
-    "visibility": "visible",    "visibility": "visible",
-
-    "is_featured": false,    "is_featured": false,
-
-    "category_ids": [1, 2],    "category_ids": [1, 2],
-
-    "meta_title": "SEO 標題",    "meta_title": "SEO 標題",
-
-    "meta_description": "SEO 描述"    "meta_description": "SEO 描述"
-
-  }  }
-
-  ```  ```
+  範例請求 JSON（節錄）：
+  ```json
+  {
+    "name": "商品名稱",
+    "slug": "product-slug",
+    "description": "詳細描述",
+    "short_description": "簡短描述（可選）",
+    "tags": ["標籤1"],
+    "base_sku": "SKU-001",
+    "has_variants": false,
+    "status": "draft",
+    "visibility": "visible",
+    "is_featured": false,
+    "category_ids": [1, 2],
+    "promotion_label": "限時",
+    "promotion_label_bg_color": "#CC824D",
+    "promotion_label_text_color": "#FFFFFF",
+    "product_tag_bg_color": "#CC824D",
+    "product_tag_text_color": "#FFFFFF",
+    "auto_hide_when_oos": true,
+    "enable_preorder": true,
+    "preorder_start_at": "2025-11-01T00:00:00.000Z",
+    "preorder_end_at": "2025-11-10T23:59:59.000Z",
+    "preorder_max_qty": 200,
+    "meta_title": "SEO 標題",
+    "meta_description": "SEO 描述"
+  }
+  ```
 
 - 回傳：`200 { id, name, slug, ... }`（同時建立 SEO 記錄）- 回傳：`200 { id, name, slug, ... }`（同時建立 SEO 記錄）
 
@@ -544,13 +540,24 @@
 
 
 
-### 4) PATCH /backend/products/:id### 4) PATCH /backend/products/:id
+### 4) PATCH /backend/products/:id
 
 
 
 - 用途：更新商品基本資訊及 SEO- 用途：更新商品基本資訊及 SEO
 
-- 請求：部分欄位（name, slug, description, tags, status, visibility, is_featured, category_ids, meta_title, meta_description 等）- 請求：部分欄位（name, slug, description, tags, status, visibility, is_featured, category_ids, meta_title, meta_description 等）
+- 請求：部分欄位（name, slug, description, tags, status, visibility, is_featured, category_ids, meta_title, meta_description 等），新增支援：
+  - `promotion_label`（string|null）
+  - `promotion_label_bg_color`（string|null, 十六進位色碼）
+  - `promotion_label_text_color`（string|null, 十六進位色碼）
+  - `product_tag_bg_color`（string|null, 十六進位色碼）
+  - `product_tag_text_color`（string|null, 十六進位色碼）
+  - `auto_hide_when_oos`（boolean）
+  - `enable_preorder`（boolean）
+  - `preorder_start_at`（timestamptz|null）
+  - `preorder_end_at`（timestamptz|null）
+  - `preorder_max_qty`（integer|null）
+  - `oos_status`（text|null，營運標註用）
 
 - 回傳：`200 { id, name, ... }`- 回傳：`200 { id, name, ... }`
 
@@ -771,7 +778,7 @@
 
 
 
-### 14) POST /backend/products/:productId/prices### 14) POST /backend/products/:productId/prices
+### 14) POST /backend/products/:productId/prices
 
 
 
@@ -781,33 +788,29 @@
 
 
 
-```json```json
+請求 JSON（僅列常用欄位，皆為選填，未提供時為 null）：
 
-{{
-
-  "sku_key": null,  "sku_key": null,
-
-  "sale_price": 1000.00,  "sale_price": 1000.00,
-
-  "compare_at_price": 1500.00,  "compare_at_price": 1500.00,
-
-  "cost_price": 600.00  "cost_price": 600.00
-
-}}
-
-``````
+```json
+{
+  "sku_key": null,
+  "sale_price": 1000.00,
+  "compare_at_price": 1500.00,
+  "cost_price": 600.00,
+  "gold_member_price": 900.00,
+  "silver_member_price": 950.00,
+  "vip_member_price": 880.00
+}
+```
 
 
 
-- 說明：- 說明：
+說明：
 
-  - `sku_key` 為 `null` 時表示該商品無變體；設定值時表示該變體的SKU識別符  - `sku_key` 為 `null` 時表示該商品無變體；設定值時表示該變體的SKU識別符
+- `sku_key` 為 `null` 時表示該商品無變體；設定值時表示該變體的 SKU 識別符。
+- 每個 `(product_id, sku_key)` 的組合必須唯一。
+- 所有價格欄位（含會員價）均為選填，未提供時為 `null`。
 
-  - 每個 `(product_id, sku_key)` 的組合必須唯一  - 每個 `(product_id, sku_key)` 的組合必須唯一
-
-  - 所有價格欄位均為選填，未提供時為 `null`  - 所有價格欄位均為選填，未提供時為 `null`
-
-- 回傳：`200 { id, product_id, sku_key, sale_price, compare_at_price, cost_price, created_at, updated_at }`- 回傳：`200 { id, product_id, sku_key, sale_price, compare_at_price, cost_price, created_at, updated_at }`
+回傳：`200 { id, product_id, sku_key, sale_price, compare_at_price, cost_price, gold_member_price, silver_member_price, vip_member_price, created_at, updated_at }`
 
 - 失敗：- 失敗：
 
@@ -817,7 +820,7 @@
 
 
 
-### 15) PATCH /backend/products/:productId/prices/:priceId### 15) PATCH /backend/products/:productId/prices/:priceId
+### 15) PATCH /backend/products/:productId/prices/:priceId
 
 
 
@@ -827,29 +830,36 @@
 
 
 
-```json```json
+請求 JSON（僅包含欲更新欄位即可）：
 
-{{
-
-  "sale_price": 1100.00,  "sale_price": 1100.00,
-
-  "compare_at_price": 1600.00,  "compare_at_price": 1600.00,
-
-  "cost_price": 650.00  "cost_price": 650.00
-
-}}
-
-``````
-
+```json
+{
+  "sale_price": 1100.00,
+  "compare_at_price": 1600.00,
+  "cost_price": 650.00,
+  "gold_member_price": 980.00,
+  "silver_member_price": 1020.00,
+  "vip_member_price": 900.00
+}
+```
 
 
-- 回傳：`200 { id, product_id, sku_key, sale_price, compare_at_price, cost_price, ... }`- 回傳：`200 { id, product_id, sku_key, sale_price, compare_at_price, cost_price, ... }`
 
-- 失敗：- 失敗：
+回傳：`200 { id, product_id, sku_key, sale_price, compare_at_price, cost_price, gold_member_price, silver_member_price, vip_member_price, ... }`
 
-  - `400 { error: 'No fields to update' }`  - `400 { error: 'No fields to update' }`
+說明與特別行為：
 
-  - `500 { error: 'Update failed' }`  - `500 { error: 'Update failed' }`
+- 一般情況下 `:priceId` 為價格記錄的 `id`，直接更新該列。
+- 若 `:priceId` 並非價格列 id，而是傳入了庫存列 `backend_products_inventory.id`：
+  1) 伺服端會先查出該庫存列的 `sku_key`；
+  2) 若此 `(product_id, sku_key)` 已有價格列，則更新該價格列；
+  3) 若尚無價格列，則以該 `sku_key` 建立新的價格列（等同 upsert 行為）。
+
+錯誤：
+
+- `400 { error: 'No fields to update' }`
+- `404 { error: 'Price not found' }`（傳入庫存 id 但查無 `sku_key`）
+- `500 { error: 'Update failed' | 'Create failed' }`
 
 
 

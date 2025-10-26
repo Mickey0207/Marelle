@@ -1307,10 +1307,10 @@ var require_cjs = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-GkhLMj/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-MtkJD6/middleware-loader.entry.ts
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-GkhLMj/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-MtkJD6/middleware-insertion-facade.js
 init_modules_watch_stub();
 
 // ../backend/API/index.ts
@@ -2090,14 +2090,14 @@ var Hono = class {
   }
   #notFoundHandler = notFoundHandler;
   errorHandler = errorHandler;
-  route(path, app9) {
+  route(path, app12) {
     const subApp = this.basePath(path);
-    app9.routes.map((r) => {
+    app12.routes.map((r) => {
       let handler;
-      if (app9.errorHandler === errorHandler) {
+      if (app12.errorHandler === errorHandler) {
         handler = r.handler;
       } else {
-        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app9.errorHandler)(c, () => r.handler(c, next))).res, "handler");
+        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app12.errorHandler)(c, () => r.handler(c, next))).res, "handler");
         handler[COMPOSED_HANDLER] = r.handler;
       }
       subApp.#addRoute(r.method, r.path, handler);
@@ -11496,8 +11496,8 @@ app.post("/backend/auth/login", async (c) => {
     }
     const session = data.session;
     const user = data.user;
-    const svc = makeSupabase(c, session.access_token);
-    const { data: row, error: selErr } = await svc.from("backend_admins").select("id,is_active").eq("id", user.id).single();
+    const svc2 = makeSupabase(c, session.access_token);
+    const { data: row, error: selErr } = await svc2.from("backend_admins").select("id,is_active").eq("id", user.id).single();
     if (selErr || !row || row.is_active === false) {
       return c.json({ error: "Not a backend admin" }, 403);
     }
@@ -11532,8 +11532,8 @@ app.get("/backend/auth/me", async (c) => {
       const { data, error } = await supabase.auth.getUser(access);
       if (error || !data?.user) return c.json({ error: "Unauthorized" }, 401);
       const user = data.user;
-      const svc = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_ANON_KEY, { auth: { persistSession: false }, global: { headers: { Authorization: `Bearer ${access}` } } });
-      const { data: row } = await svc.from("backend_admins").select("id,is_active").eq("id", user.id).single();
+      const svc2 = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_ANON_KEY, { auth: { persistSession: false }, global: { headers: { Authorization: `Bearer ${access}` } } });
+      const { data: row } = await svc2.from("backend_admins").select("id,is_active").eq("id", user.id).single();
       if (!row || row.is_active === false) return c.json({ error: "Unauthorized" }, 401);
       return c.json({ id: user.id, email: user.email });
     }
@@ -11590,13 +11590,13 @@ app.get("/backend/auth/modules", async (c) => {
       adminId = parsed.uid;
     }
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
-    const { data: adminRow, error: adminErr } = await svc.from("backend_admins").select("role,is_active").eq("id", adminId).single();
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const { data: adminRow, error: adminErr } = await svc2.from("backend_admins").select("role,is_active").eq("id", adminId).single();
     if (adminErr || !adminRow || adminRow.is_active === false) return c.json({ error: "Unauthorized" }, 401);
     role = adminRow?.role || "Staff";
-    const { data: roleRow, error: roleErr } = await svc.from("backend_role_modules").select("*").eq("role", role).single();
+    const { data: roleRow, error: roleErr } = await svc2.from("backend_role_modules").select("*").eq("role", role).single();
     if (roleErr || !roleRow) return c.json([]);
-    const { data: modules, error: modErr } = await svc.from("backend_modules").select("key").eq("is_active", true);
+    const { data: modules, error: modErr } = await svc2.from("backend_modules").select("key").eq("is_active", true);
     if (modErr) return c.json({ error: "Failed to load modules" }, 500);
     const toColumn = /* @__PURE__ */ __name((k) => k.replace(/-/g, "_"), "toColumn");
     const allowed = (modules || []).map((m) => m.key).filter((k) => !!roleRow[toColumn(k)]);
@@ -11832,8 +11832,8 @@ __name(requireAuth, "requireAuth");
 app2.get("/backend/admins", async (c) => {
   if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
-    const svc = makeSvc(c);
-    const { data, error } = await svc.from("backend_admins").select("id,email,display_name,role,department,line_user_id,line_display_name,line_picture_url,is_active,created_at").order("created_at", { ascending: false });
+    const svc2 = makeSvc(c);
+    const { data, error } = await svc2.from("backend_admins").select("id,email,display_name,role,department,line_user_id,line_display_name,line_picture_url,is_active,created_at").order("created_at", { ascending: false });
     if (error) return c.json({ error: "Failed to list" }, 500);
     const list = (data || []).map((a) => ({
       id: a.id,
@@ -11862,8 +11862,8 @@ app2.patch("/backend/admins/:id", async (c) => {
     if (typeof body.is_active === "boolean") allowed.is_active = body.is_active;
     if (typeof body.department === "string") allowed.department = body.department;
     if (Object.keys(allowed).length === 0) return c.json({ error: "No fields" }, 400);
-    const svc = makeSvc(c);
-    const { error } = await svc.from("backend_admins").update(allowed).eq("id", id);
+    const svc2 = makeSvc(c);
+    const { error } = await svc2.from("backend_admins").update(allowed).eq("id", id);
     if (error) return c.json({ error: "Update failed" }, 500);
     return c.json({ ok: true });
   } catch (e) {
@@ -11873,8 +11873,8 @@ app2.patch("/backend/admins/:id", async (c) => {
 app2.get("/backend/roles", async (c) => {
   if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
-    const svc = makeSvc(c);
-    const { data, error } = await svc.from("backend_role_modules").select("role").order("role");
+    const svc2 = makeSvc(c);
+    const { data, error } = await svc2.from("backend_role_modules").select("role").order("role");
     if (error) return c.json({ error: "Failed to list" }, 500);
     const list = (data || []).map((r, idx) => ({ id: `r${idx}`, name: r.role }));
     return c.json(list);
@@ -11888,8 +11888,8 @@ app2.post("/backend/roles", async (c) => {
     const body = await c.req.json();
     const role = String(body?.name || "").trim();
     if (!role) return c.json({ error: "Missing role name" }, 400);
-    const svc = makeSvc(c);
-    const { error } = await svc.from("backend_role_modules").insert({ role });
+    const svc2 = makeSvc(c);
+    const { error } = await svc2.from("backend_role_modules").insert({ role });
     if (error) return c.json({ error: "Create failed" }, 500);
     return c.json({ id: role, name: role });
   } catch (e) {
@@ -11900,12 +11900,12 @@ app2.get("/backend/roles/:role/modules", async (c) => {
   if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
     const role = c.req.param("role");
-    const svc = makeSvc(c);
-    const { data, error } = await svc.from("backend_role_modules").select("*").eq("role", role).single();
+    const svc2 = makeSvc(c);
+    const { data, error } = await svc2.from("backend_role_modules").select("*").eq("role", role).single();
     if (error || !data) return c.json([]);
     const { role: _r, created_at: _ca, updated_at: _ua, ...flags } = data;
     const keys = Object.entries(flags).filter(([, v]) => !!v).map(([k]) => k.replace(/_/g, "-"));
-    const { data: mods } = await svc.from("backend_modules").select("key").eq("is_active", true);
+    const { data: mods } = await svc2.from("backend_modules").select("key").eq("is_active", true);
     const active = new Set((mods || []).map((m) => m.key));
     return c.json(keys.filter((k) => active.has(k)));
   } catch (e) {
@@ -11918,11 +11918,11 @@ app2.put("/backend/roles/:role/modules", async (c) => {
     const role = c.req.param("role");
     const body = await c.req.json();
     const modules = Array.isArray(body?.modules) ? body.modules : [];
-    const svc = makeSvc(c);
-    const { data: mods } = await svc.from("backend_modules").select("key").eq("is_active", true);
+    const svc2 = makeSvc(c);
+    const { data: mods } = await svc2.from("backend_modules").select("key").eq("is_active", true);
     const active = new Set((mods || []).map((m) => m.key));
     const safe = Array.from(new Set(modules)).filter((k) => active.has(k));
-    const { data: row, error: getErr } = await svc.from("backend_role_modules").select("*").eq("role", role).single();
+    const { data: row, error: getErr } = await svc2.from("backend_role_modules").select("*").eq("role", role).single();
     if (getErr || !row) return c.json({ error: "Role not found" }, 404);
     const patch = {};
     Object.keys(row).forEach((col) => {
@@ -11930,7 +11930,7 @@ app2.put("/backend/roles/:role/modules", async (c) => {
       const key = col.replace(/_/g, "-");
       patch[col] = safe.includes(key);
     });
-    const { error: updErr } = await svc.from("backend_role_modules").update(patch).eq("role", role);
+    const { error: updErr } = await svc2.from("backend_role_modules").update(patch).eq("role", role);
     if (updErr) return c.json({ error: "Update failed" }, 500);
     return c.json({ ok: true });
   } catch (e) {
@@ -11940,8 +11940,8 @@ app2.put("/backend/roles/:role/modules", async (c) => {
 app2.get("/backend/modules", async (c) => {
   if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
-    const svc = makeSvc(c);
-    const { data, error } = await svc.from("backend_modules").select("key,name,is_active").eq("is_active", true).order("name", { ascending: true });
+    const svc2 = makeSvc(c);
+    const { data, error } = await svc2.from("backend_modules").select("key,name,is_active").eq("is_active", true).order("name", { ascending: true });
     if (error) return c.json({ error: "Failed to list" }, 500);
     const list = (data || []).map((m) => ({ key: m.key, label: m.name || m.key }));
     return c.json(list);
@@ -11959,18 +11959,18 @@ app2.post("/backend/admins", async (c) => {
     const role = String(body?.role || "Staff");
     const department = typeof body?.department === "string" ? String(body.department) : null;
     if (!email || !password) return c.json({ error: "Missing email or password" }, 400);
-    const svc = makeSvc(c);
-    const { data: created, error: createErr } = await svc.auth.admin.createUser({ email, password, email_confirm: true });
+    const svc2 = makeSvc(c);
+    const { data: created, error: createErr } = await svc2.auth.admin.createUser({ email, password, email_confirm: true });
     if (createErr || !created?.user) return c.json({ error: "Create user failed" }, 500);
     const uid = created.user.id;
     const insertRow = { id: uid, email, is_active: true };
     if (display_name) insertRow.display_name = display_name;
     if (role) insertRow.role = role;
     if (department) insertRow.department = department;
-    const { error: insErr } = await svc.from("backend_admins").insert(insertRow);
+    const { error: insErr } = await svc2.from("backend_admins").insert(insertRow);
     if (insErr) {
       try {
-        await svc.auth.admin.deleteUser(uid);
+        await svc2.auth.admin.deleteUser(uid);
       } catch {
       }
       return c.json({ error: "Create admin row failed" }, 500);
@@ -11984,11 +11984,11 @@ app2.post("/backend/admins/:id/send-reset-email", async (c) => {
   if (!await requireAuth(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
     const id = c.req.param("id");
-    const svc = makeSvc(c);
-    const { data: row, error } = await svc.from("backend_admins").select("email").eq("id", id).single();
+    const svc2 = makeSvc(c);
+    const { data: row, error } = await svc2.from("backend_admins").select("email").eq("id", id).single();
     if (error || !row?.email) return c.json({ error: "User not found" }, 404);
     const site = c.env.SITE_URL || "http://localhost:3001";
-    const { error: mailErr } = await svc.auth.resetPasswordForEmail(row.email, {
+    const { error: mailErr } = await svc2.auth.resetPasswordForEmail(row.email, {
       redirectTo: `${site.replace(/\/$/, "")}/auth/reset-password`
     });
     if (mailErr) return c.json({ error: "Send reset email failed" }, 500);
@@ -12031,8 +12031,8 @@ __name(buildCategoryTree, "buildCategoryTree");
 app3.get("/backend/categories", async (c) => {
   if (!await requireAuth2(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
-    const svc = makeSvc2(c);
-    const { data, error } = await svc.from("backend_products_cetegory").select("id,name,slug,image_url,parent_id").order("created_at", { ascending: true });
+    const svc2 = makeSvc2(c);
+    const { data, error } = await svc2.from("backend_products_cetegory").select("id,name,slug,image_url,parent_id").order("created_at", { ascending: true });
     if (error) return c.json({ error: "Failed to list" }, 500);
     const tree = buildCategoryTree(data || []);
     return c.json(tree);
@@ -12049,14 +12049,14 @@ app3.post("/backend/categories", async (c) => {
     const parentId = body?.parent_id || null;
     const imageUrl = String(body?.image_url || "").trim();
     if (!name || !slug) return c.json({ error: "Missing name or slug" }, 400);
-    const svc = makeSvc2(c);
+    const svc2 = makeSvc2(c);
     const insertRow = {
       name,
       slug,
       image_url: imageUrl || null,
       parent_id: parentId
     };
-    const { data, error } = await svc.from("backend_products_cetegory").insert(insertRow).select("id,name,slug,image_url,parent_id").single();
+    const { data, error } = await svc2.from("backend_products_cetegory").insert(insertRow).select("id,name,slug,image_url,parent_id").single();
     if (error) return c.json({ error: "Create failed" }, 500);
     return c.json({
       id: data.id,
@@ -12079,8 +12079,8 @@ app3.patch("/backend/categories/:id", async (c) => {
     if (typeof body.slug === "string") allowed.slug = String(body.slug).trim();
     if (typeof body.image_url === "string") allowed.image_url = String(body.image_url).trim() || null;
     if (Object.keys(allowed).length === 0) return c.json({ error: "No fields to update" }, 400);
-    const svc = makeSvc2(c);
-    const { data, error } = await svc.from("backend_products_cetegory").update(allowed).eq("id", id).select("id,name,slug,image_url,parent_id").single();
+    const svc2 = makeSvc2(c);
+    const { data, error } = await svc2.from("backend_products_cetegory").update(allowed).eq("id", id).select("id,name,slug,image_url,parent_id").single();
     if (error) return c.json({ error: "Update failed" }, 500);
     return c.json({
       id: data.id,
@@ -12097,13 +12097,13 @@ app3.delete("/backend/categories/:id", async (c) => {
   if (!await requireAuth2(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
     const id = c.req.param("id");
-    const svc = makeSvc2(c);
+    const svc2 = makeSvc2(c);
     async function deleteRecursive(categoryId) {
-      const { data: children } = await svc.from("backend_products_cetegory").select("id").eq("parent_id", categoryId);
+      const { data: children } = await svc2.from("backend_products_cetegory").select("id").eq("parent_id", categoryId);
       for (const child of children || []) {
         await deleteRecursive(child.id);
       }
-      await svc.from("backend_products_cetegory").delete().eq("id", categoryId);
+      await svc2.from("backend_products_cetegory").delete().eq("id", categoryId);
     }
     __name(deleteRecursive, "deleteRecursive");
     await deleteRecursive(id);
@@ -12119,13 +12119,13 @@ app3.post("/backend/categories/:id/upload-image", async (c) => {
     const formData = await c.req.formData();
     const file = formData.get("file");
     if (!file) return c.json({ error: "No file provided" }, 400);
-    const svc = makeSvc2(c);
+    const svc2 = makeSvc2(c);
     const filename = `${id}-${Date.now()}-${file.name}`;
-    const { error: uploadErr } = await svc.storage.from("product-categories").upload(filename, file, { upsert: false });
+    const { error: uploadErr } = await svc2.storage.from("product-categories").upload(filename, file, { upsert: false });
     if (uploadErr) return c.json({ error: "Upload failed" }, 500);
-    const { data: publicUrl } = svc.storage.from("product-categories").getPublicUrl(filename);
+    const { data: publicUrl } = svc2.storage.from("product-categories").getPublicUrl(filename);
     const imageUrl = publicUrl?.publicUrl || "";
-    const { data, error: updateErr } = await svc.from("backend_products_cetegory").update({ image_url: imageUrl }).eq("id", id).select("id,name,slug,image_url,parent_id").single();
+    const { data, error: updateErr } = await svc2.from("backend_products_cetegory").update({ image_url: imageUrl }).eq("id", id).select("id,name,slug,image_url,parent_id").single();
     if (updateErr) return c.json({ error: "Update failed" }, 500);
     return c.json({
       id: data.id,
@@ -12157,16 +12157,63 @@ async function requireAuth3(c) {
   return !!sess;
 }
 __name(requireAuth3, "requireAuth");
+async function recalcProductVisibility(c, svc2, productId) {
+  try {
+    const pid = typeof productId === "string" ? parseInt(productId, 10) : productId;
+    if (!pid || Number.isNaN(pid)) return;
+    const { data: product } = await svc2.from("backend_products").select("id, visibility, auto_hide_when_oos, enable_preorder, preorder_start_at, preorder_end_at").eq("id", pid).maybeSingle();
+    if (!product) return;
+    const p = product;
+    if (!p.auto_hide_when_oos) return;
+    const now = /* @__PURE__ */ new Date();
+    const startAt = p.preorder_start_at ? new Date(p.preorder_start_at) : null;
+    const endAt = p.preorder_end_at ? new Date(p.preorder_end_at) : null;
+    const preorderActive = !!p.enable_preorder && (!startAt || now >= startAt) && (!endAt || now <= endAt);
+    if (preorderActive) {
+      if (p.visibility !== "visible") {
+        await svc2.from("backend_products").update({ visibility: "visible" }).eq("id", pid);
+      }
+      return;
+    }
+    const { data: invRows } = await svc2.from("backend_products_inventory").select("current_stock_qty, low_stock_threshold, track_inventory").eq("product_id", pid);
+    const rows = Array.isArray(invRows) ? invRows : [];
+    let anySellable = rows.length === 0;
+    for (const r of rows) {
+      const track = r.track_inventory !== false;
+      if (!track) {
+        anySellable = true;
+        break;
+      }
+      const qty = typeof r.current_stock_qty === "number" ? r.current_stock_qty : parseInt(r.current_stock_qty || "0", 10);
+      const thrRaw = r.low_stock_threshold;
+      const thr = typeof thrRaw === "number" ? thrRaw : thrRaw === null || thrRaw === void 0 ? 0 : parseInt(thrRaw, 10);
+      if (qty > thr) {
+        anySellable = true;
+        break;
+      }
+    }
+    const desired = anySellable ? "visible" : "hidden";
+    if (desired !== p.visibility) {
+      await svc2.from("backend_products").update({ visibility: desired }).eq("id", pid);
+    }
+  } catch (_e) {
+  }
+}
+__name(recalcProductVisibility, "recalcProductVisibility");
 app4.get("/backend/products", async (c) => {
   if (!await requireAuth3(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     const status = c.req.query("status");
     const visibility = c.req.query("visibility");
     const search = c.req.query("search");
-    let query = svc.from("backend_products").select(
-      `id, name, slug, short_description, status, visibility, is_featured, 
-       base_sku, has_variants, tags, category_ids, created_at, updated_at`
+    let query = svc2.from("backend_products").select(
+      `id, name, slug, short_description, status, visibility, is_featured,
+       base_sku, has_variants, tags, category_ids,
+       promotion_label, promotion_label_bg_color, promotion_label_text_color,
+     product_tag_bg_color, product_tag_text_color,
+     auto_hide_when_oos, enable_preorder, preorder_start_at, preorder_end_at, preorder_max_qty, oos_status,
+       created_at, updated_at`
     );
     if (status) query = query.eq("status", status);
     if (visibility) query = query.eq("visibility", visibility);
@@ -12185,13 +12232,13 @@ app4.get("/backend/products/:id", async (c) => {
   if (!await requireAuth3(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
     const id = c.req.param("id");
-    const svc = makeSvc3(c);
-    const { data: product, error: prodErr } = await svc.from("backend_products").select("*").eq("id", id).single();
+    const svc2 = makeSvc3(c);
+    const { data: product, error: prodErr } = await svc2.from("backend_products").select("*").eq("id", id).single();
     if (prodErr || !product) return c.json({ error: "Product not found" }, 404);
-    const { data: photos } = await svc.from("backend_products_photo").select("photo_url_1, photo_url_2, photo_url_3, photo_url_4, photo_url_5, photo_url_6, photo_url_7, photo_url_8, photo_url_9, photo_url_10").eq("product_id", id).is("inventory_id", null).maybeSingle();
-    const { data: seo } = await svc.from("backend_products_seo").select("*").eq("product_id", id).single();
-    const { data: inventory } = await svc.from("backend_products_inventory").select("*").eq("product_id", id);
-    const { data: prices } = await svc.from("backend_products_prices").select("*").eq("product_id", id);
+    const { data: photos } = await svc2.from("backend_products_photo").select("photo_url_1, photo_url_2, photo_url_3, photo_url_4, photo_url_5, photo_url_6, photo_url_7, photo_url_8, photo_url_9, photo_url_10").eq("product_id", id).is("inventory_id", null).maybeSingle();
+    const { data: seo } = await svc2.from("backend_products_seo").select("*").eq("product_id", id).single();
+    const { data: inventory } = await svc2.from("backend_products_inventory").select("*").eq("product_id", id);
+    const { data: prices } = await svc2.from("backend_products_prices").select("*").eq("product_id", id);
     const variantPhotos = (inventory || []).map((inv) => ({
       inventory_id: inv.id,
       variant_photo_url_1: inv.variant_photo_url_1 ?? null,
@@ -12214,11 +12261,11 @@ app4.post("/backend/products", async (c) => {
   if (!await requireAuth3(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
     const body = await c.req.json();
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     if (!body.name || !body.slug || !body.description || !body.base_sku) {
       return c.json({ error: "Missing required fields" }, 400);
     }
-    const { data: product, error: prodErr } = await svc.from("backend_products").insert({
+    const { data: product, error: prodErr } = await svc2.from("backend_products").insert({
       name: body.name,
       slug: body.slug,
       short_description: body.short_description || null,
@@ -12229,7 +12276,18 @@ app4.post("/backend/products", async (c) => {
       status: body.status || "draft",
       visibility: body.visibility || "visible",
       is_featured: body.is_featured || false,
-      category_ids: body.category_ids || []
+      category_ids: body.category_ids || [],
+      promotion_label: body.promotion_label ?? null,
+      promotion_label_bg_color: body.promotion_label_bg_color ?? null,
+      promotion_label_text_color: body.promotion_label_text_color ?? null,
+      product_tag_bg_color: body.product_tag_bg_color ?? null,
+      product_tag_text_color: body.product_tag_text_color ?? null,
+      auto_hide_when_oos: body.auto_hide_when_oos === true,
+      enable_preorder: body.enable_preorder === true,
+      preorder_start_at: body.preorder_start_at ?? null,
+      preorder_end_at: body.preorder_end_at ?? null,
+      preorder_max_qty: body.preorder_max_qty ?? null,
+      oos_status: body.oos_status ?? null
     }).select().single();
     if (prodErr) return c.json({ error: "Failed to create product" }, 500);
     if (product.id) {
@@ -12253,9 +12311,9 @@ app4.post("/backend/products", async (c) => {
         exclude_from_search: body.exclude_from_search || false
       };
       try {
-        await svc.from("backend_products_seo").insert(seoRow).select().single();
+        await svc2.from("backend_products_seo").insert(seoRow).select().single();
       } catch (_e) {
-        await svc.from("backend_products_seo").update(seoRow).eq("product_id", product.id);
+        await svc2.from("backend_products_seo").update(seoRow).eq("product_id", product.id);
       }
     }
     return c.json(product);
@@ -12268,7 +12326,7 @@ app4.patch("/backend/products/:id", async (c) => {
   try {
     const id = c.req.param("id");
     const body = await c.req.json();
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     const allowed = {};
     if (typeof body.name === "string") allowed.name = body.name;
     if (typeof body.slug === "string") allowed.slug = body.slug;
@@ -12281,8 +12339,19 @@ app4.patch("/backend/products/:id", async (c) => {
     if (typeof body.has_variants === "boolean") allowed.has_variants = body.has_variants;
     if (typeof body.base_sku === "string") allowed.base_sku = body.base_sku;
     if (Array.isArray(body.category_ids)) allowed.category_ids = body.category_ids;
+    if (body.promotion_label !== void 0) allowed.promotion_label = body.promotion_label || null;
+    if (body.promotion_label_bg_color !== void 0) allowed.promotion_label_bg_color = body.promotion_label_bg_color || null;
+    if (body.promotion_label_text_color !== void 0) allowed.promotion_label_text_color = body.promotion_label_text_color || null;
+    if (body.product_tag_bg_color !== void 0) allowed.product_tag_bg_color = body.product_tag_bg_color || null;
+    if (body.product_tag_text_color !== void 0) allowed.product_tag_text_color = body.product_tag_text_color || null;
+    if (body.auto_hide_when_oos !== void 0) allowed.auto_hide_when_oos = !!body.auto_hide_when_oos;
+    if (body.enable_preorder !== void 0) allowed.enable_preorder = !!body.enable_preorder;
+    if (body.preorder_start_at !== void 0) allowed.preorder_start_at = body.preorder_start_at || null;
+    if (body.preorder_end_at !== void 0) allowed.preorder_end_at = body.preorder_end_at || null;
+    if (body.preorder_max_qty !== void 0) allowed.preorder_max_qty = body.preorder_max_qty === "" ? null : body.preorder_max_qty;
+    if (body.oos_status !== void 0) allowed.oos_status = body.oos_status || null;
     if (Object.keys(allowed).length === 0) return c.json({ error: "No fields to update" }, 400);
-    const { data, error } = await svc.from("backend_products").update(allowed).eq("id", id).select().single();
+    const { data, error } = await svc2.from("backend_products").update(allowed).eq("id", id).select().single();
     if (error) return c.json({ error: "Update failed" }, 500);
     if (body.meta_title !== void 0 || body.meta_description !== void 0 || body.open_graph_title !== void 0 || body.og_title !== void 0 || body.open_graph_description !== void 0 || body.og_description !== void 0 || body.open_graph_image !== void 0 || body.og_image_url !== void 0 || body.search_title !== void 0 || body.search_description !== void 0 || body.search_image !== void 0 || body.search_image_url !== void 0 || body.sitemap_indexing !== void 0 || body.custom_canonical_url !== void 0 || body.use_meta_title_for_og !== void 0 || body.use_meta_description_for_og !== void 0 || body.use_meta_title_for_search !== void 0 || body.use_meta_description_for_search !== void 0 || body.use_og_image_for_search !== void 0 || body.exclude_from_search !== void 0) {
       const seoUpdate = {};
@@ -12307,13 +12376,16 @@ app4.patch("/backend/products/:id", async (c) => {
       if (typeof body.use_og_image_for_search === "boolean") seoUpdate.use_og_image_for_search = body.use_og_image_for_search;
       if (typeof body.exclude_from_search === "boolean") seoUpdate.exclude_from_search = body.exclude_from_search;
       if (Object.keys(seoUpdate).length > 0) {
-        const { data: existingSeo } = await svc.from("backend_products_seo").select("product_id").eq("product_id", id).maybeSingle();
+        const { data: existingSeo } = await svc2.from("backend_products_seo").select("product_id").eq("product_id", id).maybeSingle();
         if (existingSeo) {
-          await svc.from("backend_products_seo").update(seoUpdate).eq("product_id", id);
+          await svc2.from("backend_products_seo").update(seoUpdate).eq("product_id", id);
         } else {
-          await svc.from("backend_products_seo").insert({ product_id: parseInt(id), ...seoUpdate });
+          await svc2.from("backend_products_seo").insert({ product_id: parseInt(id), ...seoUpdate });
         }
       }
+    }
+    if (body.auto_hide_when_oos !== void 0 || body.enable_preorder !== void 0 || body.preorder_start_at !== void 0 || body.preorder_end_at !== void 0) {
+      await recalcProductVisibility(c, svc2, id);
     }
     return c.json(data);
   } catch (e) {
@@ -12324,8 +12396,8 @@ app4.delete("/backend/products/:id", async (c) => {
   if (!await requireAuth3(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
     const id = c.req.param("id");
-    const svc = makeSvc3(c);
-    const { error } = await svc.from("backend_products").delete().eq("id", id);
+    const svc2 = makeSvc3(c);
+    const { error } = await svc2.from("backend_products").delete().eq("id", id);
     if (error) return c.json({ error: "Delete failed" }, 500);
     return c.json({ ok: true });
   } catch (e) {
@@ -12337,7 +12409,7 @@ app4.post("/backend/products/:id/photos/batch", async (c) => {
   try {
     const id = c.req.param("id");
     const body = await c.req.json();
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     const photoUrls = [];
     if (body.files && Array.isArray(body.files)) {
       for (let i = 0; i < Math.min(body.files.length, 10); i++) {
@@ -12348,9 +12420,9 @@ app4.post("/backend/products/:id/photos/batch", async (c) => {
             photoUrls.push(fileData);
           } else if (fileData instanceof File) {
             const filename = `${id}-${Date.now()}-${i}-${fileData.name}`;
-            const { error: uploadErr } = await svc.storage.from("products").upload(filename, fileData, { upsert: false });
+            const { error: uploadErr } = await svc2.storage.from("products").upload(filename, fileData, { upsert: false });
             if (!uploadErr) {
-              const { data: publicUrl } = svc.storage.from("products").getPublicUrl(filename);
+              const { data: publicUrl } = svc2.storage.from("products").getPublicUrl(filename);
               photoUrls.push(publicUrl?.publicUrl || "");
             }
           }
@@ -12364,14 +12436,14 @@ app4.post("/backend/products/:id/photos/batch", async (c) => {
       const colName = `photo_url_${i + 1}`;
       updateData[colName] = photoUrls[i] || null;
     }
-    const { data: existing } = await svc.from("backend_products_photo").select("id").eq("product_id", id).single();
+    const { data: existing } = await svc2.from("backend_products_photo").select("id").eq("product_id", id).single();
     let result;
     if (existing) {
-      const { data, error } = await svc.from("backend_products_photo").update(updateData).eq("product_id", id).select().single();
+      const { data, error } = await svc2.from("backend_products_photo").update(updateData).eq("product_id", id).select().single();
       result = data;
       if (error) return c.json({ error: "Failed to update photos" }, 500);
     } else {
-      const { data, error } = await svc.from("backend_products_photo").insert({
+      const { data, error } = await svc2.from("backend_products_photo").insert({
         product_id: parseInt(id),
         ...updateData
       }).select().single();
@@ -12388,7 +12460,7 @@ app4.patch("/backend/products/:id/photos", async (c) => {
   try {
     const id = c.req.param("id");
     const body = await c.req.json();
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     const updateData = {};
     for (let i = 1; i <= 10; i++) {
       const colName = `photo_url_${i}`;
@@ -12399,16 +12471,16 @@ app4.patch("/backend/products/:id/photos", async (c) => {
     if (Object.keys(updateData).length === 0) {
       return c.json({ error: "No photo URLs to update" }, 400);
     }
-    const { data: existing, error: existErr } = await svc.from("backend_products_photo").select("id").eq("product_id", id).is("inventory_id", null).maybeSingle();
+    const { data: existing, error: existErr } = await svc2.from("backend_products_photo").select("id").eq("product_id", id).is("inventory_id", null).maybeSingle();
     if (existErr) {
       console.error("Photos existence check failed:", existErr);
     }
     if (existing) {
-      const { data, error } = await svc.from("backend_products_photo").update(updateData).eq("product_id", id).is("inventory_id", null).select().single();
+      const { data, error } = await svc2.from("backend_products_photo").update(updateData).eq("product_id", id).is("inventory_id", null).select().single();
       if (error) return c.json({ error: "Update failed" }, 500);
       return c.json(data);
     } else {
-      const { data, error } = await svc.from("backend_products_photo").insert({ product_id: parseInt(id), inventory_id: null, ...updateData }).select().single();
+      const { data, error } = await svc2.from("backend_products_photo").insert({ product_id: parseInt(id), inventory_id: null, ...updateData }).select().single();
       if (error) return c.json({ error: "Insert failed" }, 500);
       return c.json(data);
     }
@@ -12421,8 +12493,8 @@ app4.get("/backend/products/:productId/inventory", async (c) => {
   try {
     const productId = c.req.param("productId");
     const warehouse = c.req.query("warehouse");
-    const svc = makeSvc3(c);
-    let query = svc.from("backend_products_inventory").select("*").eq("product_id", productId);
+    const svc2 = makeSvc3(c);
+    let query = svc2.from("backend_products_inventory").select("*").eq("product_id", productId);
     if (warehouse) query = query.eq("warehouse", warehouse);
     const { data, error } = await query.order("warehouse", { ascending: true }).order("sku_key", { ascending: true });
     if (error) return c.json({ error: "Failed to fetch inventory" }, 500);
@@ -12436,8 +12508,8 @@ app4.post("/backend/products/:productId/inventory", async (c) => {
   try {
     const productId = c.req.param("productId");
     const body = await c.req.json();
-    const svc = makeSvc3(c);
-    const { data, error } = await svc.from("backend_products_inventory").insert({
+    const svc2 = makeSvc3(c);
+    const { data, error } = await svc2.from("backend_products_inventory").insert({
       product_id: parseInt(productId),
       sku_key: body.sku_key || null,
       warehouse: body.warehouse || "\u4E3B\u5009",
@@ -12472,6 +12544,7 @@ app4.post("/backend/products/:productId/inventory", async (c) => {
       spec_level_5_name: body.spec_level_5_name || null
     }).select().single();
     if (error) return c.json({ error: "Failed to create inventory record" }, 500);
+    await recalcProductVisibility(c, makeSvc3(c), productId);
     return c.json(data);
   } catch (e) {
     return c.json({ error: e?.message || "Internal error" }, 500);
@@ -12483,7 +12556,7 @@ app4.patch("/backend/products/:productId/inventory/:inventoryId", async (c) => {
     const productId = c.req.param("productId");
     const inventoryId = c.req.param("inventoryId");
     const body = await c.req.json();
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     const allowed = {};
     if (typeof body.current_stock_qty === "number") allowed.current_stock_qty = body.current_stock_qty;
     if (typeof body.safety_stock_qty === "number") allowed.safety_stock_qty = body.safety_stock_qty;
@@ -12519,8 +12592,9 @@ app4.patch("/backend/products/:productId/inventory/:inventoryId", async (c) => {
     if (body.variant_photo_url_2 !== void 0) allowed.variant_photo_url_2 = body.variant_photo_url_2 || null;
     if (body.variant_photo_url_3 !== void 0) allowed.variant_photo_url_3 = body.variant_photo_url_3 || null;
     if (Object.keys(allowed).length === 0) return c.json({ error: "No fields to update" }, 400);
-    const { data, error } = await svc.from("backend_products_inventory").update(allowed).eq("id", inventoryId).eq("product_id", productId).select().single();
+    const { data, error } = await svc2.from("backend_products_inventory").update(allowed).eq("id", inventoryId).eq("product_id", productId).select().single();
     if (error) return c.json({ error: "Update failed" }, 500);
+    await recalcProductVisibility(c, makeSvc3(c), productId);
     return c.json(data);
   } catch (e) {
     return c.json({ error: e?.message || "Internal error" }, 500);
@@ -12531,9 +12605,10 @@ app4.delete("/backend/products/:productId/inventory/:inventoryId", async (c) => 
   try {
     const productId = c.req.param("productId");
     const inventoryId = c.req.param("inventoryId");
-    const svc = makeSvc3(c);
-    const { error } = await svc.from("backend_products_inventory").delete().eq("id", inventoryId).eq("product_id", productId);
+    const svc2 = makeSvc3(c);
+    const { error } = await svc2.from("backend_products_inventory").delete().eq("id", inventoryId).eq("product_id", productId);
     if (error) return c.json({ error: "Delete failed" }, 500);
+    await recalcProductVisibility(c, makeSvc3(c), productId);
     return c.json({ ok: true });
   } catch (e) {
     return c.json({ error: e?.message || "Internal error" }, 500);
@@ -12547,11 +12622,11 @@ app4.post("/backend/products/:productId/variant-photos/:inventoryId/upload", asy
     const formData = await c.req.formData();
     const file = formData.get("file");
     if (!file) return c.json({ error: "No file provided" }, 400);
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     const filename = `${productId}-${inventoryId}-${Date.now()}-${file.name}`;
-    const { error: uploadErr } = await svc.storage.from("products-sku").upload(filename, file, { upsert: false });
+    const { error: uploadErr } = await svc2.storage.from("products-sku").upload(filename, file, { upsert: false });
     if (uploadErr) return c.json({ error: "Upload failed", details: String(uploadErr?.message || uploadErr) }, 500);
-    const { data: publicUrl } = svc.storage.from("products-sku").getPublicUrl(filename);
+    const { data: publicUrl } = svc2.storage.from("products-sku").getPublicUrl(filename);
     return c.json({ url: publicUrl?.publicUrl || "" });
   } catch (e) {
     return c.json({ error: e?.message || "Internal error" }, 500);
@@ -12563,13 +12638,13 @@ app4.patch("/backend/products/:productId/variant-photos/:inventoryId", async (c)
     const productId = c.req.param("productId");
     const inventoryId = c.req.param("inventoryId");
     const body = await c.req.json();
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     const pId = parseInt(productId, 10);
     const invId = parseInt(inventoryId, 10);
     if (Number.isNaN(pId) || Number.isNaN(invId)) {
       return c.json({ error: "Invalid productId or inventoryId" }, 400);
     }
-    const { data: existing } = await svc.from("backend_products_inventory").select("id, variant_photo_url_1, variant_photo_url_2, variant_photo_url_3").eq("product_id", pId).eq("id", invId).maybeSingle();
+    const { data: existing } = await svc2.from("backend_products_inventory").select("id, variant_photo_url_1, variant_photo_url_2, variant_photo_url_3").eq("product_id", pId).eq("id", invId).maybeSingle();
     const nextUrls = [body.variant_photo_url_1 || null, body.variant_photo_url_2 || null, body.variant_photo_url_3 || null];
     const prevUrls = existing ? [existing.variant_photo_url_1, existing.variant_photo_url_2, existing.variant_photo_url_3] : [];
     const removed = (prevUrls || []).filter((u) => !!u && !nextUrls.includes(u));
@@ -12580,7 +12655,7 @@ app4.patch("/backend/products/:productId/variant-photos/:inventoryId", async (c)
         return idx >= 0 ? u.substring(idx + marker.length) : "";
       }).filter((p) => !!p);
       if (paths.length > 0) {
-        await svc.storage.from("products-sku").remove(paths);
+        await svc2.storage.from("products-sku").remove(paths);
       }
     }
     const updateData = {
@@ -12588,7 +12663,7 @@ app4.patch("/backend/products/:productId/variant-photos/:inventoryId", async (c)
       variant_photo_url_2: nextUrls[1],
       variant_photo_url_3: nextUrls[2]
     };
-    const { data, error } = await svc.from("backend_products_inventory").update(updateData).eq("product_id", pId).eq("id", invId).select().single();
+    const { data, error } = await svc2.from("backend_products_inventory").update(updateData).eq("product_id", pId).eq("id", invId).select().single();
     if (error) return c.json({ error: "Update failed", details: String(error?.message || error) }, 500);
     return c.json(data);
   } catch (e) {
@@ -12599,8 +12674,8 @@ app4.get("/backend/products/:productId/prices", async (c) => {
   if (!await requireAuth3(c)) return c.json({ error: "Unauthorized" }, 401);
   try {
     const productId = c.req.param("productId");
-    const svc = makeSvc3(c);
-    const { data, error } = await svc.from("backend_products_prices").select("*").eq("product_id", productId).order("sku_key", { ascending: true });
+    const svc2 = makeSvc3(c);
+    const { data, error } = await svc2.from("backend_products_prices").select("*").eq("product_id", productId).order("sku_key", { ascending: true });
     if (error) return c.json({ error: "Failed to fetch prices" }, 500);
     return c.json(data || []);
   } catch (e) {
@@ -12612,8 +12687,8 @@ app4.post("/backend/products/:productId/prices", async (c) => {
   try {
     const productId = c.req.param("productId");
     const body = await c.req.json();
-    const svc = makeSvc3(c);
-    const { data, error } = await svc.from("backend_products_prices").insert({
+    const svc2 = makeSvc3(c);
+    const { data, error } = await svc2.from("backend_products_prices").insert({
       product_id: parseInt(productId),
       sku_key: body.sku_key || null,
       sale_price: body.sale_price ? parseFloat(body.sale_price) : null,
@@ -12635,7 +12710,7 @@ app4.patch("/backend/products/:productId/prices/:priceId", async (c) => {
     const productId = c.req.param("productId");
     const priceId = c.req.param("priceId");
     const body = await c.req.json();
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     const allowed = {};
     if (body.sale_price !== void 0) allowed.sale_price = body.sale_price ? parseFloat(body.sale_price) : null;
     if (body.compare_at_price !== void 0) allowed.compare_at_price = body.compare_at_price ? parseFloat(body.compare_at_price) : null;
@@ -12644,9 +12719,28 @@ app4.patch("/backend/products/:productId/prices/:priceId", async (c) => {
     if (body.silver_member_price !== void 0) allowed.silver_member_price = body.silver_member_price ? parseFloat(body.silver_member_price) : null;
     if (body.vip_member_price !== void 0) allowed.vip_member_price = body.vip_member_price ? parseFloat(body.vip_member_price) : null;
     if (Object.keys(allowed).length === 0) return c.json({ error: "No fields to update" }, 400);
-    const { data, error } = await svc.from("backend_products_prices").update(allowed).eq("id", priceId).eq("product_id", productId).select().single();
-    if (error) return c.json({ error: "Update failed" }, 500);
-    return c.json(data);
+    const { data: updatedById, error: updateErr } = await svc2.from("backend_products_prices").update(allowed).eq("id", priceId).eq("product_id", productId).select().maybeSingle();
+    if (updateErr) return c.json({ error: "Update failed" }, 500);
+    if (updatedById) return c.json(updatedById);
+    const { data: inv } = await svc2.from("backend_products_inventory").select("id, sku_key").eq("id", priceId).eq("product_id", productId).maybeSingle();
+    if (!inv || !inv.sku_key) {
+      return c.json({ error: "Price not found" }, 404);
+    }
+    const { data: existingPrice } = await svc2.from("backend_products_prices").select("*").eq("product_id", productId).eq("sku_key", inv.sku_key).maybeSingle();
+    if (existingPrice) {
+      const { data: updatedBySku, error: updErr } = await svc2.from("backend_products_prices").update(allowed).eq("id", existingPrice.id).eq("product_id", productId).select().single();
+      if (updErr) return c.json({ error: "Update failed" }, 500);
+      return c.json(updatedBySku);
+    } else {
+      const insertPayload = {
+        product_id: parseInt(productId),
+        sku_key: inv.sku_key,
+        ...allowed
+      };
+      const { data: inserted, error: insErr } = await svc2.from("backend_products_prices").insert(insertPayload).select().single();
+      if (insErr) return c.json({ error: "Create failed" }, 500);
+      return c.json(inserted);
+    }
   } catch (e) {
     return c.json({ error: e?.message || "Internal error" }, 500);
   }
@@ -12656,8 +12750,8 @@ app4.delete("/backend/products/:productId/prices/:priceId", async (c) => {
   try {
     const productId = c.req.param("productId");
     const priceId = c.req.param("priceId");
-    const svc = makeSvc3(c);
-    const { error } = await svc.from("backend_products_prices").delete().eq("id", priceId).eq("product_id", productId);
+    const svc2 = makeSvc3(c);
+    const { error } = await svc2.from("backend_products_prices").delete().eq("id", priceId).eq("product_id", productId);
     if (error) return c.json({ error: "Delete failed" }, 500);
     return c.json({ ok: true });
   } catch (e) {
@@ -12671,11 +12765,11 @@ app4.post("/backend/products/:id/storage-upload", async (c) => {
     const formData = await c.req.formData();
     const file = formData.get("file");
     if (!file) return c.json({ error: "No file provided" }, 400);
-    const svc = makeSvc3(c);
+    const svc2 = makeSvc3(c);
     const filename = `${id}-${Date.now()}-${file.name}`;
-    const { error: uploadErr } = await svc.storage.from("products").upload(filename, file, { upsert: false });
+    const { error: uploadErr } = await svc2.storage.from("products").upload(filename, file, { upsert: false });
     if (uploadErr) return c.json({ error: "Upload failed" }, 500);
-    const { data: publicUrl } = svc.storage.from("products").getPublicUrl(filename);
+    const { data: publicUrl } = svc2.storage.from("products").getPublicUrl(filename);
     return c.json({ url: publicUrl?.publicUrl || "" });
   } catch (e) {
     return c.json({ error: e?.message || "Internal error" }, 500);
@@ -12818,13 +12912,13 @@ app5.post("/frontend/auth/register", async (c) => {
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (userId && serviceKey) {
       try {
-        const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+        const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
         const payload = { id: userId, email };
         if (display_name) payload.display_name = display_name;
         if (newsletter !== void 0) payload.newsletter = !!newsletter;
         if (privacy_policy !== void 0) payload.privacy_policy = !!privacy_policy;
         if (gender !== void 0 && gender !== "") payload.gender = gender;
-        await svc.from("fronted_users").upsert(payload, { onConflict: "id" });
+        await svc2.from("fronted_users").upsert(payload, { onConflict: "id" });
       } catch (_) {
       }
     }
@@ -12849,8 +12943,8 @@ app5.post("/frontend/auth/login", async (c) => {
     const user = data.user;
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
-    const { data: frow, error: ferr } = await svc.from("fronted_users").select("id,is_active,display_name").eq("id", user.id).single();
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const { data: frow, error: ferr } = await svc2.from("fronted_users").select("id,is_active,display_name").eq("id", user.id).single();
     if (ferr || !frow || frow.is_active === false) {
       return c.json({ error: "Not a frontend user" }, 403);
     }
@@ -12865,13 +12959,13 @@ app5.get("/frontend/auth/me", async (c) => {
     const access = getCookie(c, ACCESS_COOKIE5);
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     if (access) {
       const supabase = makeSupabase2(c);
       const { data, error } = await supabase.auth.getUser(access);
       if (!error && data?.user) {
         const user = data.user;
-        const { data: row } = await svc.from("fronted_users").select("id,is_active,display_name,email").eq("id", user.id).single();
+        const { data: row } = await svc2.from("fronted_users").select("id,is_active,display_name,email").eq("id", user.id).single();
         if (row && row.is_active !== false) return c.json({ id: user.id, email: user.email, display_name: row.display_name ?? null });
       }
     }
@@ -12880,7 +12974,7 @@ app5.get("/frontend/auth/me", async (c) => {
     if (secret && token) {
       const parsed = await verifyFrontSessionToken(secret, token);
       if (parsed?.uid) {
-        const { data: row } = await svc.from("fronted_users").select("id,is_active,display_name,email").eq("id", parsed.uid).single();
+        const { data: row } = await svc2.from("fronted_users").select("id,is_active,display_name,email").eq("id", parsed.uid).single();
         if (row && row.is_active !== false) {
           return c.json({ id: row.id, email: row.email ?? null, display_name: row.display_name ?? null });
         }
@@ -12905,7 +12999,7 @@ app5.get("/frontend/account/profile", async (c) => {
   try {
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     let uid = null;
     let email = null;
     const access = getCookie(c, ACCESS_COOKIE5);
@@ -12926,7 +13020,7 @@ app5.get("/frontend/account/profile", async (c) => {
       }
     }
     if (!uid) return c.json({ error: "Unauthorized" }, 401);
-    const { data: gotUser } = await svc.auth.admin.getUserById(uid);
+    const { data: gotUser } = await svc2.auth.admin.getUserById(uid);
     const created_at = gotUser?.user?.created_at ?? null;
     const last_sign_in_at = gotUser?.user?.last_sign_in_at ?? null;
     const authEmail = gotUser?.user?.email ?? email;
@@ -12936,7 +13030,7 @@ app5.get("/frontend/account/profile", async (c) => {
     let newsletter = false;
     let privacy_policy = false;
     try {
-      const { data: row } = await svc.from("fronted_users").select("display_name,email,phone,gender,newsletter,privacy_policy").eq("id", uid).single();
+      const { data: row } = await svc2.from("fronted_users").select("display_name,email,phone,gender,newsletter,privacy_policy").eq("id", uid).single();
       if (row) {
         display_name = row.display_name ?? null;
         if (!authEmail) email = row.email ?? null;
@@ -12956,7 +13050,7 @@ app5.post("/frontend/auth/password/reset", async (c) => {
   try {
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     let uid = null;
     let email = null;
     const access = getCookie(c, ACCESS_COOKIE5);
@@ -12978,7 +13072,7 @@ app5.post("/frontend/auth/password/reset", async (c) => {
     }
     if (!uid) return c.json({ error: "Unauthorized" }, 401);
     if (!email) {
-      const { data: gotUser } = await svc.auth.admin.getUserById(uid);
+      const { data: gotUser } = await svc2.auth.admin.getUserById(uid);
       email = gotUser?.user?.email ?? null;
     }
     if (!email) return c.json({ error: "No email" }, 400);
@@ -13009,7 +13103,7 @@ app5.patch("/frontend/account/profile", async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     let uid = null;
     const access = getCookie(c, ACCESS_COOKIE5);
     if (access) {
@@ -13057,7 +13151,7 @@ app5.patch("/frontend/account/profile", async (c) => {
       next.privacy_policy = !!body.privacy_policy;
     }
     if (Object.keys(next).length === 0) return c.json({ ok: true });
-    const { error } = await svc.from("fronted_users").update(next).eq("id", uid);
+    const { error } = await svc2.from("fronted_users").update(next).eq("id", uid);
     if (error) return c.json({ error: "Update failed" }, 500);
     return c.json({ ok: true });
   } catch (e) {
@@ -13068,7 +13162,7 @@ app5.get("/frontend/account/line/status", async (c) => {
   try {
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     let uid = null;
     const access = getCookie(c, ACCESS_COOKIE5);
     if (access) {
@@ -13085,7 +13179,7 @@ app5.get("/frontend/account/line/status", async (c) => {
       }
     }
     if (!uid) return c.json({ is_bound: false }, 200);
-    const { data: row } = await svc.from("fronted_users").select("line_user_id, line_display_name, line_picture_url").eq("id", uid).single();
+    const { data: row } = await svc2.from("fronted_users").select("line_user_id, line_display_name, line_picture_url").eq("id", uid).single();
     const isBound = !!row?.line_user_id;
     return c.json({ is_bound: isBound, line_display_name: row?.line_display_name ?? null, line_picture_url: row?.line_picture_url ?? null });
   } catch (e) {
@@ -13096,7 +13190,7 @@ app5.post("/frontend/account/line/unbind", async (c) => {
   try {
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     let uid = null;
     const access = getCookie(c, ACCESS_COOKIE5);
     if (access) {
@@ -13113,7 +13207,7 @@ app5.post("/frontend/account/line/unbind", async (c) => {
       }
     }
     if (!uid) return c.json({ error: "Unauthorized" }, 401);
-    const { error } = await svc.from("fronted_users").update({ line_user_id: null, line_display_name: null, line_picture_url: null }).eq("id", uid);
+    const { error } = await svc2.from("fronted_users").update({ line_user_id: null, line_display_name: null, line_picture_url: null }).eq("id", uid);
     if (error) return c.json({ error: "Unbind failed" }, 500);
     return c.json({ ok: true });
   } catch (e) {
@@ -13234,7 +13328,7 @@ app5.get("/frontend/line/callback", async (c) => {
     const prof = await profResp.json();
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.text("Server misconfigured", 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     const frontendBase = getFrontendSiteBase(c);
     if (flow === "bind") {
       let userId = null;
@@ -13253,7 +13347,7 @@ app5.get("/frontend/line/callback", async (c) => {
         }
       }
       if (!userId) return c.text("Unauthorized", 401);
-      await svc.from("fronted_users").update({
+      await svc2.from("fronted_users").update({
         line_user_id: prof.userId,
         line_display_name: prof.displayName ?? null,
         line_picture_url: prof.pictureUrl ?? null
@@ -13261,19 +13355,19 @@ app5.get("/frontend/line/callback", async (c) => {
       return c.redirect(`${frontendBase}/account?line_bound=1`, 302);
     } else if (flow === "login") {
       let uid = null;
-      const { data: existing } = await svc.from("fronted_users").select("id,is_active").eq("line_user_id", prof.userId).maybeSingle();
+      const { data: existing } = await svc2.from("fronted_users").select("id,is_active").eq("line_user_id", prof.userId).maybeSingle();
       if (existing && existing.is_active !== false) {
         uid = existing.id;
-        const { data: gotUser } = await svc.auth.admin.getUserById(uid);
+        const { data: gotUser } = await svc2.auth.admin.getUserById(uid);
         if (!gotUser?.user) {
-          const { data: created } = await svc.auth.admin.createUser({ email: `${prof.userId}@line.local`, email_confirm: true });
+          const { data: created } = await svc2.auth.admin.createUser({ email: `${prof.userId}@line.local`, email_confirm: true });
           if (created?.user?.id) uid = created.user.id;
         }
       } else {
-        const { data: created } = await svc.auth.admin.createUser({ email: `${prof.userId}@line.local`, email_confirm: true });
+        const { data: created } = await svc2.auth.admin.createUser({ email: `${prof.userId}@line.local`, email_confirm: true });
         uid = created?.user?.id ?? null;
         if (uid) {
-          await svc.from("fronted_users").upsert({ id: uid, email: `${prof.userId}@line.local`, line_user_id: prof.userId, line_display_name: prof.displayName ?? null, line_picture_url: prof.pictureUrl ?? null }, { onConflict: "id" });
+          await svc2.from("fronted_users").upsert({ id: uid, email: `${prof.userId}@line.local`, line_user_id: prof.userId, line_display_name: prof.displayName ?? null, line_picture_url: prof.pictureUrl ?? null }, { onConflict: "id" });
         } else {
           return c.text("Unable to create user", 500);
         }
@@ -13409,12 +13503,12 @@ app6.get("/frontend/account/addresses", async (c) => {
     const type = String(c.req.query("type") || "").toLowerCase();
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     if (type === "home") {
-      const { data } = await svc.from("fronted_users_home_addresses").select("*").eq("user_id", uid).eq("is_archived", false).order("is_default", { ascending: false }).order("updated_at", { ascending: false });
+      const { data } = await svc2.from("fronted_users_home_addresses").select("*").eq("user_id", uid).eq("is_archived", false).order("is_default", { ascending: false }).order("updated_at", { ascending: false });
       return c.json(data || []);
     } else if (type === "cvs") {
-      const { data } = await svc.from("fronted_users_cvs_addresses").select("*").eq("user_id", uid).eq("is_archived", false).order("is_default", { ascending: false }).order("updated_at", { ascending: false });
+      const { data } = await svc2.from("fronted_users_cvs_addresses").select("*").eq("user_id", uid).eq("is_archived", false).order("is_default", { ascending: false }).order("updated_at", { ascending: false });
       return c.json(data || []);
     }
     return c.json({ error: "Invalid type" }, 400);
@@ -13430,18 +13524,18 @@ app6.post("/frontend/account/addresses", async (c) => {
     const type = String(body.type || "").toLowerCase();
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     if (type === "home") {
       const v = pickHomeCreate(body);
       if (!v.alias || !v.receiver_name || !v.receiver_phone || !/^09\d{8}$/.test(v.receiver_phone) || !v.zip3 || !v.city || !v.district || !v.address_line) {
         return c.json({ error: "Invalid payload" }, 400);
       }
-      const { count } = await svc.from("fronted_users_home_addresses").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("is_archived", false);
+      const { count } = await svc2.from("fronted_users_home_addresses").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("is_archived", false);
       const is_default = !count || count === 0 || !!body.is_default;
       if (is_default) {
-        await svc.from("fronted_users_home_addresses").update({ is_default: false }).eq("user_id", uid);
+        await svc2.from("fronted_users_home_addresses").update({ is_default: false }).eq("user_id", uid);
       }
-      const { data, error } = await svc.from("fronted_users_home_addresses").insert([{ user_id: uid, ...v, is_default }]).select("*").single();
+      const { data, error } = await svc2.from("fronted_users_home_addresses").insert([{ user_id: uid, ...v, is_default }]).select("*").single();
       if (error) return c.json({ error: "Insert failed" }, 400);
       return c.json(data);
     } else if (type === "cvs") {
@@ -13449,12 +13543,12 @@ app6.post("/frontend/account/addresses", async (c) => {
       if (!v.alias || !v.receiver_name || !v.receiver_phone || !/^09\d{8}$/.test(v.receiver_phone || "") || !v.vendor || !v.store_id || !v.store_name || !v.store_address) {
         return c.json({ error: "Invalid payload" }, 400);
       }
-      const { count } = await svc.from("fronted_users_cvs_addresses").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("is_archived", false);
+      const { count } = await svc2.from("fronted_users_cvs_addresses").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("is_archived", false);
       const is_default = !count || count === 0 || !!body.is_default;
       if (is_default) {
-        await svc.from("fronted_users_cvs_addresses").update({ is_default: false }).eq("user_id", uid);
+        await svc2.from("fronted_users_cvs_addresses").update({ is_default: false }).eq("user_id", uid);
       }
-      const { data, error } = await svc.from("fronted_users_cvs_addresses").insert([{ user_id: uid, ...v, is_default }]).select("*").single();
+      const { data, error } = await svc2.from("fronted_users_cvs_addresses").insert([{ user_id: uid, ...v, is_default }]).select("*").single();
       if (error) return c.json({ error: "Insert failed" }, 400);
       return c.json(data);
     }
@@ -13471,30 +13565,30 @@ app6.patch("/frontend/account/addresses/:id", async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
     const type = String(body.type || "").toLowerCase();
     if (type === "home") {
       const next = pickHomeUpdate(body);
       if (body.is_default === true) {
-        await svc.from("fronted_users_home_addresses").update({ is_default: false }).eq("user_id", uid);
+        await svc2.from("fronted_users_home_addresses").update({ is_default: false }).eq("user_id", uid);
         next.is_default = true;
       }
       if (has(next, "receiver_phone") && next.receiver_phone && !/^09\d{8}$/.test(next.receiver_phone)) {
         return c.json({ error: "Invalid phone" }, 400);
       }
-      const { data, error } = await svc.from("fronted_users_home_addresses").update(next).eq("id", id).eq("user_id", uid).select("*").single();
+      const { data, error } = await svc2.from("fronted_users_home_addresses").update(next).eq("id", id).eq("user_id", uid).select("*").single();
       if (error) return c.json({ error: "Update failed" }, 400);
       return c.json(data);
     } else if (type === "cvs") {
       const next = pickCvsUpdate(body);
       if (body.is_default === true) {
-        await svc.from("fronted_users_cvs_addresses").update({ is_default: false }).eq("user_id", uid);
+        await svc2.from("fronted_users_cvs_addresses").update({ is_default: false }).eq("user_id", uid);
         next.is_default = true;
       }
       if (has(next, "receiver_phone") && next.receiver_phone && !/^09\d{8}$/.test(next.receiver_phone)) {
         return c.json({ error: "Invalid phone" }, 400);
       }
-      const { data, error } = await svc.from("fronted_users_cvs_addresses").update(next).eq("id", id).eq("user_id", uid).select("*").single();
+      const { data, error } = await svc2.from("fronted_users_cvs_addresses").update(next).eq("id", id).eq("user_id", uid).select("*").single();
       if (error) return c.json({ error: "Update failed" }, 400);
       return c.json(data);
     }
@@ -13510,27 +13604,27 @@ app6.delete("/frontend/account/addresses/:id", async (c) => {
     const id = c.req.param("id");
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
-    const h = await svc.from("fronted_users_home_addresses").select("id,is_default").eq("id", id).eq("user_id", uid).maybeSingle();
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const h = await svc2.from("fronted_users_home_addresses").select("id,is_default").eq("id", id).eq("user_id", uid).maybeSingle();
     if (!h.error && h.data) {
       const wasDefault = !!h.data.is_default;
-      await svc.from("fronted_users_home_addresses").update({ is_archived: true, is_default: false }).eq("id", id).eq("user_id", uid);
+      await svc2.from("fronted_users_home_addresses").update({ is_archived: true, is_default: false }).eq("id", id).eq("user_id", uid);
       if (wasDefault) {
-        const pick = await svc.from("fronted_users_home_addresses").select("id").eq("user_id", uid).eq("is_archived", false).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        const pick = await svc2.from("fronted_users_home_addresses").select("id").eq("user_id", uid).eq("is_archived", false).order("updated_at", { ascending: false }).limit(1).maybeSingle();
         if (!pick.error && pick.data) {
-          await svc.from("fronted_users_home_addresses").update({ is_default: true }).eq("id", pick.data.id);
+          await svc2.from("fronted_users_home_addresses").update({ is_default: true }).eq("id", pick.data.id);
         }
       }
       return c.json({ ok: true });
     }
-    const s = await svc.from("fronted_users_cvs_addresses").select("id,is_default").eq("id", id).eq("user_id", uid).maybeSingle();
+    const s = await svc2.from("fronted_users_cvs_addresses").select("id,is_default").eq("id", id).eq("user_id", uid).maybeSingle();
     if (!s.error && s.data) {
       const wasDefault = !!s.data.is_default;
-      await svc.from("fronted_users_cvs_addresses").update({ is_archived: true, is_default: false }).eq("id", id).eq("user_id", uid);
+      await svc2.from("fronted_users_cvs_addresses").update({ is_archived: true, is_default: false }).eq("id", id).eq("user_id", uid);
       if (wasDefault) {
-        const pick = await svc.from("fronted_users_cvs_addresses").select("id").eq("user_id", uid).eq("is_archived", false).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        const pick = await svc2.from("fronted_users_cvs_addresses").select("id").eq("user_id", uid).eq("is_archived", false).order("updated_at", { ascending: false }).limit(1).maybeSingle();
         if (!pick.error && pick.data) {
-          await svc.from("fronted_users_cvs_addresses").update({ is_default: true }).eq("id", pick.data.id);
+          await svc2.from("fronted_users_cvs_addresses").update({ is_default: true }).eq("id", pick.data.id);
         }
       }
       return c.json({ ok: true });
@@ -13546,8 +13640,8 @@ app6.get("/frontend/account/zip/:zip3", async (c) => {
     if (!/^\d{3}$/.test(zip3)) return c.json({ error: "Invalid zip3" }, 400);
     const serviceKey = c.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return c.json({ error: "Server misconfigured" }, 500);
-    const svc = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
-    const { data } = await svc.from("fronted_address_zip_map").select("zip3,city,district").eq("zip3", zip3).maybeSingle();
+    const svc2 = createClient(c.env.SUPABASE_URL, serviceKey, { auth: { persistSession: false } });
+    const { data } = await svc2.from("fronted_address_zip_map").select("zip3,city,district").eq("zip3", zip3).maybeSingle();
     if (!data) return c.json({ error: "Not found" }, 404);
     return c.json(data);
   } catch (e) {
@@ -13668,16 +13762,552 @@ app7.post("/frontend/account/ecpay/map/return", async (c) => {
 });
 var ecpay_default = app7;
 
+// ../fronted/API/cart/index.ts
+init_modules_watch_stub();
+var ACCESS_COOKIE7 = "sb-access-token";
+var FRONT_SESSION_COOKIE3 = "front-session";
+var GUEST_TOKEN_COOKIE = "front-guest";
+function isLocalRequest3(c) {
+  try {
+    const u = new URL(c.req.url);
+    return u.hostname === "127.0.0.1" || u.hostname === "localhost";
+  } catch {
+    return false;
+  }
+}
+__name(isLocalRequest3, "isLocalRequest");
+function makeSupabase4(c, accessToken) {
+  const url = c.env.SUPABASE_URL;
+  const anon = c.env.SUPABASE_ANON_KEY;
+  if (!url || !anon) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");
+  }
+  const headers = {};
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  return createClient(url, anon, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers }
+  });
+}
+__name(makeSupabase4, "makeSupabase");
+function makeServiceClient(c) {
+  const url = c.env.SUPABASE_URL;
+  const key = c.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Server misconfigured: missing service role key");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+__name(makeServiceClient, "makeServiceClient");
+async function resolveUserId(c) {
+  const access = getCookie(c, ACCESS_COOKIE7);
+  if (access) {
+    try {
+      const supabase = makeSupabase4(c, access);
+      const { data } = await supabase.auth.getUser(access);
+      if (data?.user?.id) return data.user.id;
+    } catch {
+    }
+  }
+  const token = getCookie(c, FRONT_SESSION_COOKIE3);
+  return null;
+}
+__name(resolveUserId, "resolveUserId");
+function ensureGuestToken(c) {
+  let token = getCookie(c, GUEST_TOKEN_COOKIE);
+  if (!token) {
+    token = crypto.randomUUID();
+    const isLocal = isLocalRequest3(c);
+    setCookie(c, GUEST_TOKEN_COOKIE, token, {
+      httpOnly: true,
+      secure: !isLocal,
+      sameSite: "Lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 60
+      // 60 days
+    });
+  }
+  return token;
+}
+__name(ensureGuestToken, "ensureGuestToken");
+var app8 = new Hono2({ strict: false });
+app8.use("*", cors({
+  origin: /* @__PURE__ */ __name((origin) => origin || "*", "origin"),
+  allowHeaders: ["Content-Type", "Authorization"],
+  allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  credentials: true,
+  maxAge: 86400
+}));
+function mapItemRow(row) {
+  return {
+    id: row.id,
+    product_id: row.product_id,
+    inventory_id: row.inventory_id,
+    sku_key: row.sku_key ?? null,
+    name: row.name_snapshot,
+    image_url: row.image_url ?? null,
+    quantity: row.quantity,
+    unit_price: Number(row.unit_price || 0),
+    currency: row.currency || "TWD",
+    line_total: Number(row.unit_price || 0) * Number(row.quantity || 0),
+    selected_options: row.selected_options || {}
+  };
+}
+__name(mapItemRow, "mapItemRow");
+function mapCartRow(cart, items) {
+  return {
+    id: cart.id,
+    status: cart.status,
+    currency: cart.currency || "TWD",
+    totals: {
+      subtotal: Number(cart.subtotal_amount || 0),
+      discount: Number(cart.discount_amount || 0),
+      shipping_fee: Number(cart.shipping_fee_amount || 0),
+      tax: Number(cart.tax_amount || 0),
+      grand_total: Number(cart.grand_total_amount || 0),
+      quantity: Number(cart.total_quantity || 0)
+    },
+    items
+  };
+}
+__name(mapCartRow, "mapCartRow");
+app8.get("/frontend/cart", async (c) => {
+  try {
+    const svc2 = makeServiceClient(c);
+    const uid = await resolveUserId(c);
+    if (uid) {
+      const { data: carts } = await svc2.from("fronted_carts").select("*").eq("user_id", uid).eq("status", "active").limit(1);
+      let cart = carts && carts[0];
+      if (!cart) {
+        const { data: created } = await svc2.from("fronted_carts").insert({ user_id: uid }).select("*").single();
+        cart = created;
+      }
+      const { data: rows } = await svc2.from("fronted_cart_items").select("*").eq("cart_id", cart.id);
+      const items = (rows || []).map(mapItemRow);
+      return c.json(mapCartRow(cart, items));
+    }
+    const token = ensureGuestToken(c);
+    return c.json({ id: null, status: "active", currency: "TWD", totals: { subtotal: 0, discount: 0, shipping_fee: 0, tax: 0, grand_total: 0, quantity: 0 }, items: [] });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+app8.post("/frontend/cart/merge", async (c) => {
+  try {
+    const svc2 = makeServiceClient(c);
+    const uid = await resolveUserId(c);
+    if (!uid) return c.json({ error: "Unauthorized" }, 401);
+    const body = await c.req.json().catch(() => ({}));
+    const draft = Array.isArray(body.draft_items) ? body.draft_items : [];
+    let { data: carts } = await svc2.from("fronted_carts").select("*").eq("user_id", uid).eq("status", "active").limit(1);
+    let cart = carts && carts[0];
+    if (!cart) {
+      const { data: created, error: icErr } = await svc2.from("fronted_carts").insert({ user_id: uid }).select("*").single();
+      if (icErr) return c.json({ error: icErr.message }, 400);
+      cart = created;
+    }
+    let added = 0, merged = 0, removed = 0;
+    for (const it of draft) {
+      const qty = Math.max(1, Number(it.quantity || 1));
+      let inv = null;
+      if (it.inventory_id) {
+        const { data } = await svc2.from("backend_products_inventory").select("*").eq("id", it.inventory_id).single();
+        inv = data;
+      } else if (it.sku_key) {
+        const { data } = await svc2.from("backend_products_inventory").select("*").eq("sku_key", it.sku_key).limit(1);
+        inv = data && data[0];
+      }
+      if (!inv) {
+        removed++;
+        continue;
+      }
+      const { data: prod } = await svc2.from("backend_products").select("id,name").eq("id", inv.product_id).single();
+      if (!prod) {
+        removed++;
+        continue;
+      }
+      let unit_price = 0;
+      try {
+        const { data: priceRow } = await svc2.from("backend_products_prices").select("sale_price").eq("product_id", prod.id).eq("sku_key", inv.sku_key).limit(1);
+        if (priceRow && priceRow[0] && priceRow[0].sale_price != null) unit_price = Number(priceRow[0].sale_price);
+      } catch {
+      }
+      const { data: exists } = await svc2.from("fronted_cart_items").select("*").eq("cart_id", cart.id).eq("inventory_id", inv.id).limit(1);
+      if (exists && exists[0]) {
+        const nextQty = Number(exists[0].quantity || 0) + qty;
+        await svc2.from("fronted_cart_items").update({ quantity: nextQty, unit_price, name_snapshot: prod.name, sku_key: inv.sku_key, selected_options: it.selected_options || {} }).eq("id", exists[0].id);
+        merged++;
+      } else {
+        await svc2.from("fronted_cart_items").insert({
+          cart_id: cart.id,
+          product_id: prod.id,
+          inventory_id: inv.id,
+          sku_key: inv.sku_key,
+          name_snapshot: prod.name,
+          image_url: null,
+          selected_options: it.selected_options || {},
+          quantity: qty,
+          unit_price,
+          currency: "TWD",
+          line_total_amount: unit_price * qty,
+          is_gift: false
+        });
+        added++;
+      }
+    }
+    const { data: freshCart } = await svc2.from("fronted_carts").select("*").eq("id", cart.id).single();
+    const { data: rows } = await svc2.from("fronted_cart_items").select("*").eq("cart_id", cart.id);
+    const items = (rows || []).map(mapItemRow);
+    return c.json({ cart: mapCartRow(freshCart, items), summary: { added, merged, removed } });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+var cart_default = app8;
+
+// ../fronted/API/categories/index.ts
+init_modules_watch_stub();
+var app9 = new Hono2({ strict: false });
+app9.use("*", cors({
+  origin: /* @__PURE__ */ __name((origin) => origin || "*", "origin"),
+  allowHeaders: ["Content-Type", "Authorization"],
+  allowMethods: ["GET", "OPTIONS"],
+  credentials: true,
+  maxAge: 86400
+}));
+function makeServiceClient2(c) {
+  const url = c.env.SUPABASE_URL;
+  const key = c.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Server misconfigured");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+__name(makeServiceClient2, "makeServiceClient");
+function buildTree(rows) {
+  const map = /* @__PURE__ */ new Map();
+  rows.forEach((r) => {
+    map.set(Number(r.id), {
+      id: Number(r.id),
+      name: r.name,
+      slug: r.slug,
+      image_url: r.image_url || null,
+      parent_id: r.parent_id ? Number(r.parent_id) : null,
+      children: [],
+      href: ""
+    });
+  });
+  const roots = [];
+  map.forEach((node) => {
+    if (node.parent_id && map.has(node.parent_id)) {
+      map.get(node.parent_id).children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+  const computeHref = /* @__PURE__ */ __name((node, parentPath) => {
+    const path = [...parentPath, node.slug];
+    node.href = "/products/" + path.join("/");
+    node.children.forEach((ch) => computeHref(ch, path));
+  }, "computeHref");
+  roots.forEach((r) => computeHref(r, []));
+  return roots;
+}
+__name(buildTree, "buildTree");
+app9.get("/frontend/categories", async (c) => {
+  try {
+    const svc2 = makeServiceClient2(c);
+    const { data, error } = await svc2.from("backend_products_cetegory").select("id,parent_id,name,slug,image_url").order("parent_id", { ascending: true, nullsFirst: true }).order("id", { ascending: true });
+    if (error) return c.json({ error: error.message }, 400);
+    const roots = buildTree(data || []);
+    return c.json({ categories: roots });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+var categories_default2 = app9;
+
+// ../fronted/API/products/index.ts
+init_modules_watch_stub();
+var app10 = new Hono2({ strict: false });
+app10.use("*", cors({
+  origin: /* @__PURE__ */ __name((origin) => origin || "*", "origin"),
+  credentials: true,
+  allowHeaders: ["Content-Type", "Authorization"],
+  allowMethods: ["GET", "OPTIONS"],
+  maxAge: 86400
+}));
+function svc(c) {
+  const url = c.env.SUPABASE_URL;
+  const key = c.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Server misconfigured");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+__name(svc, "svc");
+var transparentPng = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
+app10.get("/frontend/products", async (c) => {
+  try {
+    const s = svc(c);
+    const catPath = c.req.query("category") || "";
+    const q = c.req.query("q") || "";
+    const limit = Math.min(parseInt(c.req.query("limit") || "40", 10), 100);
+    const offset = Math.max(parseInt(c.req.query("offset") || "0", 10), 0);
+    let categoryId = null;
+    if (catPath) {
+      const parts = catPath.split("/").filter(Boolean);
+      const last = parts[parts.length - 1];
+      let { data: cat1 } = await s.from("backend_products_cetegory").select("id").eq("slug", last).maybeSingle();
+      if (cat1?.id) categoryId = Number(cat1.id);
+      if (!categoryId) {
+        const { data: cat2 } = await s.from("backend_product_categories").select("id").eq("slug", last).maybeSingle();
+        if (cat2?.id) categoryId = Number(cat2.id);
+      }
+    }
+    let query = s.from("backend_products").select("id, name, slug, has_variants, base_sku, visibility, tags, promotion_label, promotion_label_bg_color, promotion_label_text_color, product_tag_bg_color, product_tag_text_color, auto_hide_when_oos, enable_preorder, preorder_start_at, preorder_end_at, preorder_max_qty").eq("visibility", "visible");
+    if (categoryId) {
+      query = query.or(`category_ids.cs.{${categoryId}},category_id.eq.${categoryId}`);
+    }
+    if (q) {
+      const term = `%${q}%`;
+      query = query.or(`name.ilike.${term},slug.ilike.${term}`);
+    }
+    const { data: products, error } = await query.order("id", { ascending: false }).range(offset, offset + limit - 1);
+    if (error) return c.json({ error: "Failed to list products" }, 500);
+    const ids = (products || []).map((p) => p.id);
+    if (ids.length === 0) return c.json({ items: [] });
+    const { data: photos } = await s.from("backend_products_photo").select("product_id, photo_url_1").in("product_id", ids);
+    const [{ data: inventory }, { data: prices }] = await Promise.all([
+      s.from("backend_products_inventory").select("product_id, current_stock_qty, low_stock_threshold").in("product_id", ids),
+      s.from("backend_products_prices").select("product_id, sku_key, sale_price, compare_at_price").in("product_id", ids)
+    ]);
+    const photoMap = /* @__PURE__ */ new Map();
+    (photos || []).forEach((p) => photoMap.set(Number(p.product_id), p.photo_url_1 || ""));
+    const invByProduct = /* @__PURE__ */ new Map();
+    (inventory || []).forEach((iv) => {
+      const pid = Number(iv.product_id);
+      if (!invByProduct.has(pid)) invByProduct.set(pid, []);
+      invByProduct.get(pid).push(iv);
+    });
+    const priceByProduct = /* @__PURE__ */ new Map();
+    (prices || []).forEach((pr) => {
+      const pid = Number(pr.product_id);
+      if (!priceByProduct.has(pid)) priceByProduct.set(pid, []);
+      priceByProduct.get(pid).push(pr);
+    });
+    const now = /* @__PURE__ */ new Date();
+    const items = (products || []).map((p) => {
+      const pid = Number(p.id);
+      const pPrices = priceByProduct.get(pid) || [];
+      const base = pPrices.find((x) => !x.sku_key);
+      const sale = base?.sale_price ?? (pPrices.length ? Math.min(...pPrices.filter((x) => x.sale_price != null).map((x) => Number(x.sale_price))) : null);
+      const compare = base?.compare_at_price ?? (pPrices.length ? Math.max(...pPrices.filter((x) => x.compare_at_price != null).map((x) => Number(x.compare_at_price))) : null);
+      const image = photoMap.get(pid) || transparentPng;
+      const inv = invByProduct.get(pid) || [];
+      const inStock = inv.some((x) => (Number(x.current_stock_qty) || 0) > 0);
+      const allBelowLow = inv.length > 0 && inv.every((x) => (Number(x.current_stock_qty) || 0) <= (Number(x.low_stock_threshold) || 0));
+      const preorderEnabled = !!p.enable_preorder;
+      const startOk = p.preorder_start_at ? now >= new Date(p.preorder_start_at) : true;
+      const endOk = p.preorder_end_at ? now <= new Date(p.preorder_end_at) : true;
+      const preorderActive = preorderEnabled && startOk && endOk;
+      const preorderEnded = preorderEnabled && (!startOk || !endOk);
+      const autoHide = !!p.auto_hide_when_oos;
+      const forceSoldOutTag = !preorderActive && allBelowLow;
+      return {
+        id: pid,
+        name: p.name || p.title || p.slug,
+        slug: p.slug || p.route_slug,
+        href: `/product/${p.slug || p.route_slug}`,
+        image,
+        price: sale ?? 0,
+        originalPrice: compare || null,
+        inStock,
+        visibility: p.visibility || "visible",
+        // new label/color fields for overlays
+        tags: Array.isArray(p.tags) ? p.tags : [],
+        promotionLabel: p.promotion_label || null,
+        promotionLabelBgColor: p.promotion_label_bg_color || null,
+        promotionLabelTextColor: p.promotion_label_text_color || null,
+        productTagBgColor: p.product_tag_bg_color || null,
+        productTagTextColor: p.product_tag_text_color || null,
+        // helper flags for UI
+        isLowStock: allBelowLow,
+        autoHideWhenOOS: autoHide,
+        preorderEnabled,
+        preorderActive,
+        preorderEnded,
+        preorderStartAt: p.preorder_start_at || null,
+        preorderEndAt: p.preorder_end_at || null,
+        preorderMaxQty: p.preorder_max_qty || null,
+        forceSoldOutTag
+      };
+    });
+    return c.json({ items });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+var products_default2 = app10;
+app10.get("/frontend/products/:slugOrId", async (c) => {
+  try {
+    let minPrice = function() {
+      const vals = [];
+      (priceRows || []).forEach((pr) => {
+        if (pr.sale_price != null) vals.push(Number(pr.sale_price));
+      });
+      if (vals.length === 0) return null;
+      return Math.min(...vals);
+    }, ensureChild = function(list, id, label) {
+      let node = list.find((n) => n.id === id);
+      if (!node) {
+        node = { id, label, children: [] };
+        list.push(node);
+      }
+      return node;
+    };
+    __name(minPrice, "minPrice");
+    __name(ensureChild, "ensureChild");
+    const s = svc(c);
+    const slugOrId = c.req.param("slugOrId");
+    const isNumeric = /^\d+$/.test(slugOrId);
+    let product = null;
+    if (isNumeric) {
+      const { data } = await s.from("backend_products").select("id, name, slug, description, has_variants, base_sku, category_ids, visibility, tags, promotion_label, promotion_label_bg_color, promotion_label_text_color, product_tag_bg_color, product_tag_text_color, auto_hide_when_oos, enable_preorder, preorder_start_at, preorder_end_at, preorder_max_qty").eq("id", Number(slugOrId)).maybeSingle();
+      product = data;
+    } else {
+      const { data } = await s.from("backend_products").select("id, name, slug, description, has_variants, base_sku, category_ids, visibility, tags, promotion_label, promotion_label_bg_color, promotion_label_text_color, product_tag_bg_color, product_tag_text_color, auto_hide_when_oos, enable_preorder, preorder_start_at, preorder_end_at, preorder_max_qty").eq("slug", slugOrId).maybeSingle();
+      product = data;
+    }
+    if (!product) return c.json({ error: "Not found" }, 404);
+    if (product.visibility && product.visibility !== "visible") {
+      return c.json({ error: "Not found" }, 404);
+    }
+    const pid = Number(product.id);
+    const { data: photoRows } = await s.from("backend_products_photo").select("id, inventory_id, photo_url_1, photo_url_2, photo_url_3, photo_url_4, photo_url_5, photo_url_6, photo_url_7, photo_url_8, photo_url_9, photo_url_10, variant_photo_url_1, variant_photo_url_2, variant_photo_url_3").eq("product_id", pid);
+    const productPhotoRow = (photoRows || []).find((r) => !r.inventory_id) || null;
+    const productImages = [];
+    if (productPhotoRow) {
+      for (let i = 1; i <= 10; i++) {
+        const url = productPhotoRow[`photo_url_${i}`];
+        if (url) productImages.push(url);
+      }
+    }
+    if (productImages.length === 0) productImages.push(transparentPng);
+    const { data: invRows } = await s.from("backend_products_inventory").select("id, product_id, sku_key, current_stock_qty, low_stock_threshold, sku_level_1, sku_level_1_name, sku_level_2, sku_level_2_name, sku_level_3, sku_level_3_name, sku_level_4, sku_level_4_name, sku_level_5, sku_level_5_name, spec_level_1_name, spec_level_2_name, spec_level_3_name, spec_level_4_name, spec_level_5_name, variant_photo_url_1, variant_photo_url_2, variant_photo_url_3").eq("product_id", pid);
+    const { data: priceRows } = await s.from("backend_products_prices").select("product_id, sku_key, sale_price, compare_at_price").eq("product_id", pid);
+    const priceBySku = /* @__PURE__ */ new Map();
+    (priceRows || []).forEach((pr) => {
+      const key = String(pr.sku_key || "");
+      priceBySku.set(key, {
+        sale: pr.sale_price != null ? Number(pr.sale_price) : null,
+        compare: pr.compare_at_price != null ? Number(pr.compare_at_price) : null
+      });
+    });
+    const skuRows = (invRows || []).filter((r) => r.sku_key && String(r.sku_key).trim() !== "");
+    const dimLabels = [
+      skuRows.find((r) => r.spec_level_1_name)?.spec_level_1_name,
+      skuRows.find((r) => r.spec_level_2_name)?.spec_level_2_name,
+      skuRows.find((r) => r.spec_level_3_name)?.spec_level_3_name,
+      skuRows.find((r) => r.spec_level_4_name)?.spec_level_4_name,
+      skuRows.find((r) => r.spec_level_5_name)?.spec_level_5_name
+    ];
+    const variantPhotosByInv = /* @__PURE__ */ new Map();
+    (photoRows || []).filter((r) => r.inventory_id).forEach((r) => {
+      const arr = [];
+      for (let i = 1; i <= 3; i++) {
+        const u = r[`variant_photo_url_${i}`];
+        if (u) arr.push(u);
+      }
+      variantPhotosByInv.set(Number(r.inventory_id), arr);
+    });
+    const root = [];
+    for (const r of skuRows) {
+      const levels = [r.sku_level_1_name, r.sku_level_2_name, r.sku_level_3_name, r.sku_level_4_name, r.sku_level_5_name].filter((v) => v != null && String(v).trim() !== "");
+      if (levels.length === 0) continue;
+      let curr = root;
+      let parent;
+      levels.forEach((lvlLabel, idx) => {
+        const nodeId = `${idx}-${String(lvlLabel)}`;
+        const node = ensureChild(curr, nodeId, String(lvlLabel));
+        parent = node;
+        if (idx < levels.length - 1) {
+          if (!node.children) node.children = [];
+          curr = node.children;
+        }
+      });
+      const pr = priceBySku.get(String(r.sku_key)) || priceBySku.get("") || { sale: null, compare: null };
+      const variantImages = [];
+      for (let i = 1; i <= 3; i++) {
+        const u = r[`variant_photo_url_${i}`];
+        if (u) variantImages.push(u);
+      }
+      const extra = variantPhotosByInv.get(Number(r.id)) || [];
+      extra.forEach((u) => {
+        if (!variantImages.includes(u)) variantImages.push(u);
+      });
+      const leafPayload = {
+        sku: r.sku_key,
+        stock: Number(r.current_stock_qty) || 0,
+        price: pr.sale != null ? pr.sale : null,
+        compareAt: pr.compare != null ? pr.compare : null,
+        image: variantImages[0] || productImages[0] || transparentPng
+      };
+      if (parent) {
+        delete parent.children;
+        parent.payload = leafPayload;
+      }
+    }
+    let basePrice = priceBySku.get("")?.sale ?? null;
+    let baseCompare = priceBySku.get("")?.compare ?? null;
+    const inStockAny = (invRows || []).some((r) => (Number(r.current_stock_qty) || 0) > 0);
+    const allBelowLow = (invRows || []).length > 0 && (invRows || []).every((r) => (Number(r.current_stock_qty) || 0) <= (Number(r.low_stock_threshold) || 0));
+    const now2 = /* @__PURE__ */ new Date();
+    const preorderEnabled = !!product.enable_preorder;
+    const startOk = product.preorder_start_at ? now2 >= new Date(product.preorder_start_at) : true;
+    const endOk = product.preorder_end_at ? now2 <= new Date(product.preorder_end_at) : true;
+    const preorderActive = preorderEnabled && startOk && endOk;
+    const preorderEnded = preorderEnabled && (!startOk || !endOk);
+    const minP = minPrice();
+    const effectivePrice = basePrice != null ? basePrice : minP != null ? minP : 0;
+    return c.json({
+      id: pid,
+      name: product.name,
+      slug: product.slug,
+      description: product.description,
+      tags: product.tags || [],
+      promotionLabel: product.promotion_label || null,
+      promotionLabelBgColor: product.promotion_label_bg_color || null,
+      promotionLabelTextColor: product.promotion_label_text_color || null,
+      productTagBgColor: product.product_tag_bg_color || null,
+      productTagTextColor: product.product_tag_text_color || null,
+      images: productImages.length ? productImages : [transparentPng],
+      variants: root,
+      specsLabels: dimLabels.filter(Boolean),
+      price: effectivePrice,
+      originalPrice: baseCompare,
+      inStock: inStockAny,
+      isLowStock: allBelowLow,
+      autoHideWhenOOS: !!product.auto_hide_when_oos,
+      preorderEnabled,
+      preorderActive,
+      preorderEnded,
+      preorderStartAt: product.preorder_start_at || null,
+      preorderEndAt: product.preorder_end_at || null,
+      preorderMaxQty: product.preorder_max_qty || null
+    });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+});
+
 // ../backend/API/index.ts
-var app8 = new Hono2();
-app8.route("/", auth_default);
-app8.route("/", admin_default);
-app8.route("/", categories_default);
-app8.route("/", products_default);
-app8.route("/", auth_default2);
-app8.route("/", addresses_default);
-app8.route("/", ecpay_default);
-var API_default = app8;
+var app11 = new Hono2();
+app11.route("/", auth_default);
+app11.route("/", admin_default);
+app11.route("/", categories_default);
+app11.route("/", products_default);
+app11.route("/", auth_default2);
+app11.route("/", addresses_default);
+app11.route("/", ecpay_default);
+app11.route("/", cart_default);
+app11.route("/", categories_default2);
+app11.route("/", products_default2);
+var API_default = app11;
 
 // ../node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
 init_modules_watch_stub();
@@ -13722,7 +14352,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-GkhLMj/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-MtkJD6/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -13755,7 +14385,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-GkhLMj/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-MtkJD6/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

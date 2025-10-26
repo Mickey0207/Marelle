@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { getProductsByCategory } from '../../../../external_mock/data/products.mock.js';
+import { useState } from 'react';
 
 const MegaPanel = ({
   activeRoot,
@@ -15,6 +15,7 @@ const MegaPanel = ({
   setActiveLevel4,
   categories,
 }) => {
+  const [hoveredId, setHoveredId] = useState(null);
   if (!activeRoot) return null;
   const rootCat = (categories || []).find((c) => c.id === activeRoot);
   if (!rootCat) return null;
@@ -27,9 +28,24 @@ const MegaPanel = ({
   const currentLevel4 = level4List.find((c) => c.id === activeLevel4) || null;
   const level5List = currentLevel4?.children || [];
 
+  // 在整個分類樹中尋找節點
+  const findNodeById = (nodes, id) => {
+    if (!Array.isArray(nodes) || id == null) return null;
+    for (const n of nodes) {
+      if (n.id === id) return n;
+      const found = findNodeById(n.children || [], id);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  // 取得分類縮圖，優先使用後端提供的 image_url，否則使用穩定的占位圖
   const getThumb = (catId) => {
-    const p = getProductsByCategory(catId)[0];
-    return p ? p.image : 'https://picsum.photos/seed/' + catId + '/160/160';
+    const node = findNodeById(categories || [], catId);
+    const src = node?.image_url || null;
+    // 1x1 fully transparent PNG
+    const transparent = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
+    return src || transparent;
   };
 
   const resetAll = () => {
@@ -38,6 +54,7 @@ const MegaPanel = ({
     setActiveLevel3(null);
     setActiveLevel4(null);
     setPanelMode('root');
+    setHoveredId(null);
   };
 
   return (
@@ -110,7 +127,7 @@ const MegaPanel = ({
             {panelMode === 'root' || panelMode === 'level2' ? (
               <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))' }}>
                 {level2List.map((l2) => (
-                  <div key={l2.id} className="group">
+                  <div key={l2.id} className="group" onMouseEnter={() => setHoveredId(l2.id)} onMouseLeave={() => setHoveredId(null)}>
                     <Link to={l2.href} onClick={resetAll} className="block">
                       <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-2.5 bg-white/30 ring-1 ring-white/40 backdrop-blur-sm relative shadow-sm cursor-pointer">
                         <img
@@ -150,7 +167,7 @@ const MegaPanel = ({
             {panelMode === 'level3' && (
               <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))' }}>
                 {level3List.map((l3) => (
-                  <div key={l3.id} className="group">
+                  <div key={l3.id} className="group" onMouseEnter={() => setHoveredId(l3.id)} onMouseLeave={() => setHoveredId(null)}>
                     <Link to={l3.href} onClick={resetAll} className="block">
                       <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-2.5 bg-white/30 ring-1 ring-white/40 backdrop-blur-sm relative shadow-sm cursor-pointer">
                         <img
@@ -190,7 +207,7 @@ const MegaPanel = ({
             {panelMode === 'level4' && (
               <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))' }}>
                 {level4List.map((l4) => (
-                  <div key={l4.id} className="group">
+                  <div key={l4.id} className="group" onMouseEnter={() => setHoveredId(l4.id)} onMouseLeave={() => setHoveredId(null)}>
                     <Link to={l4.href} onClick={resetAll} className="block">
                       <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-2.5 bg-white/30 ring-1 ring-white/40 backdrop-blur-sm relative shadow-sm cursor-pointer">
                         <img
@@ -230,7 +247,7 @@ const MegaPanel = ({
             {panelMode === 'level5' && (
               <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))' }}>
                 {level5List.map((l5) => (
-                  <div key={l5.id} className="group">
+                  <div key={l5.id} className="group" onMouseEnter={() => setHoveredId(l5.id)} onMouseLeave={() => setHoveredId(null)}>
                     <Link to={l5.href} onClick={resetAll} className="block">
                       <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-2.5 bg-white/30 ring-1 ring-white/40 backdrop-blur-sm relative shadow-sm cursor-pointer">
                         <img
@@ -256,21 +273,27 @@ const MegaPanel = ({
           </div>
 
           <div className="col-span-3">
-            <div className="rounded-xl overflow-hidden ring-1 ring-white/40 shadow-sm bg-white/50">
-              <img
-                src={getThumb(activeLevel4 || activeLevel3 || activeLevel2 || activeRoot)}
-                alt="highlight"
-                className="w-full h-[160px] object-cover"
-              />
-              <div className="p-4">
-                <div className="text-sm font-chinese mb-1" style={{ color: '#333' }}>
-                  精選主題
+            {hoveredId && (() => {
+              const node = findNodeById(categories || [], hoveredId);
+              const title = node?.name || '';
+              return (
+                <div className="rounded-xl overflow-hidden ring-1 ring-white/40 shadow-sm bg-white/50">
+                  <img
+                    src={getThumb(hoveredId)}
+                    alt={title || 'highlight'}
+                    className="w-full h-[160px] object-cover"
+                  />
+                  <div className="p-4">
+                    <div className="text-lg font-bold font-chinese mb-1" style={{ color: '#333' }}>
+                      {title}
+                    </div>
+                    <div className="text-xs" style={{ color: '#666' }}>
+                      探索此分類下的熱門商品與系列。
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs" style={{ color: '#666' }}>
-                  探索此分類下的熱門商品與系列。
-                </div>
-              </div>
-            </div>
+              )
+            })()}
           </div>
         </div>
       </div>

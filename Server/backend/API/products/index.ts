@@ -26,6 +26,62 @@ async function requireAuth(c: any) {
   return !!sess
 }
 
+// 自動可見性重算：依缺貨/預購設定與庫存判斷，自動切換 backend_products.visibility
+async function recalcProductVisibility(c: any, svc: any, productId: number | string) {
+  try {
+    const pid = typeof productId === 'string' ? parseInt(productId, 10) : productId
+    if (!pid || Number.isNaN(pid as number)) return
+
+    // 讀取商品旗標
+    const { data: product } = await svc
+      .from('backend_products')
+      .select('id, visibility, auto_hide_when_oos, enable_preorder, preorder_start_at, preorder_end_at')
+      .eq('id', pid)
+      .maybeSingle()
+
+    if (!product) return
+    const p: any = product as any
+    if (!p.auto_hide_when_oos) return
+
+    // 預購中一律維持可見
+    const now = new Date()
+    const startAt = p.preorder_start_at ? new Date(p.preorder_start_at) : null
+    const endAt = p.preorder_end_at ? new Date(p.preorder_end_at) : null
+    const preorderActive = !!p.enable_preorder && (!startAt || now >= startAt) && (!endAt || now <= endAt)
+    if (preorderActive) {
+      if (p.visibility !== 'visible') {
+  await (svc as any).from('backend_products').update({ visibility: 'visible' }).eq('id', pid)
+      }
+      return
+    }
+
+    // 讀取庫存行，判斷是否仍有可售變體
+    const { data: invRows } = await svc
+      .from('backend_products_inventory')
+      .select('current_stock_qty, low_stock_threshold, track_inventory')
+      .eq('product_id', pid)
+
+    const rows = Array.isArray(invRows) ? invRows : []
+    // 若無庫存行，保守維持可見
+    let anySellable = rows.length === 0
+    for (const r of rows) {
+      const track = (r as any).track_inventory !== false
+      if (!track) { anySellable = true; break }
+      const qty = typeof (r as any).current_stock_qty === 'number' ? (r as any).current_stock_qty : parseInt((r as any).current_stock_qty || '0', 10)
+      const thrRaw = (r as any).low_stock_threshold
+      const thr = typeof thrRaw === 'number' ? thrRaw : (thrRaw === null || thrRaw === undefined ? 0 : parseInt(thrRaw, 10))
+      if (qty > thr) { anySellable = true; break }
+    }
+
+    const desired = anySellable ? 'visible' : 'hidden'
+    if (desired !== p.visibility) {
+  await (svc as any).from('backend_products').update({ visibility: desired }).eq('id', pid)
+    }
+  } catch (_e) {
+    // 忽略錯誤，避免影響主要請求流程
+  }
+}
+
 // GET /backend/products - List all products with filtering
 app.get('/backend/products', async (c) => {
   if (!(await requireAuth(c))) return c.json({ error: 'Unauthorized' }, 401)
@@ -36,8 +92,12 @@ app.get('/backend/products', async (c) => {
     const search = c.req.query('search')
 
     let query = svc.from('backend_products').select(
-      `id, name, slug, short_description, status, visibility, is_featured, 
-       base_sku, has_variants, tags, category_ids, created_at, updated_at`
+      `id, name, slug, short_description, status, visibility, is_featured,
+       base_sku, has_variants, tags, category_ids,
+       promotion_label, promotion_label_bg_color, promotion_label_text_color,
+     product_tag_bg_color, product_tag_text_color,
+     auto_hide_when_oos, enable_preorder, preorder_start_at, preorder_end_at, preorder_max_qty, oos_status,
+       created_at, updated_at`
     )
 
     if (status) query = query.eq('status', status)
@@ -147,7 +207,18 @@ app.post('/backend/products', async (c) => {
         status: body.status || 'draft',
         visibility: body.visibility || 'visible',
         is_featured: body.is_featured || false,
-        category_ids: body.category_ids || []
+        category_ids: body.category_ids || [],
+        promotion_label: body.promotion_label ?? null,
+        promotion_label_bg_color: body.promotion_label_bg_color ?? null,
+        promotion_label_text_color: body.promotion_label_text_color ?? null,
+        product_tag_bg_color: body.product_tag_bg_color ?? null,
+        product_tag_text_color: body.product_tag_text_color ?? null,
+        auto_hide_when_oos: body.auto_hide_when_oos === true,
+        enable_preorder: body.enable_preorder === true,
+        preorder_start_at: body.preorder_start_at ?? null,
+        preorder_end_at: body.preorder_end_at ?? null,
+        preorder_max_qty: body.preorder_max_qty ?? null,
+        oos_status: body.oos_status ?? null
       })
       .select()
       .single()
@@ -209,6 +280,19 @@ app.patch('/backend/products/:id', async (c) => {
     if (typeof body.has_variants === 'boolean') allowed.has_variants = body.has_variants
   if (typeof body.base_sku === 'string') allowed.base_sku = body.base_sku
     if (Array.isArray(body.category_ids)) allowed.category_ids = body.category_ids
+    // Label and color fields
+    if (body.promotion_label !== undefined) allowed.promotion_label = body.promotion_label || null
+    if (body.promotion_label_bg_color !== undefined) allowed.promotion_label_bg_color = body.promotion_label_bg_color || null
+    if (body.promotion_label_text_color !== undefined) allowed.promotion_label_text_color = body.promotion_label_text_color || null
+    if (body.product_tag_bg_color !== undefined) allowed.product_tag_bg_color = body.product_tag_bg_color || null
+    if (body.product_tag_text_color !== undefined) allowed.product_tag_text_color = body.product_tag_text_color || null
+  // OOS/Preorder fields
+  if (body.auto_hide_when_oos !== undefined) allowed.auto_hide_when_oos = !!body.auto_hide_when_oos
+  if (body.enable_preorder !== undefined) allowed.enable_preorder = !!body.enable_preorder
+  if (body.preorder_start_at !== undefined) allowed.preorder_start_at = body.preorder_start_at || null
+  if (body.preorder_end_at !== undefined) allowed.preorder_end_at = body.preorder_end_at || null
+  if (body.preorder_max_qty !== undefined) allowed.preorder_max_qty = body.preorder_max_qty === '' ? null : body.preorder_max_qty
+  if (body.oos_status !== undefined) allowed.oos_status = body.oos_status || null
 
     if (Object.keys(allowed).length === 0) return c.json({ error: 'No fields to update' }, 400)
 
@@ -277,6 +361,16 @@ app.patch('/backend/products/:id', async (c) => {
             .insert({ product_id: parseInt(id), ...seoUpdate })
         }
       }
+    }
+
+    // 若缺貨自動下架或預購設定有變更，重算可見性
+    if (
+      body.auto_hide_when_oos !== undefined ||
+      body.enable_preorder !== undefined ||
+      body.preorder_start_at !== undefined ||
+      body.preorder_end_at !== undefined
+    ) {
+      await recalcProductVisibility(c, svc, id)
     }
 
     return c.json(data)
@@ -520,8 +614,9 @@ app.post('/backend/products/:productId/inventory', async (c) => {
       .select()
       .single()
 
-    if (error) return c.json({ error: 'Failed to create inventory record' }, 500)
-    return c.json(data)
+  if (error) return c.json({ error: 'Failed to create inventory record' }, 500)
+  await recalcProductVisibility(c, makeSvc(c), productId)
+  return c.json(data)
   } catch (e: any) {
     return c.json({ error: e?.message || 'Internal error' }, 500)
   }
@@ -582,8 +677,9 @@ app.patch('/backend/products/:productId/inventory/:inventoryId', async (c) => {
       .select()
       .single()
 
-    if (error) return c.json({ error: 'Update failed' }, 500)
-    return c.json(data)
+  if (error) return c.json({ error: 'Update failed' }, 500)
+  await recalcProductVisibility(c, makeSvc(c), productId)
+  return c.json(data)
   } catch (e: any) {
     return c.json({ error: e?.message || 'Internal error' }, 500)
   }
@@ -606,8 +702,9 @@ app.delete('/backend/products/:productId/inventory/:inventoryId', async (c) => {
       .eq('id', inventoryId)
       .eq('product_id', productId)
 
-    if (error) return c.json({ error: 'Delete failed' }, 500)
-    return c.json({ ok: true })
+  if (error) return c.json({ error: 'Delete failed' }, 500)
+  await recalcProductVisibility(c, makeSvc(c), productId)
+  return c.json({ ok: true })
   } catch (e: any) {
     return c.json({ error: e?.message || 'Internal error' }, 500)
   }
@@ -771,16 +868,62 @@ app.patch('/backend/products/:productId/prices/:priceId', async (c) => {
 
     if (Object.keys(allowed).length === 0) return c.json({ error: 'No fields to update' }, 400)
 
-    const { data, error } = await svc
+    // First, try to update by price id
+    const { data: updatedById, error: updateErr } = await svc
       .from('backend_products_prices')
       .update(allowed)
       .eq('id', priceId)
       .eq('product_id', productId)
       .select()
-      .single()
+      .maybeSingle()
 
-    if (error) return c.json({ error: 'Update failed' }, 500)
-    return c.json(data)
+    if (updateErr) return c.json({ error: 'Update failed' }, 500)
+    if (updatedById) return c.json(updatedById)
+
+    // If not found by id, treat priceId as inventory id and upsert by sku_key
+    const { data: inv } = await svc
+      .from('backend_products_inventory')
+      .select('id, sku_key')
+      .eq('id', priceId)
+      .eq('product_id', productId)
+      .maybeSingle()
+
+    if (!inv || !inv.sku_key) {
+      return c.json({ error: 'Price not found' }, 404)
+    }
+
+    // Check if a price row exists for this sku_key
+    const { data: existingPrice } = await svc
+      .from('backend_products_prices')
+      .select('*')
+      .eq('product_id', productId)
+      .eq('sku_key', inv.sku_key)
+      .maybeSingle()
+
+    if (existingPrice) {
+      const { data: updatedBySku, error: updErr } = await svc
+        .from('backend_products_prices')
+        .update(allowed)
+        .eq('id', existingPrice.id)
+        .eq('product_id', productId)
+        .select()
+        .single()
+      if (updErr) return c.json({ error: 'Update failed' }, 500)
+      return c.json(updatedBySku)
+    } else {
+      const insertPayload: any = {
+        product_id: parseInt(productId),
+        sku_key: inv.sku_key,
+        ...allowed
+      }
+      const { data: inserted, error: insErr } = await svc
+        .from('backend_products_prices')
+        .insert(insertPayload)
+        .select()
+        .single()
+      if (insErr) return c.json({ error: 'Create failed' }, 500)
+      return c.json(inserted)
+    }
   } catch (e: any) {
     return c.json({ error: e?.message || 'Internal error' }, 500)
   }

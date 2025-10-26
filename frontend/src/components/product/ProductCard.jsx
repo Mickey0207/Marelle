@@ -2,42 +2,68 @@ import { Link } from 'react-router-dom';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { formatPrice } from '../../../external_mock/data/format.js';
-import { getProductTags, getTagConfig } from '../../../external_mock/data/productTags.js';
+// 後端已提供產品與優惠標籤與顏色，將優先使用
+// 若後端已提供 href，優先使用；否則退回舊有 mock 的 URL 生成（可逐步移除）
 import { buildProductDetailUrl } from '../../../external_mock/data/products.mock.js';
 
 const ProductCard = ({ product, isFavorite, onToggleFavorite, onQuickAdd }) => {
-  const tags = getProductTags(product);
-  const primaryTag = tags[0] ? getTagConfig(tags[0]) : null;
+  // 產品標籤（左上）
+  const productTags = Array.isArray(product.tags) ? product.tags : [];
+  let leftLabelText = productTags[0] || null;
+  const leftLabelBg = product.productTagBgColor || '#CC824D';
+  const leftLabelTextColor = product.productTagTextColor || '#FFFFFF';
+
+  // 優惠標籤（右上）
+  const promoText = product.promotionLabel || null;
+  const promoBg = product.promotionLabelBgColor || '#CC824D';
+  const promoTextColor = product.promotionLabelTextColor || '#FFFFFF';
   const hasDiscount = typeof product.originalPrice === 'number' && product.originalPrice > product.price;
   const discountPercent = hasDiscount
     ? Math.max(1, Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100))
     : null;
 
+  // 缺貨覆寫：若低庫存且未啟用中的預購，強制顯示「缺貨」
+  const isPreorderActive = !!product.preorderActive;
+  const isLowStock = !!product.isLowStock;
+  const preorderEnded = !!product.preorderEnded;
+  if (isLowStock && !isPreorderActive) {
+    leftLabelText = '缺貨';
+  }
+
   return (
     <div id={`product-${product.id}`} className="group">
-  <Link to={buildProductDetailUrl(product)} className="block">
+  <Link to={product.href || buildProductDetailUrl(product)} className="block">
         <div className="relative mb-3 xs:mb-3.5 sm:mb-4 md:mb-4 overflow-hidden bg-white rounded-lg" style={{aspectRatio: '1/1'}}>
-          {primaryTag && (
+          {leftLabelText && (
             <div
-              className="absolute top-2 xs:top-3 sm:top-3 md:top-4 left-2 xs:left-3 sm:left-3 md:left-4 z-10 px-2 xs:px-3 sm:px-3 md:px-4 py-1 xs:py-1 sm:py-1.5 md:py-1.5 text-[10px] xs:text-xs sm:text-xs md:text-xs font-semibold font-chinese tracking-widest uppercase shadow-lg"
+              className="absolute top-2 xs:top-3 sm:top-3 md:top-4 left-2 xs:left-3 sm:left-3 md:left-4 z-10 px-2.5 xs:px-3 sm:px-3.5 md:px-3.5 py-1 xs:py-1 sm:py-1.5 md:py-1.5 text-[10px] xs:text-xs sm:text-xs md:text-xs font-semibold font-chinese tracking-widest uppercase shadow-lg rounded-full"
               style={{
-                background: primaryTag.bgColor,
-                color: primaryTag.textColor,
-                border: `2px solid ${primaryTag.borderColor}`,
-                borderRadius: '4px',
+                background: (isLowStock && !isPreorderActive) ? '#999999' : leftLabelBg,
+                color: (isLowStock && !isPreorderActive) ? '#FFFFFF' : leftLabelTextColor,
+                border: `1px solid rgba(255,255,255,0.5)`,
                 backdropFilter: 'blur(8px)'
               }}
             >
-              {primaryTag.label}
+              {leftLabelText}
             </div>
           )}
-          {hasDiscount && (
+          {/* 預購中副標籤：預購啟用且在區間內時顯示，顯示在產品標籤下方 */}
+          {isPreorderActive && (
+            <div
+              className="absolute top-8 xs:top-10 sm:top-10 md:top-11 left-2 xs:left-3 sm:left-3 md:left-4 z-10 px-2 xs:px-2.5 sm:px-3 md:px-3 py-0.5 xs:py-0.5 sm:py-1 md:py-1 rounded-full shadow font-chinese text-[9px] xs:text-[10px] sm:text-xs md:text-xs tracking-wider"
+              style={{ background: '#4B5563', color: '#FFFFFF' }}
+              aria-label="預購狀態"
+            >
+              預購中
+            </div>
+          )}
+          {(promoText || hasDiscount) && (
             <div
               className="absolute top-2 xs:top-3 sm:top-3 md:top-4 right-2 xs:right-3 sm:right-3 md:right-4 z-10 px-2 xs:px-2.5 sm:px-3 md:px-3 py-1 xs:py-1 sm:py-1.5 md:py-1.5 rounded-full shadow-lg font-chinese text-[10px] xs:text-xs sm:text-xs md:text-xs tracking-wider"
-              style={{ background: '#CC824D', color: '#FFFFFF' }}
+              style={{ background: promoText ? promoBg : '#CC824D', color: promoText ? promoTextColor : '#FFFFFF' }}
               aria-label="優惠標籤"
             >
-              {discountPercent ? `省 ${discountPercent}%` : '優惠'}
+              {promoText || (discountPercent ? `省 ${discountPercent}%` : '優惠')}
             </div>
           )}
           <img
@@ -66,7 +92,7 @@ const ProductCard = ({ product, isFavorite, onToggleFavorite, onQuickAdd }) => {
                   <HeartIcon className="w-4 xs:w-5 sm:w-5 md:w-5 h-4 xs:h-5 sm:h-5 md:h-5" />
                 )}
               </button>
-              {product.inStock && (
+              {product.inStock && !preorderEnded && (
                 <button
                   onClick={(e) => {
                     e.preventDefault();
@@ -77,6 +103,15 @@ const ProductCard = ({ product, isFavorite, onToggleFavorite, onQuickAdd }) => {
                   style={{ background: '#CC824D', color: '#FFFFFF' }}
                 >
                   加入購物車
+                </button>
+              )}
+              {preorderEnded && (
+                <button
+                  disabled
+                  className="px-3 xs:px-4 sm:px-5 md:px-6 h-10 xs:h-11 sm:h-12 md:h-12 rounded-full font-chinese text-xs xs:text-xs sm:text-sm md:text-sm font-medium tracking-wide transition-all duration-300 flex items-center justify-center opacity-70 cursor-not-allowed"
+                  style={{ background: '#D1D5DB', color: '#6B7280' }}
+                >
+                  預購結束
                 </button>
               )}
             </div>

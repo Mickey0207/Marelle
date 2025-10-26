@@ -196,7 +196,7 @@ const ManagementLayout = () => {
                 }`}>
                   {item.name}
                 </span>
-                {/* Tooltip removed in desktop-only simplification */}
+                {/* Toolt   ip removed in desktop-only simplification */}
               </NavLink>
             ))}
           </nav>

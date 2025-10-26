@@ -106,3 +106,165 @@
 
 - 註冊成功後，Supabase 會寄出確認信，使用者點擊後將導回 /login。
 - LINE 註冊暫不提供；僅登入後提供綁定（未來將新增 /frontend/account/line 綁定 API）。
+
+---
+
+## 前台 API 文件補充：購物車（fronted_carts）
+
+命名說明
+
+- 本節所有路徑以 `/frontend/cart` 為基底，僅供前台使用。
+- 認證：已登入操作需帶 Cookie（HttpOnly, SameSite=Lax），伺服器以 RLS 保護；訪客模式由後端以 Service Role 操作（不開放直接給前端 Cookie 讀寫）。
+
+資料模型對應
+
+- 主表：`public.fronted_carts`
+- 明細：`public.fronted_cart_items`
+- 關聯：`product_id` → `public.backend_products(id)`；`inventory_id` → `public.backend_products_inventory(id)`
+
+共用物件（回傳）
+
+```ts
+Cart {
+  id: string,
+  status: 'active' | 'merged' | 'abandoned' | 'converted',
+  currency: 'TWD',
+  totals: { subtotal: number, discount: number, shipping_fee: number, tax: number, grand_total: number, quantity: number },
+  items: CartItem[]
+}
+
+CartItem {
+  id: string,
+  product_id: number,
+  inventory_id: number,
+  sku_key?: string,
+  name: string,
+  image_url?: string,
+  quantity: number,
+  unit_price: number,
+  currency: 'TWD',
+  line_total: number,
+  selected_options?: object
+}
+```
+
+## GET /frontend/cart
+
+- 用途：取得目前使用者（或訪客）的一個 active 購物車。
+- 行為：
+  - 已登入：根據 `auth.uid()` 取 `user_id` 對應之 active cart；無則建立空車返回。
+  - 未登入（訪客）：若存在 `guest_token` Cookie，取其 active cart；無則建立新訪客車並回 Set-Cookie。
+- 回應：200 Cart
+
+## POST /frontend/cart/items
+
+- 用途：新增或合併一筆商品變體到購物車。
+- 請求：{ product_id: number, inventory_id: number, quantity: number, selected_options?: object }
+- 行為：
+  - 若明細已存在（以 inventory_id 判斷），則加總數量（套限購與庫存上限）
+  - `unit_price` 由伺服器依目前定價規則計算，回寫明細與更新主表 totals
+- 回應：200 Cart（更新後）
+- 錯誤：
+  - 400 參數錯誤
+  - 404 product/inventory 不存在或不可售
+  - 409 超過可購買數量
+
+## PATCH /frontend/cart/items/:itemId
+
+- 用途：更新明細數量或選項。
+- 請求：{ quantity?: number, selected_options?: object }
+- 行為：
+  - 若 quantity=0 視同刪除
+  - 更新後重算 totals
+- 回應：200 Cart（更新後）
+
+## DELETE /frontend/cart/items/:itemId
+
+- 用途：移除一筆明細。
+- 回應：200 Cart（更新後）
+
+## POST /frontend/cart/merge
+
+- 用途：登入瞬間，將前端 localStorage（或訪客車）提交給後端進行合併。
+- 請求：{ draft_items: Array<{ product_id: number, inventory_id: number, quantity: number, selected_options?: object }> }
+- 行為：
+  - 以 inventory_id 為唯一鍵進行合併：加總數量、套用庫存/限購、過濾不可售品項
+  - 回傳合併後 Cart 與摘要（新增/合併/移除清單）
+- 回應：200 { cart: Cart, summary: { added: number, merged: number, removed: number } }
+
+## POST /frontend/cart/checkout/validate
+
+- 用途：結帳前最後檢核價格與庫存。
+- 行為：
+  - 針對每筆明細重新讀取最新價格、促銷與庫存，必要時調整數量或標記不可購買
+  - 返回可結帳狀態或需要使用者確認的差異
+- 回應：
+  - 200 { ok: true, cart: Cart }
+  - 409 { ok: false, issues: Issue[] , cart: Cart }
+    - Issue：缺貨/限購/價格變動/下架等
+
+備註
+
+- 所有需要登入的操作，後端以 RLS 保證 `auth.uid() = cart.user_id`。
+- 訪客模式的新增/查詢/合併由後端（Service Role）代為執行，不直接暴露 guest_token 給前端 JS。
+
+---
+
+## 產品瀏覽 API（fronted_products）
+
+所有端點允許跨來源 GET，供前台商城頁面讀取商品資料與顯示標籤樣式。
+
+### GET /frontend/products
+
+- 用途：取得商品清單（支援分類與關鍵字查詢），同時回傳顯示所需之標籤與顏色欄位。
+- 查詢參數：
+  - `category`：可選，分類路徑如 `c-f/dress`（以最後節點 slug 匹配）
+  - `q`：可選，關鍵字（name/slug ilike）
+  - `limit`、`offset`：分頁參數
+- 回傳：`200 { items: Array<Item> }`
+  - `Item` 欄位：
+    - `id: number`
+    - `name: string`
+    - `slug: string`
+    - `href: string`（商品頁連結）
+    - `image: string`（主圖，若無則透明 1x1 PNG）
+    - `price: number`（有效售價；若無明確 base 定價取所有變體最小售價）
+    - `originalPrice: number|null`（原價）
+    - `inStock: boolean`
+    - `tags: string[]`（商品標籤，左上角取第一個顯示）
+    - `promotionLabel: string|null`（右上角優惠標籤文案）
+    - `promotionLabelBgColor: string|null`（右上角優惠標籤背景色，HEX）
+    - `promotionLabelTextColor: string|null`（右上角優惠標籤文字色，HEX）
+    - `productTagBgColor: string|null`（左上角產品標籤背景色，HEX）
+    - `productTagTextColor: string|null`（左上角產品標籤文字色，HEX）
+
+### GET /frontend/products/:slugOrId
+
+- 用途：取得商品詳情，含圖片、（最多 5 層）規格變體樹與定價概要，以及新標籤/色彩欄位。
+- 參數：`slugOrId` 可為數字 ID 或 slug 字串。
+- 回傳：
+  - `200 {
+      id: number,
+      name: string,
+      slug: string,
+      description: string,
+      tags: string[],
+      promotionLabel: string|null,
+      promotionLabelBgColor: string|null,
+      promotionLabelTextColor: string|null,
+      productTagBgColor: string|null,
+      productTagTextColor: string|null,
+      images: string[],
+      variants: VariantNode[],
+      specsLabels: string[],
+      price: number,
+      originalPrice: number|null,
+      inStock: boolean
+    }`
+  - `VariantNode`：巢狀結構（最多五層），葉節點包含 `{ payload: { sku, stock, price|null, compare|null, image } }`
+  - `404 { error: 'Not found' }` 當找不到商品
+
+備註：
+
+- 標籤/顏色欄位皆為可空；若 `promotionLabel` 為空，前端可自行以折扣（若存在）顯示 fallback 徽章。
+- 左上角產品標籤取 `tags` 的第一個字串作為文案，並使用 `productTagBgColor`/`productTagTextColor` 上色。
