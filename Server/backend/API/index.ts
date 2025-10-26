@@ -9,6 +9,7 @@ import frontendEcpayApp from '../../fronted/API/ecpay/index'
 import frontendCartApp from '../../fronted/API/cart/index'
 import frontendCategoriesApp from '../../fronted/API/categories/index'
 import frontendProductsApp from '../../fronted/API/products/index'
+import ordersApp from './orders/index'
 
 const app = new Hono()
 app.route('/', authApp)
@@ -21,5 +22,6 @@ app.route('/', frontendEcpayApp)
 app.route('/', frontendCartApp)
 app.route('/', frontendCategoriesApp)
 app.route('/', frontendProductsApp)
+app.route('/', ordersApp)
 
 export default app

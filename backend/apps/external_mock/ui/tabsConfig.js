@@ -46,7 +46,10 @@ export function getTabsForPath(pathname) {
   // Orders
   if (p.startsWith('/orders')) {
     return [
-      { id: 'management', label: '訂單管理', href: '/orders' },
+      { id: 'credit', label: '信用卡', href: '/orders/credit' },
+      { id: 'atm', label: 'ATM 轉帳', href: '/orders/atm' },
+      { id: 'cvscode', label: '超商代碼', href: '/orders/cvscode' },
+      { id: 'webatm', label: 'WebATM', href: '/orders/webatm' },
     ]
   }
 

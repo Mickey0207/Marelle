@@ -1307,10 +1307,10 @@ var require_cjs = __commonJS({
   }
 });
 
-// .wrangler/tmp/bundle-MtkJD6/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-AzaLGy/middleware-loader.entry.ts
 init_modules_watch_stub();
 
-// .wrangler/tmp/bundle-MtkJD6/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-AzaLGy/middleware-insertion-facade.js
 init_modules_watch_stub();
 
 // ../backend/API/index.ts
@@ -2090,14 +2090,14 @@ var Hono = class {
   }
   #notFoundHandler = notFoundHandler;
   errorHandler = errorHandler;
-  route(path, app12) {
+  route(path, app13) {
     const subApp = this.basePath(path);
-    app12.routes.map((r) => {
+    app13.routes.map((r) => {
       let handler;
-      if (app12.errorHandler === errorHandler) {
+      if (app13.errorHandler === errorHandler) {
         handler = r.handler;
       } else {
-        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app12.errorHandler)(c, () => r.handler(c, next))).res, "handler");
+        handler = /* @__PURE__ */ __name(async (c, next) => (await compose([], app13.errorHandler)(c, () => r.handler(c, next))).res, "handler");
         handler[COMPOSED_HANDLER] = r.handler;
       }
       subApp.#addRoute(r.method, r.path, handler);
@@ -13658,6 +13658,10 @@ function endpoint(env) {
   return env === "prod" ? "https://logistics.ecpay.com.tw/Express/map" : "https://logistics-stage.ecpay.com.tw/Express/map";
 }
 __name(endpoint, "endpoint");
+function cashierEndpoint(env) {
+  return env === "prod" ? "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5" : "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5";
+}
+__name(cashierEndpoint, "cashierEndpoint");
 async function sha256HexUpper(s) {
   const enc = new TextEncoder();
   const buf = await crypto.subtle.digest("SHA-256", enc.encode(s));
@@ -13665,7 +13669,7 @@ async function sha256HexUpper(s) {
 }
 __name(sha256HexUpper, "sha256HexUpper");
 function normalizeUrlEncoded(str2) {
-  return encodeURIComponent(str2).toLowerCase().replace(/%2d/g, "-").replace(/%5f/g, "_").replace(/%2e/g, ".").replace(/%21/g, "!").replace(/%2a/g, "*").replace(/%28/g, "(").replace(/%29/g, ")");
+  return encodeURIComponent(str2).toLowerCase().replace(/%2d/g, "-").replace(/%5f/g, "_").replace(/%2e/g, ".").replace(/%21/g, "!").replace(/%2a/g, "*").replace(/%28/g, "(").replace(/%29/g, ")").replace(/%20/g, "+");
 }
 __name(normalizeUrlEncoded, "normalizeUrlEncoded");
 function buildCMV(params, key, iv) {
@@ -13674,12 +13678,140 @@ function buildCMV(params, key, iv) {
   return sha256HexUpper(normalizeUrlEncoded(raw2));
 }
 __name(buildCMV, "buildCMV");
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+__name(pad2, "pad2");
+function formatTradeDate(d = /* @__PURE__ */ new Date()) {
+  return `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+}
+__name(formatTradeDate, "formatTradeDate");
+function genTradeNo(prefix = "MRE") {
+  const ts = Date.now().toString().slice(-10);
+  const rand = Math.floor(Math.random() * 1e3).toString().padStart(3, "0");
+  return (prefix + ts + rand).slice(0, 20);
+}
+__name(genTradeNo, "genTradeNo");
+function choosePaymentFrom(method) {
+  switch (method) {
+    case "CREDIT":
+    case "INSTALLMENT":
+      return "Credit";
+    case "ATM":
+      return "ATM";
+    case "CVS":
+    case "CVS_CODE":
+      return "CVS";
+    case "WEBATM":
+      return "WebATM";
+    case "TWQR":
+      return "TWQR";
+    default:
+      return "Credit";
+  }
+}
+__name(choosePaymentFrom, "choosePaymentFrom");
+function makeSvc4(c) {
+  const url = c.env.SUPABASE_URL;
+  const key = c.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !key) throw new Error("Supabase not configured");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+__name(makeSvc4, "makeSvc");
+function detectMethodFromPaymentType(paymentType) {
+  const pt = String(paymentType || "").toLowerCase();
+  if (pt.includes("credit")) return "credit";
+  if (pt.includes("webatm")) return "webatm";
+  if (pt.includes("atm")) return "atm";
+  if (pt.includes("cvs")) return "cvscode";
+  return "credit";
+}
+__name(detectMethodFromPaymentType, "detectMethodFromPaymentType");
+function intOrNull(v) {
+  const n = parseInt(String(v ?? ""), 10);
+  return Number.isFinite(n) ? n : null;
+}
+__name(intOrNull, "intOrNull");
+function numOrNull(v) {
+  const n = Number(String(v ?? ""));
+  return Number.isFinite(n) ? n : null;
+}
+__name(numOrNull, "numOrNull");
+async function upsertPayment(c, body) {
+  const svc2 = makeSvc4(c);
+  const paymentType = String(body["PaymentType"] || "");
+  const method = detectMethodFromPaymentType(paymentType);
+  const common = {
+    merchant_id: String(body["MerchantID"] || ""),
+    merchant_trade_no: String(body["MerchantTradeNo"] || ""),
+    rtn_code: intOrNull(body["RtnCode"]) ?? null,
+    rtn_msg: String(body["RtnMsg"] || ""),
+    trade_no: String(body["TradeNo"] || ""),
+    trade_amt: intOrNull(body["TradeAmt"]) ?? null,
+    payment_date: String(body["PaymentDate"] || ""),
+    payment_type: paymentType,
+    payment_type_charge_fee: numOrNull(body["PaymentTypeChargeFee"]) ?? null,
+    trade_date: String(body["TradeDate"] || ""),
+    simulate_paid: intOrNull(body["SimulatePaid"]) ?? null,
+    check_mac_value: String(body["CheckMacValue"] || ""),
+    raw_result: body
+  };
+  if (method === "credit") {
+    const row = {
+      ...common,
+      gwsr: String(body["Gwsr"] || ""),
+      process_date: String(body["ProcessDate"] || ""),
+      auth_code: String(body["AuthCode"] || ""),
+      amount: intOrNull(body["Amount"]) ?? null,
+      eci: String(body["ECI"] || ""),
+      card4no: String(body["Card4No"] || ""),
+      card6no: String(body["Card6No"] || ""),
+      red_dan: String(body["RedDan"] || ""),
+      red_de_amt: intOrNull(body["RedDeAmt"]) ?? null,
+      red_ok_amt: intOrNull(body["RedOkAmt"]) ?? null,
+      stage: String(body["Stage"] || ""),
+      stast: String(body["Stast"] || "")
+    };
+    const { error } = await svc2.from("fronted_credit_order").upsert(row, { onConflict: "merchant_trade_no" });
+    if (error) throw new Error("upsert credit failed");
+    return { method };
+  }
+  if (method === "atm") {
+    const row = {
+      ...common,
+      bank_code: String(body["BankCode"] || ""),
+      v_account: String(body["vAccount"] || ""),
+      expire_date: String(body["ExpireDate"] || "")
+    };
+    const { error } = await svc2.from("fronted_atm_order").upsert(row, { onConflict: "merchant_trade_no" });
+    if (error) throw new Error("upsert atm failed");
+    return { method };
+  }
+  if (method === "cvscode") {
+    const row = {
+      ...common,
+      payment_no: String(body["PaymentNo"] || ""),
+      expire_date: String(body["ExpireDate"] || "")
+    };
+    const { error } = await svc2.from("fronted_cvscode_order").upsert(row, { onConflict: "merchant_trade_no" });
+    if (error) throw new Error("upsert cvscode failed");
+    return { method };
+  }
+  if (method === "webatm") {
+    const row = { ...common };
+    const { error } = await svc2.from("fronted_webatm_order").upsert(row, { onConflict: "merchant_trade_no" });
+    if (error) throw new Error("upsert webatm failed");
+    return { method };
+  }
+  return { method };
+}
+__name(upsertPayment, "upsertPayment");
 async function buildStartHtml(c) {
   const env = c.env.ECPAY_ENV || "stage";
   const action = endpoint(env);
   const merchantId = c.env.ECPAY_LOGISTICS_MERCHANT_ID;
-  const key = c.env.ECPAY_HASH_KEY;
-  const iv = c.env.ECPAY_HASH_IV;
+  const key = c.env.ECPAY_LOGISTICS_HASH_KEY || c.env.ECPAY_HASH_KEY;
+  const iv = c.env.ECPAY_LOGISTICS_HASH_IV || c.env.ECPAY_HASH_IV;
   if (!merchantId || !key || !iv) return c.text("ECPay not configured", 500);
   let base = "";
   try {
@@ -13759,6 +13891,166 @@ app7.post("/frontend/account/ecpay/map/return", async (c) => {
     </body></html>`;
     return c.html(html);
   }
+});
+app7.post("/frontend/pay/ecpay/checkout", async (c) => {
+  try {
+    const env = c.env.ECPAY_ENV || "stage";
+    const action = cashierEndpoint(env);
+    const body = await c.req.json();
+    const method = String(body?.method || "CREDIT").toUpperCase();
+    const amount = parseInt(String(body?.amount || "0"), 10) || 0;
+    const order = body?.order || {};
+    const allowed = /* @__PURE__ */ new Set(["CREDIT", "ATM", "CVS_CODE", "WEBATM"]);
+    if (!allowed.has(method)) {
+      return c.text("Unsupported payment method", 400);
+    }
+    const merchantId = c.env.ECPAY_PAYMENT_MERCHANT_ID || c.env.ECPAY_MERCHANT_ID || c.env.ECPAY_LOGISTICS_MERCHANT_ID;
+    const key = c.env.ECPAY_PAYMENT_HASH_KEY || c.env.ECPAY_HASH_KEY;
+    const iv = c.env.ECPAY_PAYMENT_HASH_IV || c.env.ECPAY_HASH_IV;
+    if (!merchantId || !key || !iv) return c.text("ECPay payment not configured", 500);
+    if (!(amount > 0)) return c.text("Invalid amount", 400);
+    let base = "";
+    try {
+      const u = new URL(c.req.url);
+      base = u.origin;
+    } catch {
+    }
+    const frontBase = String(c.env.FRONTEND_SITE_URL || base);
+    const tradeNo = genTradeNo("MRE");
+    const tradeDate = formatTradeDate(/* @__PURE__ */ new Date());
+    const choosePayment = choosePaymentFrom(method);
+    const items = Array.isArray(order?.items) ? order.items : [];
+    const names = items.map((it) => String(it?.name || "\u54C1\u9805")).slice(0, 5);
+    const itemName = names.length ? names.join("#") : "Marelle \u8A02\u55AE";
+    const tradeDesc = "Marelle \u8A02\u55AE\u4ED8\u6B3E";
+    const payload = {
+      MerchantID: String(merchantId),
+      MerchantTradeNo: tradeNo,
+      MerchantTradeDate: tradeDate,
+      PaymentType: "aio",
+      TotalAmount: String(amount),
+      TradeDesc: tradeDesc,
+      ItemName: itemName,
+      ReturnURL: `${base}/frontend/pay/ecpay/notify`,
+      OrderResultURL: `${base}/frontend/pay/ecpay/result`,
+      // 使用前端站台的返回網址，避免導到 API 網域造成 404
+      ClientBackURL: `${frontBase}/checkout`,
+      ChoosePayment: choosePayment,
+      EncryptType: "1"
+    };
+    if (choosePayment === "ATM") {
+    } else if (choosePayment === "CVS") {
+    }
+    const cmv = await buildCMV(payload, key, iv);
+    const html = `<!doctype html><html><body>
+      <form id="f" method="POST" action="${action}">
+        ${Object.entries(payload).map(([k, v]) => `<input type="hidden" name="${k}" value="${v}"/>`).join("")}
+        <input type="hidden" name="CheckMacValue" value="${cmv}" />
+      </form>
+      <script>document.getElementById('f').submit();<\/script>
+    </body></html>`;
+    return c.html(html);
+  } catch (e) {
+    return c.text(e?.message || "error", 500);
+  }
+});
+app7.post("/frontend/pay/ecpay/notify", async (c) => {
+  try {
+    const body = await c.req.parseBody();
+    const key = c.env.ECPAY_PAYMENT_HASH_KEY || c.env.ECPAY_HASH_KEY;
+    const iv = c.env.ECPAY_PAYMENT_HASH_IV || c.env.ECPAY_HASH_IV;
+    if (!key || !iv) return c.text("HashKey/IV missing", 500);
+    const receivedCMV = String(body["CheckMacValue"] || "");
+    const params = {};
+    for (const [k, v] of Object.entries(body)) {
+      if (k === "CheckMacValue") continue;
+      params[k] = String(v ?? "");
+    }
+    const cmv = await buildCMV(params, key, iv);
+    if (cmv !== receivedCMV) {
+      try {
+        console.log("[ECPay][notify] CMV mismatch", { receivedCMV, expected: cmv, merchantTradeNo: params["MerchantTradeNo"] });
+      } catch {
+      }
+      return c.text("CheckMacValue Mismatch", 400);
+    }
+    try {
+      await upsertPayment(c, body);
+      try {
+        console.log("[ECPay][notify] upsert ok", { merchantTradeNo: params["MerchantTradeNo"], paymentType: params["PaymentType"] });
+      } catch {
+      }
+    } catch (e) {
+      try {
+        console.error("[ECPay][notify] upsert error", { merchantTradeNo: params["MerchantTradeNo"], error: e?.message });
+      } catch {
+      }
+      return c.text("error", 500);
+    }
+    return c.text("1|OK");
+  } catch (e) {
+    return c.text("error", 500);
+  }
+});
+app7.post("/frontend/pay/ecpay/result", async (c) => {
+  try {
+    const body = await c.req.parseBody();
+    const key = c.env.ECPAY_PAYMENT_HASH_KEY || c.env.ECPAY_HASH_KEY;
+    const iv = c.env.ECPAY_PAYMENT_HASH_IV || c.env.ECPAY_HASH_IV;
+    if (!key || !iv) return c.html("<h3>\u8A2D\u5B9A\u6709\u8AA4</h3>", 500);
+    const receivedCMV = String(body["CheckMacValue"] || "");
+    const params = {};
+    for (const [k, v] of Object.entries(body)) {
+      if (k === "CheckMacValue") continue;
+      params[k] = String(v ?? "");
+    }
+    const cmv = await buildCMV(params, key, iv);
+    const ok = cmv === receivedCMV;
+    const tradeNo = String(body["MerchantTradeNo"] || "");
+    const rtnCode = String(body["RtnCode"] || "");
+    if (ok) {
+      try {
+        await upsertPayment(c, body);
+        try {
+          console.log("[ECPay][result] upsert ok", { merchantTradeNo: tradeNo, paymentType: params["PaymentType"] });
+        } catch {
+        }
+      } catch (e) {
+        try {
+          console.error("[ECPay][result] upsert error", { merchantTradeNo: tradeNo, error: e?.message });
+        } catch {
+        }
+      }
+    }
+    let base = "";
+    try {
+      const u = new URL(c.req.url);
+      base = u.origin;
+    } catch {
+    }
+    const frontBase = String(c.env.FRONTEND_SITE_URL || base);
+    const target = ok ? `${frontBase}/orders?orderNo=${encodeURIComponent(tradeNo)}&code=${encodeURIComponent(rtnCode)}` : `${frontBase}/checkout/fail?orderNo=${encodeURIComponent(tradeNo)}&reason=cmv`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"/></head><body>
+      <script>location.replace(${JSON.stringify(target)});<\/script>
+    </body></html>`;
+    return c.html(html);
+  } catch (e) {
+    const html = `<!doctype html><html><body><h3>\u4ED8\u6B3E\u7D50\u679C\u8655\u7406\u5931\u6557</h3></body></html>`;
+    return c.html(html, 500);
+  }
+});
+app7.get("/frontend/pay/ecpay/back", (c) => {
+  let base = "";
+  try {
+    const u = new URL(c.req.url);
+    base = u.origin;
+  } catch {
+  }
+  const frontBase = String(c.env.FRONTEND_SITE_URL || base);
+  const html = `<!doctype html><html><head><meta charset="utf-8"/></head><body>
+    <script>location.replace(${JSON.stringify(frontBase + "/checkout?back=1")});<\/script>
+  </body></html>`;
+  return c.html(html);
 });
 var ecpay_default = app7;
 
@@ -14295,19 +14587,62 @@ app10.get("/frontend/products/:slugOrId", async (c) => {
   }
 });
 
-// ../backend/API/index.ts
+// ../backend/API/orders/index.ts
+init_modules_watch_stub();
 var app11 = new Hono2();
-app11.route("/", auth_default);
-app11.route("/", admin_default);
-app11.route("/", categories_default);
-app11.route("/", products_default);
-app11.route("/", auth_default2);
-app11.route("/", addresses_default);
-app11.route("/", ecpay_default);
-app11.route("/", cart_default);
-app11.route("/", categories_default2);
-app11.route("/", products_default2);
-var API_default = app11;
+var ACCESS_COOKIE8 = "sb-access-token";
+var ADMIN_SESSION_COOKIE5 = "admin-session";
+function makeSvc5(c) {
+  const url = c.env.SUPABASE_URL;
+  const key = c.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Server misconfigured");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+__name(makeSvc5, "makeSvc");
+async function requireAuth4(c) {
+  const access = getCookie(c, ACCESS_COOKIE8);
+  if (access) return true;
+  const sess = getCookie(c, ADMIN_SESSION_COOKIE5);
+  return !!sess;
+}
+__name(requireAuth4, "requireAuth");
+async function listTable(c, table) {
+  if (!await requireAuth4(c)) return c.json({ error: "Unauthorized" }, 401);
+  try {
+    const svc2 = makeSvc5(c);
+    const page = Math.max(parseInt(String(c.req.query("page") || "1"), 10) || 1, 1);
+    const pageSize = Math.min(Math.max(parseInt(String(c.req.query("pageSize") || "20"), 10) || 20, 1), 100);
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    const sel = svc2.from(table).select("*", { count: "exact" }).order("created_at", { ascending: false }).range(from, to);
+    const { data, error, count } = await sel;
+    if (error) return c.json({ error: "List failed" }, 500);
+    return c.json({ items: data || [], total: count || 0, page, pageSize });
+  } catch (e) {
+    return c.json({ error: e?.message || "Internal error" }, 500);
+  }
+}
+__name(listTable, "listTable");
+app11.get("/backend/orders/credit", (c) => listTable(c, "fronted_credit_order"));
+app11.get("/backend/orders/atm", (c) => listTable(c, "fronted_atm_order"));
+app11.get("/backend/orders/cvscode", (c) => listTable(c, "fronted_cvscode_order"));
+app11.get("/backend/orders/webatm", (c) => listTable(c, "fronted_webatm_order"));
+var orders_default = app11;
+
+// ../backend/API/index.ts
+var app12 = new Hono2();
+app12.route("/", auth_default);
+app12.route("/", admin_default);
+app12.route("/", categories_default);
+app12.route("/", products_default);
+app12.route("/", auth_default2);
+app12.route("/", addresses_default);
+app12.route("/", ecpay_default);
+app12.route("/", cart_default);
+app12.route("/", categories_default2);
+app12.route("/", products_default2);
+app12.route("/", orders_default);
+var API_default = app12;
 
 // ../node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
 init_modules_watch_stub();
@@ -14352,7 +14687,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-MtkJD6/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-AzaLGy/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -14385,7 +14720,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-MtkJD6/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-AzaLGy/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

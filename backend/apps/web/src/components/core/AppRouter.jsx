@@ -148,9 +148,13 @@ const AppRouter = () => {
             <Route path="products/edit/:sku" element={<EditProduct />} />
             <Route path="products/categories" element={<CategoryManagement />} />
 
-            {/* Orders 模組路由（統一路徑） */}
-            <Route path="orders" element={<RequireModule module="orders"><OrderList /></RequireModule>} />
-            <Route path="orders/management" element={<Navigate to="/orders" replace />} />
+            {/* Orders 模組路由（依付款方式分頁籤） */}
+            <Route path="orders" element={<RequireModule module="orders"><Navigate to="/orders/credit" replace /></RequireModule>} />
+            <Route path="orders/credit" element={<RequireModule module="orders"><OrderList /></RequireModule>} />
+            <Route path="orders/atm" element={<RequireModule module="orders"><OrderList /></RequireModule>} />
+            <Route path="orders/cvscode" element={<RequireModule module="orders"><OrderList /></RequireModule>} />
+            <Route path="orders/webatm" element={<RequireModule module="orders"><OrderList /></RequireModule>} />
+            <Route path="orders/management" element={<Navigate to="/orders/credit" replace />} />
             <Route path="orders/details/:id" element={<OrderDetails />} />
             {/* 新增訂單頁已移除 */}
 

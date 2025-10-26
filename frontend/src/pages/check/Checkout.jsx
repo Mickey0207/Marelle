@@ -29,33 +29,22 @@ const Checkout = () => {
   });
 
   const [paymentInfo, setPaymentInfo] = useState({
-    method: 'CREDIT', // CREDIT | INSTALLMENT | APPLE_PAY | ATM | CVS_CODE | WEBATM | TWQR | LINEPAY
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    cardName: ''
+    method: 'CREDIT' // CREDIT | ATM | CVS_CODE | WEBATM | (其他之後再開)
   });
 
   // 付款方式定義與開發用開關
   const PAYMENT_DEFS = [
-    { id: 'CREDIT', label: '信用卡（一次付清）' },
-    { id: 'INSTALLMENT', label: '信用卡分期' },
-    { id: 'APPLE_PAY', label: 'Apple Pay（僅 iOS Safari）' },
-    { id: 'ATM', label: 'ATM 轉帳付款' },
-    { id: 'CVS_CODE', label: '超商代碼付款' },
-    { id: 'WEBATM', label: 'WEBATM 網路轉帳' },
-    { id: 'TWQR', label: 'TWQR 行動支付' },
-    { id: 'LINEPAY', label: 'LINE Pay' },
+    { id: 'CREDIT', label: '信用卡（導轉綠界）' },
+    { id: 'ATM', label: 'ATM 轉帳（導轉綠界）' },
+    { id: 'CVS_CODE', label: '超商代碼（導轉綠界）' },
+    { id: 'WEBATM', label: 'WEBATM（導轉綠界）' }
+    // 其餘之後再開
   ];
   const [paymentSwitches, setPaymentSwitches] = useState({
     CREDIT: true,
-    INSTALLMENT: true,
-    APPLE_PAY: true,
     ATM: true,
     CVS_CODE: true,
-    WEBATM: true,
-    TWQR: true,
-    LINEPAY: true,
+    WEBATM: true
   });
 
   const [isApplePayAvailable, setIsApplePayAvailable] = useState(false);
@@ -71,11 +60,7 @@ const Checkout = () => {
     }
   }, []);
 
-  const isMethodEnabled = (id) => {
-    if (!paymentSwitches[id]) return false;
-    if (id === 'APPLE_PAY') return isApplePayAvailable && paymentSwitches.APPLE_PAY;
-    return true;
-  };
+  const isMethodEnabled = (id) => Boolean(paymentSwitches[id]);
 
   // 若目前選取的方式被關閉或不可用，自動回退到第一個可用方式
   useEffect(() => {
@@ -83,7 +68,7 @@ const Checkout = () => {
       const first = PAYMENT_DEFS.find(m => isMethodEnabled(m.id));
       if (first) setPaymentInfo(prev => ({ ...prev, method: first.id }));
     }
-  }, [paymentSwitches, isApplePayAvailable]);
+  }, [paymentSwitches]);
 
   // 配送方式與地址簿/超商資訊
   const [shippingMethod, setShippingMethod] = useState('home'); // 'home' | 'cvs'
@@ -189,13 +174,8 @@ const Checkout = () => {
       // 超商取貨：需姓名、電話、品牌與門市名稱
       return shippingInfo.fullName && shippingInfo.phone && cvsInfo.brand && cvsInfo.storeName;
     } else if (step === 2) {
-      if (paymentInfo.method === 'CREDIT' || paymentInfo.method === 'INSTALLMENT') {
-        return paymentInfo.cardNumber && 
-               paymentInfo.expiryDate && 
-               paymentInfo.cvv && 
-               paymentInfo.cardName;
-      }
-      return true;
+      // 導轉綠界：不需要站內信用卡欄位
+      return !!paymentInfo.method;
     }
     return true;
   };
@@ -243,29 +223,54 @@ const Checkout = () => {
   }, []);
 
   const handleSubmitOrder = async () => {
-    setIsProcessing(true);
-    
-    // Simulate order processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setOrderComplete(true);
-    clearCart();
-    
-    // Success animation
-    gsap.fromTo(
-      '.success-content',
-      {
-        opacity: 0,
-        scale: 0.8,
-      },
-      {
-        opacity: 1,
-        scale: 1,
-        duration: 0.8,
-        ease: 'back.out(1.7)',
+    try {
+      setIsProcessing(true);
+      // 準備導轉到綠界的資料（後端會回傳自動送出的 HTML 表單）
+      const payload = {
+        method: paymentInfo.method,
+        amount: Math.max(1, Math.round(cartTotal || 0)),
+        order: {
+          shippingMethod,
+          shippingInfo,
+          cvsInfo,
+          items: (cartItems || []).map(it => ({ id: it.id, name: it.name, price: it.price, qty: it.quantity }))
+        }
+      };
+      const res = await fetch('/frontend/pay/ecpay/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        alert('建立金流交易失敗：' + (t || res.status));
+        setIsProcessing(false);
+        return;
       }
-    );
+      const html = await res.text();
+      // 以同視窗導轉（避免彈窗阻擋）
+      const w = window.open('', '_self');
+      if (w && w.document) {
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+      } else {
+        // 後援：若同視窗被阻擋，嘗試新視窗
+        const win = window.open('about:blank', '_blank');
+        if (win) {
+          win.document.write(html);
+          win.document.close();
+        } else {
+          alert('瀏覽器阻擋導轉，請允許彈出視窗後重試');
+          setIsProcessing(false);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert('建立金流交易時發生錯誤');
+      setIsProcessing(false);
+    }
   };
 
   if (orderComplete) {
@@ -605,7 +610,7 @@ const Checkout = () => {
                   付款方式
                 </h2>
                 
-                {/* Payment Method Selection with dev toggles */}
+                {/* Payment Method Selection (導轉至綠界，不顯示站內卡片欄位) */}
                 <div className="space-y-3 xs:space-y-3 sm:space-y-4 md:space-y-4 mb-5 xs:mb-5 sm:mb-6 md:mb-6">
                   {PAYMENT_DEFS.map((m) => {
                     const enabled = isMethodEnabled(m.id);
@@ -622,7 +627,7 @@ const Checkout = () => {
                               <span className="ml-2 text-xs text-gray-500">僅 iOS Safari 可用</span>
                             )}
                           </div>
-                          {/* 開發用開關 */}
+                          {/* 開發用開關（可快速關閉特定方式） */}
                           <label className="flex items-center gap-2 text-xs text-gray-600 select-none">
                             <span>啟用</span>
                             <input
@@ -637,63 +642,7 @@ const Checkout = () => {
                     );
                   })}
                 </div>
-
-                {/* Credit Card Details */}
-                {(paymentInfo.method === 'CREDIT' || paymentInfo.method === 'INSTALLMENT') && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 xs:gap-3 sm:gap-4 md:gap-4 lg:gap-5">
-                    <div className="md:col-span-2">
-                      <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2 font-chinese">
-                        持卡人姓名 *
-                      </label>
-                      <input
-                        type="text"
-                        value={paymentInfo.cardName}
-                        onChange={(e) => handleInputChange('payment', 'cardName', e.target.value)}
-                        className="input-glass font-chinese"
-                        placeholder="請輸入持卡人姓名"
-                      />
-                    </div>
-                    
-                    <div className="md:col-span-2">
-                      <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2">
-                        卡號 *
-                      </label>
-                      <input
-                        type="text"
-                        value={paymentInfo.cardNumber}
-                        onChange={(e) => handleInputChange('payment', 'cardNumber', e.target.value)}
-                        className="input-glass"
-                        placeholder="1234 5678 9012 3456"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2">
-                        有效期限 *
-                      </label>
-                      <input
-                        type="text"
-                        value={paymentInfo.expiryDate}
-                        onChange={(e) => handleInputChange('payment', 'expiryDate', e.target.value)}
-                        className="input-glass"
-                        placeholder="MM/YY"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-xs xs:text-xs sm:text-sm md:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2 sm:mb-2 md:mb-2">
-                        CVV *
-                      </label>
-                      <input
-                        type="text"
-                        value={paymentInfo.cvv}
-                        onChange={(e) => handleInputChange('payment', 'cvv', e.target.value)}
-                        className="input-glass"
-                        placeholder="123"
-                      />
-                    </div>
-                  </div>
-                )}
+                {/* 不顯示任何站內信用卡欄位，付款將導轉至綠界 */}
               </div>
             )}
 

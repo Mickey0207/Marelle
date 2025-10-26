@@ -42,6 +42,41 @@
 - RLS 已啟用，僅本人可存取與操作。
 - 刪除預設地址時，後端會自動選擇同類型中最近更新的一筆作為新預設（若存在）。
 
+## 資料表：public.fronted_credit_order（信用卡付款紀錄）
+
+- 用途：保存綠界信用卡付款回傳（notify/result）資訊；同一 `MerchantTradeNo` 唯一。
+- 欄位（重點；其餘請見資料庫）：
+  - merchant_id, merchant_trade_no (unique)
+  - rtn_code, rtn_msg, trade_no, trade_amt, payment_date, payment_type, payment_type_charge_fee, trade_date, simulate_paid, check_mac_value
+  - 信用卡專屬：gwsr, process_date, auth_code, amount, eci, card4no, card6no, red_dan, red_de_amt, red_ok_amt, stage, stast
+  - raw_result jsonb：完整原始回傳
+  - 安全性：RLS 已啟用，未對 anon/authenticated 開任何 policy；僅後端以 Service Role 存取。
+
+## 資料表：public.fronted_atm_order（ATM 轉帳記錄）
+
+- 用途：保存 ATM 付款回傳；含「代碼指派」與「入帳」兩階段資訊。
+- 欄位（重點）：
+  - 共通：merchant_id, merchant_trade_no (unique), rtn_code, rtn_msg, trade_no, trade_amt, payment_date, payment_type, payment_type_charge_fee, trade_date, simulate_paid, check_mac_value
+  - 代碼指派：bank_code, v_account, expire_date
+  - raw_result jsonb
+  - 安全性：RLS 已啟用，未對 anon/authenticated 開任何 policy；僅後端以 Service Role 存取。
+
+## 資料表：public.fronted_cvscode_order（超商代碼記錄）
+
+- 用途：保存超商代碼繳費回傳；含「代碼指派」與「入帳」。
+- 欄位（重點）：
+  - 共通：merchant_id, merchant_trade_no (unique), rtn_code, rtn_msg, trade_no, trade_amt, payment_date, payment_type, payment_type_charge_fee, trade_date, simulate_paid, check_mac_value
+  - 代碼指派：payment_no, expire_date
+  - raw_result jsonb
+  - 安全性：RLS 已啟用，未對 anon/authenticated 開任何 policy；僅後端以 Service Role 存取。
+
+## 資料表：public.fronted_webatm_order（WebATM 記錄）
+
+- 用途：保存 WebATM 付款回傳。
+- 欄位（重點）：
+  - 共通：merchant_id, merchant_trade_no (unique), rtn_code, rtn_msg, trade_no, trade_amt, payment_date, payment_type, payment_type_charge_fee, trade_date, simulate_paid, check_mac_value, raw_result
+  - 安全性：RLS 已啟用，未對 anon/authenticated 開任何 policy；僅後端以 Service Role 存取。
+
 ## 資料表：fronted_users
 
 - 用途：前台使用者的公開/一般資料，以及 LINE 綁定資訊。
