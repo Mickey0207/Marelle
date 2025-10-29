@@ -120,7 +120,8 @@ const AdminLogin = () => {
           <button
             type="button"
             onClick={() => {
-              const url = new URL('/backend/auth/line/start', window.location.origin)
+              const apiBase = (window && window.__MARELLE_API_BASE__) || '/'
+              const url = new URL('/backend/auth/line/start', apiBase)
               url.searchParams.set('next', `${window.location.origin}/`)
               window.location.href = url.toString()
             }}

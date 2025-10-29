@@ -233,7 +233,22 @@ async function exchangeLineToken(c: any, code: string) {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body
   })
-  if (!resp.ok) throw new Error(`LINE token exchange failed: ${resp.status}`)
+  if (!resp.ok) {
+    let detail = ''
+    try {
+      const ct = resp.headers.get('content-type') || ''
+      if (ct.includes('application/json')) {
+        const j = await resp.json()
+        const err = j?.error || ''
+        const msg = j?.error_description || j?.message || ''
+        detail = [err, msg].filter(Boolean).join(': ')
+      } else {
+        detail = await resp.text()
+      }
+    } catch {}
+    const msg = detail ? `LINE token exchange failed: ${resp.status} ${detail}` : `LINE token exchange failed: ${resp.status}`
+    throw new Error(msg)
+  }
   return resp.json()
 }
 
@@ -463,23 +478,50 @@ app.get('/backend/auth/line/callback', async (c) => {
     const code = u.searchParams.get('code')
     const state = u.searchParams.get('state')
     const error = u.searchParams.get('error')
-    if (error) return c.redirect(`/login?line_status=error&reason=${encodeURIComponent(error)}`, 302)
-    if (!code || !state) return c.redirect('/login?line_status=error&reason=missing_code_or_state', 302)
+    const adminBaseEarly = (c.env.ALLOWED_ORIGIN || '').toString().replace(/\/$/, '')
+    if (error) {
+      const url = adminBaseEarly
+        ? `${adminBaseEarly}/login?line_status=error&reason=${encodeURIComponent(error)}`
+        : `/login?line_status=error&reason=${encodeURIComponent(error)}`
+      return c.redirect(url, 302)
+    }
+    if (!code || !state) {
+      const url = adminBaseEarly
+        ? `${adminBaseEarly}/login?line_status=error&reason=missing_code_or_state`
+        : '/login?line_status=error&reason=missing_code_or_state'
+      return c.redirect(url, 302)
+    }
     const expected = getStateCookie(c)
-    if (!expected || expected !== state) return c.redirect('/login?line_status=error&reason=state_mismatch', 302)
+    if (!expected || expected !== state) {
+      const url = adminBaseEarly
+        ? `${adminBaseEarly}/login?line_status=error&reason=state_mismatch`
+        : '/login?line_status=error&reason=state_mismatch'
+      return c.redirect(url, 302)
+    }
 
     const tokenRes = await exchangeLineToken(c, code)
     const accessToken = tokenRes?.access_token
-    if (!accessToken) return c.redirect('/login?line_status=error&reason=no_access_token', 302)
+    if (!accessToken) {
+      const url = adminBaseEarly
+        ? `${adminBaseEarly}/login?line_status=error&reason=no_access_token`
+        : '/login?line_status=error&reason=no_access_token'
+      return c.redirect(url, 302)
+    }
     const profile = await fetchLineProfile(accessToken)
     const lineUserId = profile?.userId
   const lineName = profile?.displayName
   const linePicture = profile?.pictureUrl || null
-    if (!lineUserId) return c.redirect('/login?line_status=error&reason=no_line_user', 302)
+    if (!lineUserId) {
+      const url = adminBaseEarly
+        ? `${adminBaseEarly}/login?line_status=error&reason=no_line_user`
+        : '/login?line_status=error&reason=no_line_user'
+      return c.redirect(url, 302)
+    }
 
-    // Mode & next
-    const mode = getCookie(c, LINE_MODE_COOKIE) || 'login'
-    const next = getCookie(c, LINE_NEXT_COOKIE) || (mode === 'bind' ? '/accountsetting/oauth' : '/login')
+  // Mode & next
+  const mode = getCookie(c, LINE_MODE_COOKIE) || 'login'
+  const next = getCookie(c, LINE_NEXT_COOKIE) || (mode === 'bind' ? '/accountsetting/oauth' : '/login')
+  const adminBase = (c.env.ALLOWED_ORIGIN || '').toString().replace(/\/$/, '')
     deleteCookie(c, LINE_MODE_COOKIE, { path: '/' })
     deleteCookie(c, LINE_NEXT_COOKIE, { path: '/' })
 
@@ -514,10 +556,16 @@ app.get('/backend/auth/line/callback', async (c) => {
         return null
       })()
       if (!currentUid) {
-        return c.redirect(`/login?line_status=error&reason=${encodeURIComponent('not_logged_in_for_bind')}`, 302)
+        const url = adminBase
+          ? `${adminBase}/login?line_status=error&reason=${encodeURIComponent('not_logged_in_for_bind')}`
+          : `/login?line_status=error&reason=${encodeURIComponent('not_logged_in_for_bind')}`
+        return c.redirect(url, 302)
       }
       if (!serviceKey) {
-        return c.redirect(`/accountsetting/oauth?bind=error&reason=${encodeURIComponent('missing_service_key')}`, 302)
+        const url = adminBase
+          ? `${adminBase}/accountsetting/oauth?bind=error&reason=${encodeURIComponent('missing_service_key')}`
+          : `/accountsetting/oauth?bind=error&reason=${encodeURIComponent('missing_service_key')}`
+        return c.redirect(url, 302)
       }
       const admin = createClient(requiredEnv(c, 'SUPABASE_URL'), serviceKey, { auth: { persistSession: false } })
       // 檢查是否被他人佔用
@@ -528,55 +576,70 @@ app.get('/backend/auth/line/callback', async (c) => {
         .limit(1)
       const occupied = Array.isArray(existRows) && existRows.length > 0 && String(existRows[0].id) !== String(currentUid)
       if (occupied) {
-        return c.redirect(`/accountsetting/oauth?bind=error&reason=${encodeURIComponent('line_id_taken')}`, 302)
+        const url = adminBase
+          ? `${adminBase}/accountsetting/oauth?bind=error&reason=${encodeURIComponent('line_id_taken')}`
+          : `/accountsetting/oauth?bind=error&reason=${encodeURIComponent('line_id_taken')}`
+        return c.redirect(url, 302)
       }
       const { error: updErr } = await admin
         .from('backend_admins')
         .update({ line_user_id: lineUserId, line_display_name: lineName || null, line_picture_url: linePicture, line_bound_at: new Date().toISOString() })
         .eq('id', currentUid)
       if (updErr) {
-        return c.redirect(`/accountsetting/oauth?bind=error&reason=${encodeURIComponent('update_failed')}`, 302)
+        const url = adminBase
+          ? `${adminBase}/accountsetting/oauth?bind=error&reason=${encodeURIComponent('update_failed')}`
+          : `/accountsetting/oauth?bind=error&reason=${encodeURIComponent('update_failed')}`
+        return c.redirect(url, 302)
       }
+      // Success: prefer absolute next or compose with adminBase
       const sep = next.includes('?') ? '&' : '?'
-      return c.redirect(`${next}${sep}bind=success`, 302)
+      let bindTarget = `${next}${sep}bind=success`
+      if (!/^https?:\/\//i.test(next)) {
+        bindTarget = adminBase
+          ? `${adminBase}${next.startsWith('/') ? '' : '/'}${next}${sep}bind=success`
+          : `${next}${sep}bind=success`
+      }
+      return c.redirect(bindTarget, 302)
     }
 
     if (bound && uid) {
       const secret = c.env.ADMIN_SESSION_SECRET
       if (!secret) {
-        // 回退到登入頁顯示已綁定
+        // 回退到登入頁顯示已綁定（優先導回後台網域）
         const q = new URLSearchParams({ line_status: 'success', bound: '1', name: lineName || '' })
+        if (adminBase) return c.redirect(`${adminBase}/login?${q.toString()}`, 302)
         return c.redirect(`/login?${q.toString()}`, 302)
       }
       const token = await createAdminSessionToken(secret, uid, 60 * 60 * 12) // 12h
       setAdminSessionCookie(c, token, 60 * 60 * 12)
-      // 目標導回：如果 next 是絕對網址就用 next；否則若有 ALLOWED_ORIGIN，拼接相對路徑；否則使用 next 或 '/'
+      // 目標導回：
+      // 1) next 為絕對網址 => 直接使用
+      // 2) 否則優先使用 adminBase（ALLOWED_ORIGIN）+ 相對路徑（預設 '/'）
+      // 3) 再不然使用相對路徑或 '/'
       let target = '/'
       if (next && /^https?:\/\//i.test(next)) {
         target = next
-      } else if (c.env.ALLOWED_ORIGIN) {
-        const base = c.env.ALLOWED_ORIGIN.replace(/\/$/, '')
+      } else if (adminBase) {
         const path = next || '/'
-        target = `${base}${path.startsWith('/') ? '' : '/'}${path}`
+        target = `${adminBase}${path.startsWith('/') ? '' : '/'}${path}`
       } else if (next) {
         target = next
       }
       return c.redirect(target, 302)
     }
 
-    // 未綁定：回登入頁提示（盡量導回前端的 Login）
+    // 未綁定：回登入頁提示（優先導回後台的 Login）
     const q = new URLSearchParams({ line_status: 'success', bound: '0', name: lineName || '' })
-    let loginUrl = `/login?${q.toString()}`
+    let loginUrl = adminBase ? `${adminBase}/login?${q.toString()}` : `/login?${q.toString()}`
     if (next && /^https?:\/\//i.test(next)) {
       const sep = next.endsWith('/') ? '' : '/'
       loginUrl = `${next}${sep}login?${q.toString()}`
-    } else if (c.env.ALLOWED_ORIGIN) {
-      const sep = c.env.ALLOWED_ORIGIN.endsWith('/') ? '' : '/'
-      loginUrl = `${c.env.ALLOWED_ORIGIN}${sep}login?${q.toString()}`
     }
     return c.redirect(loginUrl, 302)
   } catch (e: any) {
-    return c.redirect(`/login?line_status=error&reason=${encodeURIComponent(e?.message || 'callback_failed')}`, 302)
+    const adminBase = (c.env.ALLOWED_ORIGIN || '').toString().replace(/\/$/, '')
+    const url = adminBase ? `${adminBase}/login?line_status=error&reason=${encodeURIComponent(e?.message || 'callback_failed')}` : `/login?line_status=error&reason=${encodeURIComponent(e?.message || 'callback_failed')}`
+    return c.redirect(url, 302)
   }
 })
 

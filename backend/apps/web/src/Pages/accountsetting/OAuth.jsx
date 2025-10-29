@@ -31,7 +31,8 @@ const OAuth = () => {
     }
     ;(async () => {
       try {
-        const res = await fetch('/backend/account/line/profile', { credentials: 'include' })
+  const apiBase = (window && window.__MARELLE_API_BASE__) || '/'
+  const res = await fetch(`${apiBase.replace(/\/$/, '')}/backend/account/line/profile`, { credentials: 'include' })
         if (!res.ok) throw new Error('載入失敗')
         const data = await res.json()
         if (!ignore) {
@@ -52,7 +53,8 @@ const OAuth = () => {
   const handleBindLine = () => {
     // 透過後端啟動 LINE 授權，模式為 bind
     const next = window.location.pathname + window.location.search
-    const url = new URL('/backend/auth/line/start', window.location.origin)
+    const apiBase = (window && window.__MARELLE_API_BASE__) || '/'
+    const url = new URL('/backend/auth/line/start', apiBase)
     url.searchParams.set('mode', 'bind')
     url.searchParams.set('next', next)
     window.location.href = url.toString()
@@ -60,7 +62,8 @@ const OAuth = () => {
 
   const handleUnbindLine = async () => {
     try {
-      const res = await fetch('/backend/account/line/unbind', {
+      const apiBase = (window && window.__MARELLE_API_BASE__) || '/'
+      const res = await fetch(`${apiBase.replace(/\/$/, '')}/backend/account/line/unbind`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' }
