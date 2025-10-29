@@ -12,8 +12,20 @@
   </head>
   <body>
     <script>
-      // 指定後端 API 網域（Admin 後台）
-      window.__MARELLE_API_BASE__ = window.__MARELLE_API_BASE__ || 'https://api.marelle.com.tw';
+      (function(){
+        // Admin 後台：動態推斷 API 網域，支援更換主網域而不需改碼
+        try {
+          if (!window.__MARELLE_API_BASE__) {
+            const { protocol, hostname } = window.location;
+            let apex = hostname || '';
+            if (apex.startsWith('admin.')) apex = apex.slice('admin.'.length);
+            if (apex.startsWith('www.')) apex = apex.slice('www.'.length);
+            window.__MARELLE_API_BASE__ = `${protocol}//api.${apex}`;
+          }
+        } catch {
+          window.__MARELLE_API_BASE__ = window.__MARELLE_API_BASE__ || 'https://api.marelle.com.tw';
+        }
+      })();
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

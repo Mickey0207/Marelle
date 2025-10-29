@@ -8,6 +8,8 @@ export default function ProfileInfo({ user }) {
   const [showUnbind, setShowUnbind] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ display_name: '', phone: '', gender: '', newsletter: false });
+  const apiBase = (typeof window !== 'undefined' && window.__MARELLE_API_BASE__) || '/'
+  const lineBindHref = `${apiBase.replace(/\/$/, '')}/frontend/account/line/start`
   // 地址簿（串後端 API）
   const [homeAddresses, setHomeAddresses] = useState([]);
   const [storeAddresses, setStoreAddresses] = useState([]);
@@ -86,7 +88,8 @@ export default function ProfileInfo({ user }) {
   // 綠界選店（新視窗）
   function openCvsMap(subType = 'FAMIC2C') {
     const w = window.open('', 'ecpay_map', 'width=1024,height=768')
-    if (w) w.location.href = `/frontend/account/ecpay/map/start?subType=${encodeURIComponent(subType)}`
+    const base = (typeof window !== 'undefined' && window.__MARELLE_API_BASE__) || '/'
+    if (w) w.location.href = `${String(base).replace(/\/$/, '')}/frontend/account/ecpay/map/start?subType=${encodeURIComponent(subType)}`
   }
 
   // 接收選店回傳並填入新增草稿
@@ -183,6 +186,12 @@ export default function ProfileInfo({ user }) {
                     if (res.ok) {
                       setMeta((m) => ({ ...m, display_name: payload.display_name, phone: payload.phone, gender: payload.gender, newsletter: payload.newsletter ?? m.newsletter }));
                       setIsEditing(false);
+                      try { pushToast('success', '已更新個人資料') } catch {}
+                    } else {
+                      try {
+                        const data = await res.json().catch(()=>({}));
+                        pushToast('error', data?.error || `更新失敗 (${res.status})`)
+                      } catch {}
                     }
                   } catch {}
                 }}
@@ -614,7 +623,7 @@ export default function ProfileInfo({ user }) {
           ) : (
             <div className="flex items-center gap-3">
               <a
-                href="/frontend/account/line/start"
+                href={lineBindHref}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold shadow-md transition-all"
                 style={{ background: '#06C755', color: '#FFFFFF' }}
                 onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(0.95)')}

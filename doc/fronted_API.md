@@ -107,6 +107,25 @@
 - 註冊成功後，Supabase 會寄出確認信，使用者點擊後將導回 /login。
 - LINE 註冊暫不提供；僅登入後提供綁定（未來將新增 /frontend/account/line 綁定 API）。
 
+### 帳號資料 API（account/profile）
+
+- GET /frontend/account/profile
+  - 用途：取得目前登入使用者在 `fronted_users` 的基本資料與部分 Auth 參數。
+  - 回傳：`{ id, email, display_name, phone, gender, newsletter, privacy_policy, created_at, last_sign_in_at }`
+
+- PATCH /frontend/account/profile
+  - 用途：更新 `fronted_users` 的基本資料欄位。
+  - 請求 JSON（部分欄位可選）：
+    - `{ display_name?: string|null, phone?: string|null, gender?: '男'|'女'|'不願透漏'|null, newsletter?: boolean, privacy_policy?: boolean }`
+  - 回應：`200 { ok: true }`（或錯誤訊息）
+
+- CORS 與認證：
+  - 來源：允許從 `https://marelle.com.tw` 呼叫 `https://api.marelle.com.tw`。
+  - 方法：`Access-Control-Allow-Methods: GET, POST, PATCH, OPTIONS`（已於 Worker 設定）。
+  - 標頭：`Access-Control-Allow-Headers: Content-Type, Authorization`。
+  - Cookie：需帶 `credentials: 'include'` 以便後端以 Cookie 判定身分。
+  - 注意：`Content-Type: application/json` 的 PATCH 請求會觸發預檢（OPTIONS），現已允許。
+
 ---
 
 ## 前台 API 文件補充：購物車（fronted_carts）

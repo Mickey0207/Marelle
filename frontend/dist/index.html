@@ -9,23 +9,35 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
-    <script type="module" crossorigin src="/assets/index-0a9cce49.js"></script>
+    <script type="module" crossorigin src="/assets/index-3cce95a5.js"></script>
     <link rel="stylesheet" href="/assets/index-563222bf.css">
   </head>
   <body>
     <script>
-      // 指定前台呼叫的後端 API 網域
-      window.__MARELLE_API_BASE__ = window.__MARELLE_API_BASE__ || 'https://api.marelle.com.tw';
-      // 將以 /frontend/ 開頭的 fetch 自動導至 API 網域
       (function(){
+        // 動態推斷 API 網域：優先使用既有設定，否則依目前網域推導 api 子網域
+        try {
+          if (!window.__MARELLE_API_BASE__) {
+            const { protocol, hostname } = window.location;
+            let apex = hostname || '';
+            if (apex.startsWith('admin.')) apex = apex.slice('admin.'.length);
+            if (apex.startsWith('www.')) apex = apex.slice('www.'.length);
+            window.__MARELLE_API_BASE__ = `${protocol}//api.${apex}`;
+          }
+        } catch {
+          // 後援：維持既有正式站域名
+          window.__MARELLE_API_BASE__ = window.__MARELLE_API_BASE__ || 'https://api.marelle.com.tw';
+        }
+
+        // 將以 /frontend/ 開頭的 fetch 自動導至 API 網域
         try {
           const orig = window.fetch;
-          const base = window.__MARELLE_API_BASE__;
+          const getBase = () => (window.__MARELLE_API_BASE__ || '').replace(/\/$/, '');
           window.fetch = function(input, init){
             try {
               const url = typeof input === 'string' ? input : (input && input.url);
               if (typeof url === 'string' && url.startsWith('/frontend/')) {
-                const full = base.replace(/\/$/, '') + url;
+                const full = getBase() + url;
                 return orig.call(this, full, init);
               }
             } catch {}

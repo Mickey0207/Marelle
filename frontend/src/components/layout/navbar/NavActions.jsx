@@ -17,6 +17,8 @@ const NavActions = ({
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const accountMenuRef = useRef(null);
   const [accountHover, setAccountHover] = useState(false);
+  const apiBase = (typeof window !== 'undefined' && window.__MARELLE_API_BASE__) || '/';
+  const lineBindHref = `${apiBase.replace(/\/$/, '')}/frontend/account/line/start`;
 
   const fetchMe = useCallback(async () => {
     try {
@@ -80,7 +82,7 @@ const NavActions = ({
       {/* 未綁定 LINE 的使用者：在搜尋 icon 左側顯示綁定按鈕（桌面端） */}
       {currentUser && isLineBound === false && (
         <a
-          href="/frontend/account/line/start"
+          href={lineBindHref}
           className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold shadow-md transition-all"
           style={{ background: '#06C755', color: '#FFFFFF' }}
           title="綁定 LINE"

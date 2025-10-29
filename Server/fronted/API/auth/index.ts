@@ -21,10 +21,21 @@ const app = new Hono<{ Bindings: Bindings }>({ strict: false })
 app.use('*', cors({
   origin: (origin) => origin || '*',
   allowHeaders: ['Content-Type', 'Authorization'],
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
   credentials: true,
   maxAge: 86400
 }))
+
+// Explicit preflight for account profile update to ensure PATCH is advertised
+app.options('/frontend/account/profile', (c) => {
+  const origin = c.req.header('Origin') || '*'
+  c.header('Access-Control-Allow-Origin', origin)
+  c.header('Vary', 'Origin')
+  c.header('Access-Control-Allow-Credentials', 'true')
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS')
+  return c.body(null, 204)
+})
 
 const ACCESS_COOKIE = 'sb-access-token'
 const REFRESH_COOKIE = 'sb-refresh-token'
@@ -379,11 +390,15 @@ app.patch('/frontend/account/profile', async (c) => {
 
     // resolve uid
     let uid: string | null = null
+    let userEmail: string | null = null
     const access = getCookie(c, ACCESS_COOKIE)
     if (access) {
       const supabase = makeSupabase(c)
       const { data } = await supabase.auth.getUser(access)
-      if (data?.user?.id) uid = data.user.id
+      if (data?.user?.id) {
+        uid = data.user.id
+        userEmail = data.user.email ?? null
+      }
     }
     if (!uid) {
       const secret = c.env.ADMIN_SESSION_SECRET
@@ -430,9 +445,37 @@ app.patch('/frontend/account/profile', async (c) => {
 
     if (Object.keys(next).length === 0) return c.json({ ok: true })
 
-    const { error } = await svc.from('fronted_users').update(next).eq('id', uid)
-    if (error) return c.json({ error: 'Update failed' }, 500)
-    return c.json({ ok: true })
+    // Check if row exists to avoid NOT NULL constraint failures when creating
+    const { data: existsRow } = await svc
+      .from('fronted_users')
+      .select('id')
+      .eq('id', uid)
+      .maybeSingle()
+
+    if (existsRow && existsRow.id) {
+      const { error } = await svc.from('fronted_users').update(next).eq('id', uid)
+      if (error) return c.json({ error: 'Update failed' }, 500)
+      return c.json({ ok: true })
+    } else {
+      // Need email when creating new row if schema requires it
+      if (!userEmail) {
+        try {
+          // @ts-ignore
+          const { data: gotUser } = await (svc as any).auth.admin.getUserById(uid)
+          userEmail = gotUser?.user?.email ?? null
+        } catch {}
+      }
+      if (!userEmail) {
+        // Fallback synthetic email for LINE-only accounts
+        userEmail = `${uid}@line.local`
+      }
+      const payload = { id: uid, email: userEmail, ...next }
+      const { error } = await svc
+        .from('fronted_users')
+        .upsert(payload, { onConflict: 'id' })
+      if (error) return c.json({ error: 'Update failed' }, 500)
+      return c.json({ ok: true })
+    }
   } catch (e: any) {
     return c.json({ error: e?.message || 'Internal error' }, 500)
   }

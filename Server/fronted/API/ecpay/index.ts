@@ -245,9 +245,24 @@ async function upsertPayment(c: any, body: Record<string, any>) {
 async function buildStartHtml(c: any) {
   const env = (c.env.ECPAY_ENV || 'stage') as string
   const action = endpoint(env)
-  const merchantId = c.env.ECPAY_LOGISTICS_MERCHANT_ID
-  const key = c.env.ECPAY_LOGISTICS_HASH_KEY || c.env.ECPAY_HASH_KEY
-  const iv = c.env.ECPAY_LOGISTICS_HASH_IV || c.env.ECPAY_HASH_IV
+
+  // 取得前端指定的超商子類別，預設 FAMIC2C
+  const subType = (c.req.query('subType') || 'FAMIC2C').toString().toUpperCase()
+  const isC2C = ['FAMIC2C','UNIMARTC2C','HILIFEC2C','OKMARTC2C'].includes(subType)
+
+  // 在測試環境優先使用 C2C 的測試金鑰；若未提供則回退到統一物流金鑰；最後回退到共用 ECPAY_HASH_*
+  let merchantId = ''
+  let key = ''
+  let iv = ''
+  if ((env && env.toLowerCase() === 'stage') && isC2C) {
+    merchantId = c.env.ECPAY_LOGISTICS_C2C_MERCHANT_ID || c.env.ECPAY_LOGISTICS_MERCHANT_ID || ''
+    key = c.env.ECPAY_LOGISTICS_C2C_HASH_KEY || c.env.ECPAY_LOGISTICS_HASH_KEY || c.env.ECPAY_HASH_KEY || ''
+    iv = c.env.ECPAY_LOGISTICS_C2C_HASH_IV || c.env.ECPAY_LOGISTICS_HASH_IV || c.env.ECPAY_HASH_IV || ''
+  } else {
+    merchantId = c.env.ECPAY_LOGISTICS_MERCHANT_ID || ''
+    key = c.env.ECPAY_LOGISTICS_HASH_KEY || c.env.ECPAY_HASH_KEY || ''
+    iv = c.env.ECPAY_LOGISTICS_HASH_IV || c.env.ECPAY_HASH_IV || ''
+  }
   if (!merchantId || !key || !iv) return c.text('ECPay not configured', 500)
 
   // Build ReturnURL based on current origin
@@ -256,7 +271,6 @@ async function buildStartHtml(c: any) {
   const debug = (c.req.query('debug') || '') === '1'
   const returnURL = `${base}/frontend/account/ecpay/map/return${debug ? '?debug=1' : ''}`
 
-  const subType = (c.req.query('subType') || 'FAMIC2C').toString()
   const payload: Record<string,string> = {
     MerchantID: merchantId,
     LogisticsType: 'CVS',

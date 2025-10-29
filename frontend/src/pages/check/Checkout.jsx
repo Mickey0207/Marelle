@@ -200,7 +200,8 @@ const Checkout = () => {
   // 綠界選店（新視窗）
   function openCvsMap(subType = 'FAMIC2C') {
     const w = window.open('', 'ecpay_map', 'width=1024,height=768');
-    if (w) w.location.href = `/frontend/account/ecpay/map/start?subType=${encodeURIComponent(subType)}`;
+    const base = (typeof window !== 'undefined' && window.__MARELLE_API_BASE__) || '/';
+    if (w) w.location.href = `${String(base).replace(/\/$/, '')}/frontend/account/ecpay/map/start?subType=${encodeURIComponent(subType)}`;
   }
 
   // 接收選店回傳並填入 cvsInfo

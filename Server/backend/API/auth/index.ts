@@ -26,7 +26,7 @@ const app = new Hono<{ Bindings: Bindings }>({ strict: false })
 app.use('*', cors({
   origin: (origin) => origin || '*',
   allowHeaders: ['Content-Type', 'Authorization'],
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   exposeHeaders: [],
   credentials: true,
   maxAge: 86400

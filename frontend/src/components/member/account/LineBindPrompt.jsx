@@ -4,6 +4,8 @@ export default function LineBindPrompt() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [lineName, setLineName] = useState(null)
+  const apiBase = (typeof window !== 'undefined' && window.__MARELLE_API_BASE__) || '/'
+  const lineBindHref = `${apiBase.replace(/\/$/, '')}/frontend/account/line/start`
 
   useEffect(() => {
     let mounted = true
@@ -36,7 +38,7 @@ export default function LineBindPrompt() {
         <p className="text-sm mb-4" style={{color:'#666666'}}>為了接收重要通知與優惠，建議綁定 LINE。</p>
         <div className="flex gap-2 justify-end">
           <button onClick={() => setOpen(false)} className="text-sm px-3 py-1.5 rounded hover:bg-gray-50" style={{color:'#666666'}}>稍後再說</button>
-          <a href="/frontend/account/line/start" className="text-sm px-3 py-1.5 rounded" style={{background:'#CC824D', color:'#FFFFFF'}}>立即綁定</a>
+          <a href={lineBindHref} className="text-sm px-3 py-1.5 rounded" style={{background:'#CC824D', color:'#FFFFFF'}}>立即綁定</a>
         </div>
       </div>
     </div>
